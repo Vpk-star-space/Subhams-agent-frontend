@@ -28,6 +28,9 @@ export default function CustomerUpload() {
   const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_shopId') || '');
   const [customerName, setCustomerName] = useState(localStorage.getItem('subhams_customerName') || '');
   
+  // 🌟 NEW STATE: To track if the Shop ID is real or fake
+  const [shopStatus, setShopStatus] = useState('idle'); // 'idle', 'checking', 'valid', 'invalid'
+
   const uniqueCustomerName = customerName.trim() ? `${customerName.trim()} #${userCode}` : '';
 
   const [securityMode, setSecurityMode] = useState('none'); 
@@ -67,11 +70,49 @@ export default function CustomerUpload() {
     localStorage.setItem('subhams_tracker', JSON.stringify(liveStatusTracker));
   }, [shopId, customerName, liveStatusTracker]);
 
+  // 🌟 NEW FEATURE: Live Shop Validation Check
   useEffect(() => {
-    if (shopId.trim() && uniqueCustomerName) {
-      socket.emit('JOIN_CUSTOMER', { shopId: shopId.toUpperCase(), customerName: uniqueCustomerName });
-    }
-  }, [shopId, uniqueCustomerName]);
+      const checkShopValidity = async () => {
+          if (!shopId || shopId.length < 5) {
+              setShopStatus('idle');
+              return;
+          }
+          setShopStatus('checking');
+          try {
+              // We use the pricing route to quietly check if the shop exists in the DB
+              const res = await axios.get(`https://subhams-vpk.onrender.com/api/shop/pricing/${shopId}`);
+              if (res.data.success) {
+                  setShopStatus('valid');
+              } else {
+                  setShopStatus('invalid');
+              }
+          } catch  {
+              setShopStatus('invalid');
+          }
+      };
+
+      // Debounce the check so it doesn't spam the server on every single letter typed
+      const timeoutId = setTimeout(checkShopValidity, 800);
+      return () => clearTimeout(timeoutId);
+  }, [shopId]);
+  
+useEffect(() => {
+    const joinTrackingRoom = () => {
+      if (shopId.trim() && uniqueCustomerName && shopStatus === 'valid') {
+        socket.emit('JOIN_CUSTOMER', { shopId: shopId.toUpperCase(), customerName: uniqueCustomerName });
+      }
+    };
+
+    // 1. Join immediately when they type a valid name/ID
+    joinTrackingRoom();
+
+    // 2. 🟢 CRITICAL TRACKING FIX: If the mobile screen turns off and wakes back up, reconnect instantly!
+    socket.on('connect', joinTrackingRoom);
+
+    return () => {
+      socket.off('connect', joinTrackingRoom);
+    };
+  }, [shopId, uniqueCustomerName, shopStatus]);
 
   useEffect(() => {
     socket.on('CUSTOMER_TRACKER', (data) => {
@@ -92,7 +133,6 @@ export default function CustomerUpload() {
               { fps: 10, qrbox: { width: 250, height: 250 } },
               (decodedText) => {
                   if (isComponentMounted) {
-                      // Paytm style double vibration buzz
                       if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
 
                       const extractedId = decodedText.includes('/u/') ? decodedText.split('/u/').pop().toUpperCase() : decodedText.toUpperCase();
@@ -101,13 +141,13 @@ export default function CustomerUpload() {
                       setScanSuccess(true);
                       
                       setTimeout(() => {
-                          setShopId(extractedId);
+                          setShopId(extractedId); // This will trigger the new validation automatically!
                           setScanSuccess(false);
                           setIsScanning(false);
                       }, 1500);
                   }
               },
-              () => {} // Ignore constant background scan errors
+              () => {} 
           ).catch((err) => {
               console.error("Camera error:", err);
               setIsScanning(false);
@@ -278,6 +318,7 @@ export default function CustomerUpload() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!shopId) return alert("Please enter a Shop ID.");
+    if (shopStatus === 'invalid') return alert("❌ The Shop ID you entered does not exist. Please check it again.");
     if (!customerName.trim()) return alert("Please enter your name.");
     if (fileItems.length === 0) return alert("Please add at least one file.");
 
@@ -455,9 +496,29 @@ export default function CustomerUpload() {
             )}
           </div>
         ) : (
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <input type="text" placeholder="e.g. SUBHAMS-123456" value={shopId} onChange={(e) => setShopId(e.target.value.toUpperCase())} style={{...inputStyle, flex: 1, fontWeight: 'bold', color: '#2563eb'}} />
-            <button type="button" style={qrBtnStyle} onClick={() => setIsScanning(true)}>📷 Scan QR</button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              {/* 🟢 FIX: Added .trim() to onChange to destroy invisible spaces instantly */}
+              <input 
+                type="text" 
+                placeholder="SUBHAMS-XXXXXX" 
+                value={shopId} 
+                onChange={(e) => setShopId(e.target.value.toUpperCase().trim())} 
+                style={{
+                    ...inputStyle, 
+                    flex: 1, 
+                    fontWeight: 'bold', 
+                    color: shopStatus === 'invalid' ? '#ef4444' : '#2563eb',
+                    borderColor: shopStatus === 'invalid' ? '#ef4444' : (shopStatus === 'valid' ? '#10b981' : '#cbd5e1')
+                }} 
+              />
+              <button type="button" style={qrBtnStyle} onClick={() => setIsScanning(true)}>📷 Scan QR</button>
+            </div>
+            
+            {/* 🌟 NEW VISUAL FEEDBACK FOR SHOP VALIDITY */}
+            {shopStatus === 'checking' && <span style={{ fontSize: '12px', color: '#64748b' }}>⏳ Verifying Shop ID...</span>}
+            {shopStatus === 'valid' && <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 'bold' }}>✅ Shop Found & Ready!</span>}
+            {shopStatus === 'invalid' && shopId.length > 0 && <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 'bold' }}>❌ Invalid Shop ID. Please check again.</span>}
           </div>
         )}
       </div>

@@ -130,24 +130,27 @@ export default function Dashboard() {
 
   
   
-  // 🟢 FIX 3: Fast HTTP Preview instead of Laggy Sockets!
+  // 🟢 FIX 3: Fast HTTP Preview (with Explicit Binary Parsing)
   useEffect(() => {
     if (activeJob && !isDrawingMode) {
-   
-
       const delayTimer = setTimeout(async () => {
         try {
-            // Ask for the file via HTTP Blob (super fast, no Base64 text limits!)
             const response = await secureAxios.post(`/preview-fast/${activeJob.jobId}`, { 
                 overrides: { ...printSettings } 
-            }, { responseType: 'blob' }); // Tell Axios we want a binary file
+            }, { responseType: 'blob' }); 
             
-            const cleanBlobUrl = URL.createObjectURL(response.data) + '#toolbar=0';
-            setPreviewImage(cleanBlobUrl);
+            // 🟢 Explicitly tell the browser if it's a PDF or an Image
+            const contentType = response.headers['content-type'] || 'application/pdf';
+            const fileBlob = new Blob([response.data], { type: contentType });
+            const rawUrl = URL.createObjectURL(fileBlob);
+            
+            // Only add '#toolbar=0' if it's actually a PDF!
+            setPreviewImage(contentType === 'application/pdf' ? rawUrl + '#toolbar=0' : rawUrl);
+            
         } catch (error) {
             console.error("Fast preview error:", error);
         }
-      }, 600); // 600ms debounce saves CPU
+      }, 600); 
 
       return () => clearTimeout(delayTimer); 
     }
