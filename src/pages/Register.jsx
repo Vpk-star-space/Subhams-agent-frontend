@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { QRCodeSVG } from 'qrcode.react';
-import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google'; // 🟢 FIX: Added GoogleOAuthProvider
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google'; 
 import { jwtDecode } from 'jwt-decode';            
 
 export default function Register() {
@@ -23,10 +23,10 @@ export default function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  // 🟢 FIX: State to hold the Google Client ID
+  // 🟢 State to hold the Google Client ID
   const [clientId, setClientId] = useState('');
 
-  // 🟢 FIX: Fetch the Google Client ID securely on load
+  // 🟢 Fetch the Google Client ID securely on load
   useEffect(() => {
     axios.get('https://subhams-vpk.onrender.com/api/auth/google-client-id')
       .then(res => {
@@ -131,7 +131,6 @@ export default function Register() {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', minHeight: '40px' }}>
-          {/* 🟢 FIX: Button is properly wrapped in the Provider! */}
           {clientId ? (
               <GoogleOAuthProvider clientId={clientId}>
                   <GoogleLogin onSuccess={handleGoogleRegister} onError={() => setError("Google Registration Failed")} theme="outline" shape="pill" />
@@ -203,9 +202,9 @@ export default function Register() {
           Download the Windows Agent, install it on your shop's computer, and paste your Agent Key to connect your printer to the cloud.
         </p>
         
+        {/* 🟢 THE NEW GITHUB RELEASES DOWNLOAD LINK! */}
         <a 
-          href="/Install-SubhamsAgent.exe" 
-          download="Install-SubhamsAgent.exe"
+          href="https://github.com/Vpk-star-space/Subhams-agent-frontend/releases/download/v1.0.0/Install-SubhamsAgent.exe" 
           style={{
             backgroundColor: '#2563eb', color: 'white', padding: '14px 28px', 
             borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold',
