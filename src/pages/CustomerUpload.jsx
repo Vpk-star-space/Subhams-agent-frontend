@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Scanner } from '@yudiel/react-qr-scanner'; 
+import { Html5Qrcode } from 'html5-qrcode'; 
 import { io } from 'socket.io-client'; 
 
 const socket = io('https://subhams-vpk.onrender.com', {
@@ -36,13 +36,6 @@ export default function CustomerUpload() {
   const [isBlindPreview, setIsBlindPreview] = useState(false);
   
   const todayDate = new Date().toLocaleDateString('en-GB'); 
-  
-  const processSuccessfulScan = (text) => {
-      if (!text) return;
-      const extractedId = text.includes('/u/') ? text.split('/u/').pop() : text;
-      setShopId(extractedId.toUpperCase());
-      setIsScanning(false);
-  };
 
   const [drawState, setDrawState] = useState({ isDrawing: false, startX: 0, startY: 0, currentRect: null });
   const [isScanning, setIsScanning] = useState(false);
@@ -81,6 +74,47 @@ export default function CustomerUpload() {
     });
     return () => socket.off('CUSTOMER_TRACKER');
   }, []);
+
+  useEffect(() => {
+      let html5QrCode;
+      
+      if (isScanning) {
+          html5QrCode = new Html5Qrcode("qr-reader");
+          html5QrCode.start(
+              { facingMode: "environment" }, 
+              {
+                  fps: 10,
+                  qrbox: { width: 250, height: 250 }
+              },
+              (decodedText) => {
+                  if (html5QrCode) {
+                      html5QrCode.stop().then(() => {
+                          const extractedId = decodedText.includes('/u/') ? decodedText.split('/u/').pop() : decodedText;
+                          setShopId(extractedId.toUpperCase());
+                          setIsScanning(false);
+                      }).catch(console.error);
+                  }
+              },
+              () => {
+                  // 🟢 FIX 1: Removed unused errorMessage variable
+                  // Ignore continuous parsing errors
+              }
+          ).catch((err) => {
+              console.error("Camera error:", err);
+              setIsScanning(false);
+          });
+      }
+
+      return () => {
+          if (html5QrCode) {
+              try {
+                  html5QrCode.stop().catch(() => {});
+              } catch (e) {
+                  console.error(e);
+              }
+          }
+      };
+  }, [isScanning]);
 
   const handleFileChange = (e) => {
     const rawFiles = Array.from(e.target.files);
@@ -392,20 +426,10 @@ export default function CustomerUpload() {
       <div style={{...sectionCard, marginBottom: '15px'}}>
         <label style={labelStyle}>Shop ID / షాప్ ID</label>
         {isScanning ? (
-          <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px' }}>
-            <p style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold', margin: '0 0 15px 0', textAlign: 'center' }}>Point camera at Shop QR Code</p>
+          <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold', marginBottom: '15px' }}>Point camera at Shop QR Code</span>
             
-            {/* 🟢 THIS IS THE FIX. No CSS constraints. Pure library natural rendering. */}
-            <div style={{ background: '#000' }}>
-                <Scanner 
-                    onScan={(result) => {
-                        console.log("Scanner caught:", result);
-                        if (result && result.length > 0 && result[0].rawValue) {
-                            processSuccessfulScan(result[0].rawValue);
-                        }
-                    }}
-                />
-            </div>
+            <div id="qr-reader" style={{ width: '100%', maxWidth: '300px', borderRadius: '12px', overflow: 'hidden', border: '3px solid #3b82f6', background: '#000' }}></div>
             
             <button onClick={() => setIsScanning(false)} style={{ width: '100%', padding: '12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', marginTop: '20px', fontWeight: 'bold', cursor: 'pointer' }}>Cancel Scanner</button>
           </div>
@@ -715,7 +739,6 @@ const sectionCard = { background: '#fff', padding: '15px', borderRadius: '12px',
 const labelStyle = { fontSize: '12px', fontWeight: 'bold', color: '#64748b', display: 'block', marginBottom: '6px' };
 const inputStyle = { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '16px', background: '#f8fafc', boxSizing: 'border-box' };
 const qrBtnStyle = { padding: '0 15px', background: '#1e293b', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' };
-
 const uploadBtnStyle = { padding: '20px 10px', background: '#f1f5f9', border: '2px dashed #cbd5e1', borderRadius: '12px', cursor: 'pointer', color: '#475569', fontWeight: 'bold', fontSize: '13px' };
 const removeBtnStyle = { background: '#fee2e2', color: '#991b1b', border: 'none', cursor: 'pointer', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' };
 const submitBtn = { width: '100%', padding: '18px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '10px', boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)' };
