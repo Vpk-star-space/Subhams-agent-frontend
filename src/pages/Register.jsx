@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { QRCodeSVG } from 'qrcode.react';
-import { GoogleLogin } from '@react-oauth/google'; 
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google'; // 🟢 FIX: Added GoogleOAuthProvider
 import { jwtDecode } from 'jwt-decode';            
 
 export default function Register() {
@@ -16,12 +16,26 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   
-  // 🌟 THE FIX: Initialize state directly from the teleport location data! No useEffect needed.
+  // 🌟 Initialize state directly from the teleport location data
   const [step, setStep] = useState(location.state?.step === 3 ? 3 : 1); 
   const [shopData, setShopData] = useState(location.state?.step === 3 ? location.state.shopData : null);
   
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // 🟢 FIX: State to hold the Google Client ID
+  const [clientId, setClientId] = useState('');
+
+  // 🟢 FIX: Fetch the Google Client ID securely on load
+  useEffect(() => {
+    axios.get('https://subhams-vpk.onrender.com/api/auth/google-client-id')
+      .then(res => {
+          if (res.data.success) {
+              setClientId(res.data.clientId);
+          }
+      })
+      .catch(err => console.error("Failed to fetch Google Client ID:", err));
+  }, []);
 
   // --- MANUAL REGISTRATION LOGIC ---
   const handleRequestOTP = async (e) => {
@@ -116,8 +130,15 @@ export default function Register() {
           <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <GoogleLogin onSuccess={handleGoogleRegister} onError={() => setError("Google Registration Failed")} theme="outline" shape="pill" />
+        <div style={{ display: 'flex', justifyContent: 'center', minHeight: '40px' }}>
+          {/* 🟢 FIX: Button is properly wrapped in the Provider! */}
+          {clientId ? (
+              <GoogleOAuthProvider clientId={clientId}>
+                  <GoogleLogin onSuccess={handleGoogleRegister} onError={() => setError("Google Registration Failed")} theme="outline" shape="pill" />
+              </GoogleOAuthProvider>
+          ) : (
+              <span style={{ fontSize: '13px', color: '#94a3b8' }}>Loading Secure Login...</span>
+          )}
         </div>
 
         <p style={{textAlign: 'center', marginTop: '20px', fontSize: '14px'}}>
@@ -176,23 +197,40 @@ export default function Register() {
         </div>
       </div>
 
-      <div style={{ marginTop: '30px', textAlign: 'center', padding: '20px', background: '#f8fafc', borderRadius: '10px', border: '2px dashed #cbd5e1' }}>
+      <div style={{ marginTop: '30px', textAlign: 'center', padding: '25px', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #cbd5e1' }}>
         <h3 style={{ color: '#0f172a', marginBottom: '10px', marginTop: 0 }}>Next Step: Connect Your Printer</h3>
-        <p style={{ color: '#64748b', marginBottom: '15px', fontSize: '0.95rem' }}>
-          Download the Windows Agent, install it on your shop's computer, and paste your keys above to connect your printer to the cloud.
+        <p style={{ color: '#64748b', marginBottom: '20px', fontSize: '0.95rem' }}>
+          Download the Windows Agent, install it on your shop's computer, and paste your Agent Key to connect your printer to the cloud.
         </p>
+        
         <a 
           href="/Install-SubhamsAgent.exe" 
           download="Install-SubhamsAgent.exe"
           style={{
-            backgroundColor: '#2563eb', color: 'white', padding: '12px 24px', 
+            backgroundColor: '#2563eb', color: 'white', padding: '14px 28px', 
             borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold',
             display: 'inline-block', fontSize: '1.1rem',
-            boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)', transition: 'transform 0.2s'
+            boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)', transition: 'transform 0.2s',
+            marginBottom: '20px'
           }}
         >
           ⬇️ Download Windows Agent (.exe)
         </a>
+
+        {/* 🟢 THE TRUST MANUAL: Explains Windows SmartScreen */}
+        <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '15px', textAlign: 'left', maxWidth: '500px', margin: '0 auto' }}>
+            <h4 style={{ margin: '0 0 10px 0', color: '#b45309', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '18px' }}>🛡️</span> Windows Installation Guide
+            </h4>
+            <p style={{ fontSize: '13px', color: '#92400e', margin: '0 0 10px 0', lineHeight: '1.5' }}>
+                Because Subhams Agent is a private, highly secure business tool and not a public consumer app, Windows Defender will ask you to confirm the installation. 
+            </p>
+            <ol style={{ fontSize: '13px', color: '#92400e', margin: 0, paddingLeft: '20px', fontWeight: 'bold' }}>
+                <li style={{ marginBottom: '5px' }}>Open the downloaded `.exe` file.</li>
+                <li style={{ marginBottom: '5px' }}>When the blue Windows screen appears, click <u><strong>"More info"</strong></u>.</li>
+                <li>Click the <u><strong>"Run anyway"</strong></u> button to complete installation.</li>
+            </ol>
+        </div>
       </div>
 
       <button onClick={() => navigate('/login?role=business')} style={{...finishBtnStyle, marginTop: '30px'}}>

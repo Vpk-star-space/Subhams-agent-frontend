@@ -35,7 +35,7 @@ const ServerBootloader = () => {
     const interval = setInterval(() => {
       i = (i + 1) % texts.length;
       setLoadingText(texts[i]);
-    }, 4000); // Change text every 4 seconds to keep user entertained
+    }, 4000); 
     
     return () => clearInterval(interval);
   }, []);
@@ -80,15 +80,10 @@ export default function App() {
   const [isServerAwake, setIsServerAwake] = useState(false);
 
   useEffect(() => {
-  
-
-
-// To THIS:
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://subhams-vpk.onrender.com';
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://subhams-vpk.onrender.com';
     
     const pingServer = async () => {
       try {
-        // Try to reach the health endpoint we just made
         const res = await fetch(`${BACKEND_URL}/api/health`);
         if (res.ok) {
           console.log("🟢 Server is Awake!");
@@ -98,19 +93,17 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://subhams-vpk.onr
         }
       } catch  {
         console.log("🟡 Server is sleeping. Retrying in 3 seconds...");
-        setTimeout(pingServer, 3000); // Retry every 3 seconds until it works
+        setTimeout(pingServer, 3000); 
       }
     };
 
     pingServer();
   }, []);
 
-  // 🛑 BLOCK THE APP UNTIL SERVER WAKES UP
   if (!isServerAwake) {
     return <ServerBootloader />;
   }
 
-  // 🟢 SERVER IS AWAKE! LOAD THE REAL APP
   return (
     <BrowserRouter>
       <Routes>

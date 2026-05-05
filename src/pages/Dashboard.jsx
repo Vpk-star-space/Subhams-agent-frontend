@@ -236,8 +236,11 @@ export default function Dashboard() {
     setPreviewImage(null); 
     setIsDrawingMode(false);
     setZoomLevel(1);
-  };
 
+    // 🟢 BUG FIX: Tell the server that the shop owner just viewed the file!
+    socket.emit('NOTIFY_VIEWED', { jobId: job.jobId });
+  };
+  
   const handlePrint = (jobId) => {
     socket.emit('MANUAL_PRINT', { 
         jobId, 

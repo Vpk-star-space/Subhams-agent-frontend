@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google'; // 🟢 FIX: Added GoogleOAuthProvider
 import { jwtDecode } from 'jwt-decode';
 
 export default function Login() {
@@ -15,6 +15,20 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // 🟢 FIX: State to hold the Google Client ID from your backend
+  const [clientId, setClientId] = useState('');
+
+  // 🟢 FIX: Fetch the Google Client ID securely on load
+  useEffect(() => {
+    axios.get('https://subhams-vpk.onrender.com/api/auth/google-client-id')
+      .then(res => {
+          if (res.data.success) {
+              setClientId(res.data.clientId);
+          }
+      })
+      .catch(err => console.error("Failed to fetch Google Client ID:", err));
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -52,7 +66,6 @@ export default function Login() {
       });
       
       if (response.data.success) {
-        // 🌟 GET THE isNewUser FLAG FROM BACKEND
         const { accessToken, refreshToken, role, shopId, isNewUser } = response.data;
         
         localStorage.setItem('accessToken', accessToken);
@@ -60,17 +73,12 @@ export default function Login() {
         
         if (role === 'business') {
           localStorage.setItem('shopId', shopId);
-          
-          // 🛑 THE LOGIC CHECK
           if (isNewUser) {
-            // Brand new user! Teleport them to the Register page's Step 3 setup screen.
             navigate('/register?role=business', { state: { shopData: response.data, step: 3 } });
           } else {
-            // Existing user! Send them straight to the dashboard.
             navigate('/dashboard');
           }
         } else {
-          // Individual flow
           navigate(`/u/${shopId}`);
         }
       }
@@ -100,8 +108,15 @@ export default function Login() {
 
       <div style={dividerStyle}><span>OR</span></div>
       
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError("Google Login Failed")} theme="outline" shape="pill" />
+      <div style={{ display: 'flex', justifyContent: 'center', minHeight: '40px' }}>
+        {/* 🟢 FIX: Button is now properly wrapped in the Provider! */}
+        {clientId ? (
+            <GoogleOAuthProvider clientId={clientId}>
+                <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError("Google Login Failed")} theme="outline" shape="pill" />
+            </GoogleOAuthProvider>
+        ) : (
+            <span style={{ fontSize: '13px', color: '#94a3b8' }}>Loading Secure Login...</span>
+        )}
       </div>
 
       <p style={{ textAlign: 'center', marginTop: '30px', fontSize: '14px' }}>

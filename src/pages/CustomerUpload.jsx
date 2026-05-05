@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef} from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { QrReader } from 'react-qr-reader';
+import { Scanner } from '@yudiel/react-qr-scanner'; // 🟢 The new, working scanner!
 import { io } from 'socket.io-client'; 
 
 const socket = io('https://subhams-vpk.onrender.com');
@@ -9,11 +9,10 @@ const socket = io('https://subhams-vpk.onrender.com');
 const MAX_FILE_SIZE_MB = 15;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
-// 🟢 BUG FIX 1: Moved impure logic (Math.random & localStorage) OUTSIDE the render cycle!
 const getOrCreateUserCode = () => {
     let code = localStorage.getItem('subhams_userCode');
     if (!code) {
-        code = Math.floor(100 + Math.random() * 900); // Generates 100-999
+        code = Math.floor(100 + Math.random() * 900); 
         localStorage.setItem('subhams_userCode', code);
     }
     return code;
@@ -22,13 +21,10 @@ const getOrCreateUserCode = () => {
 export default function CustomerUpload() {
   const { shopId: urlShopId } = useParams(); 
   
-  // 🟢 Safely load the code exactly once when the component mounts
   const [userCode] = useState(getOrCreateUserCode);
-
   const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_shopId') || '');
   const [customerName, setCustomerName] = useState(localStorage.getItem('subhams_customerName') || '');
   
-  // This combines their name and code to send to the backend (e.g., "Pavan #343")
   const uniqueCustomerName = customerName.trim() ? `${customerName.trim()} #${userCode}` : '';
 
   const [securityMode, setSecurityMode] = useState('none'); 
@@ -65,7 +61,6 @@ export default function CustomerUpload() {
 
   useEffect(() => {
     if (shopId.trim() && uniqueCustomerName) {
-      // Connect to the unique room so tracking statuses don't get mixed up!
       socket.emit('JOIN_CUSTOMER', { shopId: shopId.toUpperCase(), customerName: uniqueCustomerName });
     }
   }, [shopId, uniqueCustomerName]);
@@ -76,19 +71,6 @@ export default function CustomerUpload() {
     });
     return () => socket.off('CUSTOMER_TRACKER');
   }, []);
-
-  const handleScanResult = (result, error) => {
-    if (result?.text) {
-      const extractedId = result.text.split('/u/').pop(); 
-      setShopId(extractedId);
-      setIsScanning(false); 
-      alert(`✅ Shop ID Detected: ${extractedId}`);
-    }
-    if (error && (error.name === "NotAllowedError" || error.message?.includes('Permission'))) {
-        alert("⚠️ Camera Blocked! Please allow camera permissions.");
-        setIsScanning(false);
-    }
-  };
 
   const handleFileChange = (e) => {
     const rawFiles = Array.from(e.target.files);
@@ -334,10 +316,8 @@ export default function CustomerUpload() {
   };
 
   const activeOrders = Object.values(liveStatusTracker);
-  // Status mapping: SECURED=1, PREVIEWING=2, PRINTING=3, WIPED=4
   const getStepNumber = (status) => status === 'SECURED' ? 1 : status === 'PREVIEWING' ? 2 : status === 'PRINTING' ? 3 : status === 'WIPED' ? 4 : 1;
 
-  // 🟢 Welcome/Registration screen if no Shop ID and not actively scanning
   if (!shopId && !isScanning) {
     return (
       <div style={{ ...containerStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -405,13 +385,19 @@ export default function CustomerUpload() {
           <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', background: '#0f172a', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '15px' }}>
             <span style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>Loading Camera...</span>
             <div style={{ width: '100%', maxWidth: '280px', position: 'relative' }}>
-              <div style={{ paddingTop: '100%', position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '2px solid #3b82f6' }}>
+              <div style={{ paddingTop: '100%', position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '2px solid #3b82f6', background: '#000', minHeight: '280px' }}>
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                    <QrReader 
-                      onResult={handleScanResult} 
-                      constraints={{ facingMode: 'environment' }} 
-                      containerStyle={{ width: '100%', height: '100%' }} 
-                      videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    {/* 🟢 THE NEW SCANNER IS FINALLY HERE */}
+                    <Scanner 
+                        onScan={(result) => {
+                            const text = Array.isArray(result) ? result[0].rawValue : result;
+                            if (text) {
+                                const extractedId = text.split('/u/').pop();
+                                setShopId(extractedId);
+                                setIsScanning(false);
+                            }
+                        }}
+                        onError={(error) => console.log(error)}
                     />
                   </div>
               </div>
