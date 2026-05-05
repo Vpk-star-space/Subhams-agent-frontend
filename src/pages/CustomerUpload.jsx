@@ -80,7 +80,6 @@ export default function CustomerUpload() {
     return () => socket.off('CUSTOMER_TRACKER');
   }, []);
 
-  // 🟢 NEW: Bulletproof Scanner with Paytm-Style Animation!
   useEffect(() => {
       let isComponentMounted = true;
       let html5QrCode;
@@ -93,17 +92,14 @@ export default function CustomerUpload() {
               { fps: 10, qrbox: { width: 250, height: 250 } },
               (decodedText) => {
                   if (isComponentMounted) {
-                      // 1. Paytm style double vibration buzz!
+                      // Paytm style double vibration buzz
                       if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
 
-                      // 2. Extract the ID
                       const extractedId = decodedText.includes('/u/') ? decodedText.split('/u/').pop().toUpperCase() : decodedText.toUpperCase();
                       
-                      // 3. Trigger the Green Success UI instantly
                       setScannedIdTemp(extractedId);
                       setScanSuccess(true);
                       
-                      // 4. Wait 1.5 seconds, then close scanner and load the shop
                       setTimeout(() => {
                           setShopId(extractedId);
                           setScanSuccess(false);
@@ -111,14 +107,13 @@ export default function CustomerUpload() {
                       }, 1500);
                   }
               },
-              () => { /* Ignore constant background scan errors */ }
+              () => {} // Ignore constant background scan errors
           ).catch((err) => {
               console.error("Camera error:", err);
               setIsScanning(false);
           });
       }
 
-      // Cleanup: Stops camera if user hits cancel OR when success screen shows
       return () => {
           isComponentMounted = false;
           if (html5QrCode) {
@@ -443,7 +438,6 @@ export default function CustomerUpload() {
         {isScanning ? (
           <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             
-            {/* 🟢 THE NEW PAYTM STYLE SUCCESS SCREEN */}
             {scanSuccess ? (
                 <div style={{ width: '100%', maxWidth: '300px', aspectRatio: '1 / 1', background: '#10b981', borderRadius: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'white', boxShadow: '0 0 20px rgba(16, 185, 129, 0.5)' }}>
                     <div style={{ fontSize: '70px', marginBottom: '10px' }}>✅</div>
@@ -454,7 +448,6 @@ export default function CustomerUpload() {
                 <span style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold', marginBottom: '15px' }}>Point camera at Shop QR Code</span>
             )}
             
-            {/* 🟢 Safe div: We hide it instead of destroying it so the scanner doesn't crash */}
             <div id="qr-reader" style={{ width: '100%', maxWidth: '300px', borderRadius: '12px', overflow: 'hidden', border: '3px solid #3b82f6', background: '#000', display: scanSuccess ? 'none' : 'block' }}></div>
             
             {!scanSuccess && (
@@ -767,7 +760,6 @@ const sectionCard = { background: '#fff', padding: '15px', borderRadius: '12px',
 const labelStyle = { fontSize: '12px', fontWeight: 'bold', color: '#64748b', display: 'block', marginBottom: '6px' };
 const inputStyle = { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '16px', background: '#f8fafc', boxSizing: 'border-box' };
 const qrBtnStyle = { padding: '0 15px', background: '#1e293b', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' };
-
 const uploadBtnStyle = { padding: '20px 10px', background: '#f1f5f9', border: '2px dashed #cbd5e1', borderRadius: '12px', cursor: 'pointer', color: '#475569', fontWeight: 'bold', fontSize: '13px' };
 const removeBtnStyle = { background: '#fee2e2', color: '#991b1b', border: 'none', cursor: 'pointer', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' };
 const submitBtn = { width: '100%', padding: '18px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '10px', boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)' };
