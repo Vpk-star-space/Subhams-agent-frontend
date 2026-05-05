@@ -33,9 +33,6 @@ export default function CustomerUpload() {
   const frontInputRef = useRef(null);
   const backInputRef = useRef(null);
 
-  // 🟢 FIX 2: Added state to minimize/maximize the Live Tracker
-  const [isTrackerExpanded, setIsTrackerExpanded] = useState(true);
-
   const [liveStatusTracker, setLiveStatusTracker] = useState(() => {
     const saved = localStorage.getItem('subhams_tracker');
     return saved ? JSON.parse(saved) : {};
@@ -81,8 +78,9 @@ export default function CustomerUpload() {
     const validItems = [];
 
     for (const f of rawFiles) {
+        // 🟢 FIX 3: 15MB Strict Warning enforcement
         if (f.size > MAX_FILE_SIZE_BYTES) {
-            alert(`❌ File too large: "${f.name}" is ${(f.size / 1024 / 1024).toFixed(1)}MB.`);
+            alert(`❌ FILE TOO LARGE!\n\nYour file "${f.name}" is ${(f.size / 1024 / 1024).toFixed(1)}MB.\nThe maximum limit is 15MB. Please compress the file and try again.`);
             continue; 
         }
         
@@ -114,7 +112,11 @@ export default function CustomerUpload() {
   const processIdMerge = async () => {
     const { front, back } = idMergeModal;
     if (!front || !back) return alert("Please select both Front and Back sides.");
-    if (front.size > MAX_FILE_SIZE_BYTES || back.size > MAX_FILE_SIZE_BYTES) return alert("ID photo is too large.");
+    
+    // 🟢 Extra 15MB Warning for ID Merge
+    if (front.size > MAX_FILE_SIZE_BYTES || back.size > MAX_FILE_SIZE_BYTES) {
+        return alert("❌ One of your ID photos is too large! Maximum limit is 15MB.");
+    }
 
     setIsUploading(true);
     setStatus('⚙️ Optimizing and Merging ID...');
@@ -269,7 +271,12 @@ export default function CustomerUpload() {
       
       setStatus(`✅ Success! Files sent to the queue.`);
       setFileItems([]); setSecurityMode('none'); setSecurePurpose(''); setMaskAadhaar(false); setIsBlindPreview(false);
-      setIsTrackerExpanded(true); // Automatically pop open the tracker on success
+      
+      // Auto-scroll to the bottom so they see the Flipkart style tracker!
+      setTimeout(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      }, 500);
+
     } catch (err) {
       setStatus(`❌ Error: ${err.response?.data?.message || 'Failed to send files.'}`);
     } finally {
@@ -348,14 +355,16 @@ export default function CustomerUpload() {
       <div style={{...sectionCard, marginBottom: '15px'}}>
         <label style={labelStyle}>Shop ID / షాప్ ID</label>
         {isScanning ? (
-          <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', background: '#e2e8f0', minHeight: '250px' }}>
-            {/* 🟢 FIX 1: Applied videoStyle properties to stretch camera feed properly over the black screen */}
-            <QrReader 
-              onResult={handleScanResult} 
-              constraints={{ facingMode: 'environment' }} 
-              containerStyle={{ width: '100%', height: '250px' }} 
-              videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
+          /* 🟢 FIX 1: Scanner Black Screen Fix */
+          <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', background: '#1e293b', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
+            <span style={{ color: '#94a3b8', position: 'absolute', zIndex: 1, fontWeight: 'bold' }}>Loading Camera...</span>
+            <div style={{ width: '100%', position: 'relative', zIndex: 2 }}>
+              <QrReader 
+                onResult={handleScanResult} 
+                constraints={{ facingMode: 'environment' }} 
+                containerStyle={{ width: '100%', paddingTop: '100%' }} 
+              />
+            </div>
             <button onClick={() => setIsScanning(false)} style={cancelScanBtn}>Cancel</button>
           </div>
         ) : (
@@ -413,8 +422,7 @@ export default function CustomerUpload() {
         )}
       </div>
 
-      {/* 🟢 FIX 2: Dynamic padding bottom. If tracker is minimized, padding shrinks so buttons stay clickable */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px', paddingBottom: activeOrders.length > 0 ? (isTrackerExpanded ? '400px' : '60px') : '20px' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px', paddingBottom: '20px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           <button type="button" onClick={() => fileInputRef.current.click()} style={uploadBtnStyle}><span style={{ fontSize: '24px' }}>📁</span><br/>Browse Files</button>
           <input type="file" multiple accept=".pdf,image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
@@ -619,46 +627,43 @@ export default function CustomerUpload() {
 
       {status && <div style={{ ...statusBox, background: status.includes('❌') ? '#fee2e2' : '#dcfce3', color: status.includes('❌') ? '#991b1b' : '#166534' }}>{status}</div>}
 
-      {/* 🟢 FIX 2: Added onClick toggle to the header and conditionally rendering the body */}
+      {/* 🟢 FIX 2: Replaced floating popup with inline Flipkart-style block */}
       {activeOrders.length > 0 && (
-        <div style={trackerOverlay}>
-          <div style={trackerHeader} onClick={() => setIsTrackerExpanded(!isTrackerExpanded)}>
+        <div style={trackerContainerStyle}>
+          <div style={trackerHeader}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span>🛡️ Subham Privacy Guard ({activeOrders.length})</span>
-                <span style={{ fontSize: '16px' }}>{isTrackerExpanded ? '🔽' : '🔼'}</span>
+                <span>🛡️ Live Order Tracking ({activeOrders.length})</span>
             </div>
-            <button onClick={(e) => { e.stopPropagation(); clearHistory(); }} style={{background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.8)', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline'}}>Clear</button>
+            <button onClick={(e) => { e.stopPropagation(); clearHistory(); }} style={{background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.8)', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline'}}>Clear All</button>
           </div>
           
-          {isTrackerExpanded && (
-              <div style={{ padding: '15px', maxHeight: '400px', overflowY: 'auto' }}>
-                {activeOrders.map((order) => {
-                  const step = getStepNumber(order.status);
-                  const isCancelled = order.status === 'CANCELLED';
-                  const isWiped = order.status === 'WIPED' || isCancelled;
+          <div style={{ padding: '15px' }}>
+            {activeOrders.map((order) => {
+              const step = getStepNumber(order.status);
+              const isCancelled = order.status === 'CANCELLED';
+              const isWiped = order.status === 'WIPED' || isCancelled;
 
-                  return (
-                    <div key={order.jobId} style={orderCard}>
-                      <div style={{ fontWeight: 'bold', fontSize: '13px', marginBottom: '10px', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>📄 {order.fileName}</div>
-                      {isCancelled ? ( <div style={{ color: '#ef4444', fontSize: '12px', fontWeight: 'bold' }}>❌ {order.msg}</div> ) : (
-                        <>
-                          <div style={timelineContainer}>
-                            <div style={stepStyle(step >= 1)}><div style={circleStyle(step >= 1)}>1</div><span style={stepLabel}>Secured</span></div><div style={lineStyle(step >= 2)} />
-                            <div style={stepStyle(step >= 2)}><div style={circleStyle(step >= 2)}>2</div><span style={stepLabel}>Viewed</span></div><div style={lineStyle(step >= 3)} />
-                            <div style={stepStyle(step >= 3)}><div style={circleStyle(step >= 3)}>3</div><span style={stepLabel}>Printed</span></div><div style={lineStyle(step >= 4)} />
-                            <div style={stepStyle(step >= 4)}><div style={circleStyle(step >= 4)}>4</div><span style={stepLabel}>Wiped</span></div>
-                          </div>
-                          <div style={statusMsg}>{order.msg || 'File secured in RAM by Subham Agent.'}</div>
-                          {!isWiped && (
-                            <button onClick={() => handleRevoke(order.jobId)} style={{ width: '100%', padding: '8px', background: '#fee2e2', color: '#991b1b', border: '1px solid #f87171', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', marginTop: '10px', cursor: 'pointer' }}>🛑 Revoke Access & Delete</button>
-                          )}
-                        </>
+              return (
+                <div key={order.jobId} style={orderCard}>
+                  <div style={{ fontWeight: 'bold', fontSize: '13px', marginBottom: '10px', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>📄 {order.fileName}</div>
+                  {isCancelled ? ( <div style={{ color: '#ef4444', fontSize: '12px', fontWeight: 'bold' }}>❌ {order.msg}</div> ) : (
+                    <>
+                      <div style={timelineContainer}>
+                        <div style={stepStyle(step >= 1)}><div style={circleStyle(step >= 1)}>1</div><span style={stepLabel}>Secured</span></div><div style={lineStyle(step >= 2)} />
+                        <div style={stepStyle(step >= 2)}><div style={circleStyle(step >= 2)}>2</div><span style={stepLabel}>Viewed</span></div><div style={lineStyle(step >= 3)} />
+                        <div style={stepStyle(step >= 3)}><div style={circleStyle(step >= 3)}>3</div><span style={stepLabel}>Printed</span></div><div style={lineStyle(step >= 4)} />
+                        <div style={stepStyle(step >= 4)}><div style={circleStyle(step >= 4)}>4</div><span style={stepLabel}>Wiped</span></div>
+                      </div>
+                      <div style={statusMsg}>{order.msg || 'File secured in RAM by Subham Agent.'}</div>
+                      {!isWiped && (
+                        <button onClick={() => handleRevoke(order.jobId)} style={{ width: '100%', padding: '8px', background: '#fee2e2', color: '#991b1b', border: '1px solid #f87171', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', marginTop: '10px', cursor: 'pointer' }}>🛑 Revoke Access & Delete</button>
                       )}
-                    </div>
-                  );
-                })}
-              </div>
-          )}
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
@@ -680,9 +685,12 @@ const modalOverlay = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
 const modalContent = { background: 'white', padding: '25px', borderRadius: '16px', width: '90%', maxWidth: '350px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' };
 const mergeBtnStyle = { width: '100%', padding: '15px', borderRadius: '10px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', color: '#1e293b' };
 const actionBtn = { padding: '12px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' };
-const trackerOverlay = { position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '3px solid #2563eb', boxShadow: '0 -10px 25px rgba(0,0,0,0.1)', zIndex: 1000, borderRadius: '20px 20px 0 0' };
-const trackerHeader = { background: '#2563eb', color: 'white', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' };
-const orderCard = { background: '#f8fafc', padding: '15px', borderRadius: '12px', marginBottom: '15px', border: '1px solid #cbd5e1', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' };
+
+// 🟢 FIX 2: New Flipkart-style inline container for the tracker
+const trackerContainerStyle = { marginTop: '20px', background: '#fff', border: '1px solid #cbd5e1', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', borderRadius: '12px', overflow: 'hidden' };
+const trackerHeader = { background: '#2563eb', color: 'white', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold', fontSize: '15px' };
+const orderCard = { background: '#f8fafc', padding: '15px', borderRadius: '12px', marginBottom: '15px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' };
+
 const timelineContainer = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '15px 0' };
 const stepStyle = (active) => ({ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: active ? 1 : 0.4, transition: 'opacity 0.3s' });
 const circleStyle = (active) => ({ width: '24px', height: '24px', borderRadius: '50%', background: active ? '#16a34a' : '#94a3b8', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', boxShadow: active ? '0 0 8px rgba(22, 163, 74, 0.4)' : 'none', transition: 'all 0.3s' });
