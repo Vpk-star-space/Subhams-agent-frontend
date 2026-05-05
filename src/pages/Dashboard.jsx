@@ -149,7 +149,7 @@ export default function Dashboard() {
     }
   }, [activeJob, printSettings, isDrawingMode, secureAxios]);
 
-  // 🟢 FIX 2: Optimized Socket Connection (No Lag)
+// 🟢 FIX 2: Optimized Socket Connection (No Lag)
   useEffect(() => {
     if (!auth.token || !auth.shopId) {
       navigate('/login');
@@ -177,9 +177,6 @@ export default function Dashboard() {
 
     const securityInterval = setInterval(checkHardware, 5000);
 
-    
-
-    socket.on('RECEIVE_PREVIEW', handlePreview);
     socket.on('NEW_JOB_RECEIVED', () => fetchQueue());
     
     socket.on('AGENT_NEEDS_UPDATE', () => {
@@ -189,14 +186,13 @@ export default function Dashboard() {
     
     return () => {
       socket.off('connect', handleConnect);
-     
+      // 👇 Notice handlePreview is completely gone from here!
       socket.off('NEW_JOB_RECEIVED');
       socket.off('AGENT_NEEDS_UPDATE');
       clearInterval(securityInterval);
-      // Removed socket.disconnect() to fix lag
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.shopId, auth.token, navigate]);// Clean dependency array
+  }, [auth.shopId, auth.token, navigate]); // Clean dependency array
 
   const calculateJobPrice = (job, isForPreview = false) => {
     const settings = isForPreview ? printSettings : job.options;
