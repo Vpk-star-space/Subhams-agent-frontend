@@ -5,7 +5,11 @@ import { io } from 'socket.io-client';
 import { QRCodeSVG } from 'qrcode.react'; 
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://subhams-vpk.onrender.com';
-const socket = io(BACKEND_URL, { autoConnect: false });
+const socket = io(BACKEND_URL, { 
+    autoConnect: false,
+    transports: ['websocket', 'polling'],
+    reconnectionAttempts: 5
+});
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -240,7 +244,7 @@ export default function Dashboard() {
     // 🟢 BUG FIX: Tell the server that the shop owner just viewed the file!
     socket.emit('NOTIFY_VIEWED', { jobId: job.jobId });
   };
-  
+
   const handlePrint = (jobId) => {
     socket.emit('MANUAL_PRINT', { 
         jobId, 
