@@ -9,12 +9,28 @@ const socket = io('https://subhams-vpk.onrender.com');
 const MAX_FILE_SIZE_MB = 15;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
+// 🟢 BUG FIX 1: Moved impure logic (Math.random & localStorage) OUTSIDE the render cycle!
+const getOrCreateUserCode = () => {
+    let code = localStorage.getItem('subhams_userCode');
+    if (!code) {
+        code = Math.floor(100 + Math.random() * 900); // Generates 100-999
+        localStorage.setItem('subhams_userCode', code);
+    }
+    return code;
+};
+
 export default function CustomerUpload() {
   const { shopId: urlShopId } = useParams(); 
   
+  // 🟢 Safely load the code exactly once when the component mounts
+  const [userCode] = useState(getOrCreateUserCode);
+
   const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_shopId') || '');
   const [customerName, setCustomerName] = useState(localStorage.getItem('subhams_customerName') || '');
   
+  // This combines their name and code to send to the backend (e.g., "Pavan #343")
+  const uniqueCustomerName = customerName.trim() ? `${customerName.trim()} #${userCode}` : '';
+
   const [securityMode, setSecurityMode] = useState('none'); 
   const [securePurpose, setSecurePurpose] = useState('');
   const [maskAadhaar, setMaskAadhaar] = useState(false);
@@ -48,10 +64,11 @@ export default function CustomerUpload() {
   }, [shopId, customerName, liveStatusTracker]);
 
   useEffect(() => {
-    if (shopId.trim() && customerName.trim()) {
-      socket.emit('JOIN_CUSTOMER', { shopId: shopId.toUpperCase(), customerName: customerName.trim() });
+    if (shopId.trim() && uniqueCustomerName) {
+      // Connect to the unique room so tracking statuses don't get mixed up!
+      socket.emit('JOIN_CUSTOMER', { shopId: shopId.toUpperCase(), customerName: uniqueCustomerName });
     }
-  }, [shopId, customerName]);
+  }, [shopId, uniqueCustomerName]);
 
   useEffect(() => {
     socket.on('CUSTOMER_TRACKER', (data) => {
@@ -224,12 +241,12 @@ export default function CustomerUpload() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!shopId) return alert("Please enter a Shop ID / దయచేసి షాప్ ID ని నమోదు చేయండి");
-    if (!customerName.trim()) return alert("Please enter your name / దయచేసి మీ పేరును నమోదు చేయండి");
-    if (fileItems.length === 0) return alert("Please add at least one file / కనీసం ఒక ఫైల్‌ని ఎంచుకోండి");
+    if (!shopId) return alert("Please enter a Shop ID.");
+    if (!customerName.trim()) return alert("Please enter your name.");
+    if (fileItems.length === 0) return alert("Please add at least one file.");
 
     if (securityMode !== 'none' && !securePurpose.trim()) {
-        return alert("Please enter the exact purpose of the document to generate the security stamp.");
+        return alert("Please enter the purpose of the document to generate the security stamp.");
     }
 
     setIsUploading(true);
@@ -239,9 +256,12 @@ export default function CustomerUpload() {
     try {
       for (const item of fileItems) {
           const formData = new FormData();
-          formData.append('shopId', shopId); formData.append('customerName', customerName); 
-          formData.append('copies', item.copies); formData.append('colorMode', item.colorMode);
-          formData.append('fileName', item.file.name); formData.append('scale', item.scale);
+          formData.append('shopId', shopId); 
+          formData.append('customerName', uniqueCustomerName); 
+          formData.append('copies', item.copies); 
+          formData.append('colorMode', item.colorMode);
+          formData.append('fileName', item.file.name); 
+          formData.append('scale', item.scale);
           formData.append('position', item.position);
           
           formData.append('securityMode', securityMode);
@@ -317,6 +337,32 @@ export default function CustomerUpload() {
   // Status mapping: SECURED=1, PREVIEWING=2, PRINTING=3, WIPED=4
   const getStepNumber = (status) => status === 'SECURED' ? 1 : status === 'PREVIEWING' ? 2 : status === 'PRINTING' ? 3 : status === 'WIPED' ? 4 : 1;
 
+  // 🟢 Welcome/Registration screen if no Shop ID and not actively scanning
+  if (!shopId && !isScanning) {
+    return (
+      <div style={{ ...containerStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ background: '#fff', padding: '40px 20px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
+          <div style={{ fontSize: '60px', marginBottom: '15px' }}>🖨️</div>
+          <h2 style={{ color: '#1e293b', margin: '0 0 10px 0', fontSize: '22px' }}>Subhams Print Portal</h2>
+          <p style={{ color: '#64748b', fontSize: '14px', lineHeight: '1.6', marginBottom: '30px' }}>
+            To securely upload and print documents, please scan the QR Code on the shop counter.
+          </p>
+          
+          <button onClick={() => setIsScanning(true)} style={{...uploadBtnStyle, width: '100%', padding: '18px', background: '#2563eb', color: 'white', border: 'none', fontSize: '16px', boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)'}}>
+            📸 Scan Shop QR Now
+          </button>
+          
+          <div style={{ marginTop: '40px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 8px 0' }}>Are you a Shop Owner?</p>
+            <a href="https://subhams-agent-vpk.vercel.app" style={{ color: '#2563eb', fontWeight: 'bold', textDecoration: 'none', fontSize: '14px' }}>
+              Register your Shop ↗
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={containerStyle}>
       {idMergeModal.open && (
@@ -346,25 +392,31 @@ export default function CustomerUpload() {
       <p style={{ textAlign: 'center', color: '#64748b', fontSize: '13px', marginBottom: '20px' }}>Mobile Fast Print Portal</p>
 
       <div style={{...sectionCard, marginBottom: '15px'}}>
-        <label style={labelStyle}>Your Name / మీ పేరు</label>
-        <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} style={inputStyle} required />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <label style={{...labelStyle, marginBottom: 0}}>Your Name / మీ పేరు</label>
+            {customerName && <span style={{ fontSize: '11px', background: '#e0e7ff', color: '#1e40af', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>ID: #{userCode}</span>}
+        </div>
+        <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} style={inputStyle} placeholder="Enter your name" required />
       </div>
 
       <div style={{...sectionCard, marginBottom: '15px'}}>
         <label style={labelStyle}>Shop ID / షాప్ ID</label>
         {isScanning ? (
-          /* 🟢 FIX 1: Scanner Container nicely formatted so it doesn't stretch white/black */
-          <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', background: '#000', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px', gap: '10px' }}>
-            <span style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}>Scanning for Shop QR...</span>
-            <div style={{ width: '100%', maxWidth: '280px', borderRadius: '8px', overflow: 'hidden' }}>
-              <QrReader 
-                onResult={handleScanResult} 
-                constraints={{ facingMode: 'environment' }} 
-                containerStyle={{ width: '100%' }} 
-                videoStyle={{ width: '100%', objectFit: 'cover' }}
-              />
+          <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', background: '#0f172a', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '15px' }}>
+            <span style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>Loading Camera...</span>
+            <div style={{ width: '100%', maxWidth: '280px', position: 'relative' }}>
+              <div style={{ paddingTop: '100%', position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '2px solid #3b82f6' }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+                    <QrReader 
+                      onResult={handleScanResult} 
+                      constraints={{ facingMode: 'environment' }} 
+                      containerStyle={{ width: '100%', height: '100%' }} 
+                      videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </div>
+              </div>
             </div>
-            <button onClick={() => setIsScanning(false)} style={cancelScanBtn}>Cancel Scanner</button>
+            <button onClick={() => setIsScanning(false)} style={{...cancelScanBtn, position: 'relative', left: 'auto', bottom: 'auto', transform: 'none', marginTop: '15px'}}>Cancel Scanner</button>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: '10px' }}>
@@ -421,7 +473,6 @@ export default function CustomerUpload() {
         )}
       </div>
 
-      {/* Normal 20px padding because there are no more floating elements blocking the button! */}
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px', paddingBottom: '20px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           <button type="button" onClick={() => fileInputRef.current.click()} style={uploadBtnStyle}><span style={{ fontSize: '24px' }}>📁</span><br/>Browse Files</button>
@@ -625,7 +676,6 @@ export default function CustomerUpload() {
 
       {status && <div style={{ ...statusBox, background: status.includes('❌') ? '#fee2e2' : '#dcfce3', color: status.includes('❌') ? '#991b1b' : '#166534' }}>{status}</div>}
 
-      {/* 🟢 FIX 2: True Flipkart Style inline block tracker */}
       {activeOrders.length > 0 && (
         <div style={trackerContainerStyle}>
           <div style={trackerHeader}>
@@ -648,7 +698,6 @@ export default function CustomerUpload() {
                     <>
                       <div style={timelineContainer}>
                         <div style={stepStyle(step >= 1)}><div style={circleStyle(step >= 1)}>1</div><span style={stepLabel}>Secured</span></div><div style={lineStyle(step >= 2)} />
-                        {/* 🟢 FIX 3: Viewed state accurately updates based on backend socket trigger */}
                         <div style={stepStyle(step >= 2)}><div style={circleStyle(step >= 2)}>2</div><span style={stepLabel}>Viewed</span></div><div style={lineStyle(step >= 3)} />
                         <div style={stepStyle(step >= 3)}><div style={circleStyle(step >= 3)}>3</div><span style={stepLabel}>Printed</span></div><div style={lineStyle(step >= 4)} />
                         <div style={stepStyle(step >= 4)}><div style={circleStyle(step >= 4)}>4</div><span style={stepLabel}>Wiped</span></div>
@@ -669,12 +718,13 @@ export default function CustomerUpload() {
   );
 }
 
-const containerStyle = { maxWidth: '100%', margin: '0 auto', padding: '20px', fontFamily: "'Inter', sans-serif", background: '#f8fafc', minHeight: '100vh', position: 'relative' };
+// --- Styles ---
+const containerStyle = { maxWidth: '450px', margin: '0 auto', padding: '20px', fontFamily: "'Inter', sans-serif", background: '#f8fafc', minHeight: '100vh', position: 'relative' };
 const sectionCard = { background: '#fff', padding: '15px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #e2e8f0' };
 const labelStyle = { fontSize: '12px', fontWeight: 'bold', color: '#64748b', display: 'block', marginBottom: '6px' };
 const inputStyle = { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '16px', background: '#f8fafc', boxSizing: 'border-box' };
 const qrBtnStyle = { padding: '0 15px', background: '#1e293b', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' };
-const cancelScanBtn = { padding: '8px 20px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer' };
+const cancelScanBtn = { position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', background: '#ef4444', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', zIndex: 10 };
 const uploadBtnStyle = { padding: '20px 10px', background: '#f1f5f9', border: '2px dashed #cbd5e1', borderRadius: '12px', cursor: 'pointer', color: '#475569', fontWeight: 'bold', fontSize: '13px' };
 const removeBtnStyle = { background: '#fee2e2', color: '#991b1b', border: 'none', cursor: 'pointer', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' };
 const submitBtn = { width: '100%', padding: '18px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '10px', boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)' };
@@ -685,7 +735,6 @@ const modalContent = { background: 'white', padding: '25px', borderRadius: '16px
 const mergeBtnStyle = { width: '100%', padding: '15px', borderRadius: '10px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', color: '#1e293b' };
 const actionBtn = { padding: '12px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' };
 
-// 🟢 FIX 2: Styles for the true inline Flipkart Tracker
 const trackerContainerStyle = { marginTop: '30px', background: '#fff', border: '1px solid #cbd5e1', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', borderRadius: '12px', overflow: 'hidden' };
 const trackerHeader = { background: '#2563eb', color: 'white', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold', fontSize: '15px' };
 const orderCard = { background: '#f8fafc', padding: '15px', borderRadius: '12px', marginBottom: '15px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' };
