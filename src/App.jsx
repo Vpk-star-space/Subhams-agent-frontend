@@ -80,7 +80,11 @@ export default function App() {
   const [isServerAwake, setIsServerAwake] = useState(false);
 
   useEffect(() => {
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  
+
+
+// To THIS:
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://subhams-vpk.onrender.com';
     
     const pingServer = async () => {
       try {
