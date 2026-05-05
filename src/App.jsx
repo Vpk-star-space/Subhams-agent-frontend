@@ -20,7 +20,8 @@ const ProtectedRoute = ({ children }) => {
   return children; 
 };
 
-// =====================================================================
+
+
 // 🚧 THE MAINTENANCE MODE SCREEN
 // =====================================================================
 const MaintenanceScreen = () => {
@@ -39,24 +40,32 @@ const MaintenanceScreen = () => {
         <div style={styles.shieldIcon}>🛠️</div>
       </div>
       
-      <h1 style={{...styles.brandTitle, color: '#fcd34d'}}>SYSTEM MAINTENANCE</h1>
+      <h1 style={{...styles.brandTitle, color: '#fcd34d', marginBottom: '10px'}}>
+        SYSTEM MAINTENANCE<br/>
+        <span style={{fontSize: '18px', color: '#fbbf24', display: 'block', marginTop: '5px'}}>సిస్టమ్ నిర్వహణ</span>
+      </h1>
       
-      <p style={{...styles.subText, fontSize: '15px', maxWidth: '500px', marginBottom: '30px', color: '#cbd5e1'}}>
-        We are currently deploying the latest Subhams Security Updates to improve your printing experience. The portal is temporarily locked.
+      <p style={{...styles.subText, fontSize: '14px', maxWidth: '500px', marginBottom: '30px', color: '#cbd5e1'}}>
+        We are currently deploying the latest Subhams Security Updates to improve your printing experience. The portal is temporarily locked. <br/><br/>
+        <span style={{color: '#94a3b8', fontSize: '13px'}}>మీ ప్రింటింగ్ అనుభవాన్ని మెరుగుపరచడానికి సిస్టమ్ అప్‌డేట్ చేయబడుతోంది. పోర్టల్ తాత్కాలికంగా లాక్ చేయబడింది. దయచేసి వేచి ఉండండి.</span>
       </p>
 
       <div style={{ display: 'flex', gap: '15px', width: '100%', maxWidth: '500px', marginBottom: '25px' }}>
-        {/* Live Current Time Box */}
-        <div style={{ flex: 1, background: '#1e293b', padding: '15px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
-          <p style={{ margin: '0 0 5px 0', fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', letterSpacing: '1px' }}>YOUR LOCAL TIME</p>
-          <div style={{ fontSize: '20px', color: '#38bdf8', fontWeight: 'bold', fontVariantNumeric: 'tabular-nums' }}>
+        {/* Live Current Time Box (RED THEME) */}
+        <div style={{ flex: 1, background: '#450a0a', padding: '15px', borderRadius: '12px', border: '1px solid #991b1b', textAlign: 'center' }}>
+          <p style={{ margin: '0 0 5px 0', fontSize: '11px', color: '#fca5a5', fontWeight: 'bold', letterSpacing: '1px' }}>
+            MAINTENANCE / నిర్వహణ సమయం
+          </p>
+          <div style={{ fontSize: '20px', color: '#ef4444', fontWeight: 'bold', fontVariantNumeric: 'tabular-nums' }}>
             {currentTime.toLocaleTimeString()}
           </div>
         </div>
 
-        {/* Target Launch Box */}
-        <div style={{ flex: 1, background: '#1e293b', padding: '15px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
-          <p style={{ margin: '0 0 5px 0', fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', letterSpacing: '1px' }}>ESTIMATED LAUNCH</p>
+        {/* Target Launch Box (GREEN THEME) */}
+        <div style={{ flex: 1, background: '#022c22', padding: '15px', borderRadius: '12px', border: '1px solid #065f46', textAlign: 'center' }}>
+          <p style={{ margin: '0 0 5px 0', fontSize: '11px', color: '#6ee7b7', fontWeight: 'bold', letterSpacing: '1px' }}>
+            ESTIMATED LAUNCH / ప్రారంభ సమయం
+          </p>
           <div style={{ fontSize: '15px', color: '#10b981', fontWeight: 'bold', marginBottom: '2px' }}>
             {TARGET_LAUNCH_DATE.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
           </div>
@@ -72,7 +81,7 @@ const MaintenanceScreen = () => {
           Thank you for your patience!
         </p>
         <p style={{ color: '#e2e8f0', fontSize: '14px', margin: '0 0 10px 0', fontWeight: '500' }}>
-          మీ ఓపికకు ధన్యవాదాలు!
+          మీ సహనానికి ధన్యవాదాలు!
         </p>
         <p style={{ color: '#facc15', fontSize: '13px', fontWeight: 'bold', margin: 0, letterSpacing: '1px' }}>
           — A. Venkata Pavan Kumar
@@ -91,7 +100,6 @@ const MaintenanceScreen = () => {
           </a>
         </div>
       </div>
-
     </div>
   );
 };
