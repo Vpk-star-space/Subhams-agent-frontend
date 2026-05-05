@@ -41,30 +41,57 @@ const MaintenanceScreen = () => {
       
       <h1 style={{...styles.brandTitle, color: '#fcd34d'}}>SYSTEM MAINTENANCE</h1>
       
-      <p style={{...styles.subText, fontSize: '15px', maxWidth: '500px', marginBottom: '40px', color: '#cbd5e1'}}>
+      <p style={{...styles.subText, fontSize: '15px', maxWidth: '500px', marginBottom: '30px', color: '#cbd5e1'}}>
         We are currently deploying the latest Subhams Security Updates to improve your printing experience. The portal is temporarily locked.
       </p>
 
-      <div style={{ display: 'flex', gap: '20px', width: '100%', maxWidth: '500px' }}>
+      <div style={{ display: 'flex', gap: '15px', width: '100%', maxWidth: '500px', marginBottom: '25px' }}>
         {/* Live Current Time Box */}
-        <div style={{ flex: 1, background: '#1e293b', padding: '20px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
-          <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#94a3b8', fontWeight: 'bold', letterSpacing: '1px' }}>YOUR LOCAL TIME</p>
-          <div style={{ fontSize: '24px', color: '#38bdf8', fontWeight: 'bold', fontVariantNumeric: 'tabular-nums' }}>
+        <div style={{ flex: 1, background: '#1e293b', padding: '15px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
+          <p style={{ margin: '0 0 5px 0', fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', letterSpacing: '1px' }}>YOUR LOCAL TIME</p>
+          <div style={{ fontSize: '20px', color: '#38bdf8', fontWeight: 'bold', fontVariantNumeric: 'tabular-nums' }}>
             {currentTime.toLocaleTimeString()}
           </div>
         </div>
 
         {/* Target Launch Box */}
-        <div style={{ flex: 1, background: '#1e293b', padding: '20px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
-          <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#94a3b8', fontWeight: 'bold', letterSpacing: '1px' }}>ESTIMATED LAUNCH</p>
-          <div style={{ fontSize: '16px', color: '#10b981', fontWeight: 'bold', marginBottom: '5px' }}>
+        <div style={{ flex: 1, background: '#1e293b', padding: '15px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
+          <p style={{ margin: '0 0 5px 0', fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', letterSpacing: '1px' }}>ESTIMATED LAUNCH</p>
+          <div style={{ fontSize: '15px', color: '#10b981', fontWeight: 'bold', marginBottom: '2px' }}>
             {TARGET_LAUNCH_DATE.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
           </div>
-          <div style={{ fontSize: '14px', color: '#34d399' }}>
+          <div style={{ fontSize: '12px', color: '#34d399' }}>
             {TARGET_LAUNCH_DATE.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>
       </div>
+
+      {/* 🌟 Personal Thank You Section */}
+      <div style={{ textAlign: 'center', marginBottom: '30px', background: 'rgba(30, 41, 59, 0.5)', padding: '15px 30px', borderRadius: '12px', border: '1px dashed #475569' }}>
+        <p style={{ color: '#e2e8f0', fontSize: '14px', margin: '0 0 5px 0', fontWeight: '500' }}>
+          Thank you for your patience!
+        </p>
+        <p style={{ color: '#e2e8f0', fontSize: '14px', margin: '0 0 10px 0', fontWeight: '500' }}>
+          మీ ఓపికకు ధన్యవాదాలు!
+        </p>
+        <p style={{ color: '#facc15', fontSize: '13px', fontWeight: 'bold', margin: 0, letterSpacing: '1px' }}>
+          — A. Venkata Pavan Kumar
+        </p>
+      </div>
+
+      {/* 🔗 App Network Links */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+        <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 5px 0', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>Explore Our Network</p>
+        <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <a href="https://subhams-vpk.vercel.app/" target="_blank" rel="noopener noreferrer" style={styles.linkBtn}>
+            <span style={{ fontSize: '16px', marginRight: '5px' }}>🚀</span> Subhams App
+          </a>
+          <a href="https://bhavyams-vendor-hub-vpk.vercel.app/" target="_blank" rel="noopener noreferrer" style={styles.linkBtn}>
+            <span style={{ fontSize: '16px', marginRight: '5px' }}>🏬</span> Bhavyams Vendor Hub
+          </a>
+        </div>
+      </div>
+
     </div>
   );
 };
@@ -284,5 +311,19 @@ const styles = {
     textAlign: 'center',
     maxWidth: '400px',
     lineHeight: '1.5'
+  },
+  linkBtn: {
+    backgroundColor: '#1e293b',
+    color: '#f8fafc',
+    padding: '10px 18px',
+    borderRadius: '8px',
+    textDecoration: 'none',
+    fontSize: '13px',
+    fontWeight: 'bold',
+    border: '1px solid #334155',
+    display: 'flex',
+    alignItems: 'center',
+    transition: 'background-color 0.2s',
+    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
   }
 };
