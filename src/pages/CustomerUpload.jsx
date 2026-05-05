@@ -391,20 +391,30 @@ export default function CustomerUpload() {
             <div style={{ width: '100%', maxWidth: '280px', position: 'relative' }}>
               <div style={{ paddingTop: '100%', position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '2px solid #3b82f6', background: '#000', minHeight: '280px' }}>
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                    {/* 🟢 FIX 2: THE CORRECT SCANNER CODE BLOCK! */}
+                   {/* 🟢 FIX: Removed "formats" prop and made the receiver bulletproof! */}
                     <Scanner 
-                        onScan={(detectedCodes) => {
-                            if (detectedCodes && detectedCodes.length > 0) {
-                                const text = detectedCodes[0].rawValue;
-                                if (text) {
-                                    const extractedId = text.includes('/u/') ? text.split('/u/').pop() : text;
-                                    setShopId(extractedId);
-                                    setIsScanning(false);
-                                }
+                        onScan={(result) => {
+                            console.log("Raw Scan Result:", result); // Helps us debug if needed
+                            
+                            let text = '';
+                            // Handle new version (Array)
+                            if (Array.isArray(result) && result.length > 0) {
+                                text = result[0].rawValue;
+                            } 
+                            // Handle older versions (String or Object)
+                            else if (typeof result === 'string') {
+                                text = result;
+                            } else if (result && result.text) {
+                                text = result.text;
+                            }
+
+                            if (text) {
+                                const extractedId = text.includes('/u/') ? text.split('/u/').pop() : text;
+                                setShopId(extractedId);
+                                setIsScanning(false);
                             }
                         }}
                         onError={(error) => console.log("Scanner Error:", error)}
-                        formats={['qr_code']} // Explicitly tell it to only look for QRs
                         components={{ audio: false, finder: true }}
                     />
                   </div>
