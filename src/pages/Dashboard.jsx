@@ -124,16 +124,24 @@ export default function Dashboard() {
     }
   }, [auth.shopId, auth.token, secureAxios]);
 
+  // 🟢 FIX 3: Debounce the Preview Request to save CPU and stop the lag!
+  
   useEffect(() => {
     if (activeJob && !isDrawingMode) {
-      socket.emit('REQUEST_PREVIEW', { 
-        jobId: activeJob.jobId, 
-        fileIndex: 0,
-        overrides: { ...printSettings, maskRect: printSettings.maskRectArray } 
-      });
-    }
-  }, [activeJob, printSettings, isDrawingMode]); 
+      
 
+      const delayTimer = setTimeout(() => {
+        socket.emit('REQUEST_PREVIEW', { 
+          jobId: activeJob.jobId, 
+          fileIndex: 0,
+          overrides: { ...printSettings, maskRect: printSettings.maskRectArray } 
+        });
+      }, 600); // Wait 600ms before sending to Render
+
+      return () => clearTimeout(delayTimer); // Cancel if user clicks fast
+    }
+  }, [activeJob, printSettings, isDrawingMode]);
+  
   // 🟢 FIX 2: Optimized Socket Connection (No Lag)
   useEffect(() => {
     if (!auth.token || !auth.shopId) {
@@ -710,7 +718,6 @@ export default function Dashboard() {
                                           touchAction: 'none', cursor: 'crosshair', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                                       }}
                                   >
-                                      {/* 🟢 FIX 3: Dynamic Image SRC */}
                                       <img 
                                         src={`${BACKEND_URL}/api/jobs/download/${activeJob.jobId}`} 
                                         alt="Original File" 
