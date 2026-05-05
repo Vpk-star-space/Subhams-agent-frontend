@@ -33,6 +33,9 @@ export default function CustomerUpload() {
   const frontInputRef = useRef(null);
   const backInputRef = useRef(null);
 
+  // 🟢 FIX 2: Added state to minimize/maximize the Live Tracker
+  const [isTrackerExpanded, setIsTrackerExpanded] = useState(true);
+
   const [liveStatusTracker, setLiveStatusTracker] = useState(() => {
     const saved = localStorage.getItem('subhams_tracker');
     return saved ? JSON.parse(saved) : {};
@@ -84,12 +87,11 @@ export default function CustomerUpload() {
         }
         
         const isImage = f.type.startsWith('image/');
-        // 🛡️ PDF handling: If it's a PDF, we don't generate an object URL for image preview.
         validItems.push({
             file: f,
             copies: 1,
             colorMode: 'bw',
-            scale: 'fit',         
+            scale: 'fit',        
             position: 'top-left', 
             previewUrl: isImage ? URL.createObjectURL(f) : null,
             isPdf: !isImage,
@@ -267,6 +269,7 @@ export default function CustomerUpload() {
       
       setStatus(`✅ Success! Files sent to the queue.`);
       setFileItems([]); setSecurityMode('none'); setSecurePurpose(''); setMaskAadhaar(false); setIsBlindPreview(false);
+      setIsTrackerExpanded(true); // Automatically pop open the tracker on success
     } catch (err) {
       setStatus(`❌ Error: ${err.response?.data?.message || 'Failed to send files.'}`);
     } finally {
@@ -345,8 +348,14 @@ export default function CustomerUpload() {
       <div style={{...sectionCard, marginBottom: '15px'}}>
         <label style={labelStyle}>Shop ID / షాప్ ID</label>
         {isScanning ? (
-          <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', background: '#000', minHeight: '250px' }}>
-            <QrReader onResult={handleScanResult} constraints={{ facingMode: 'environment' }} containerStyle={{ width: '100%', height: '100%' }} />
+          <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', background: '#e2e8f0', minHeight: '250px' }}>
+            {/* 🟢 FIX 1: Applied videoStyle properties to stretch camera feed properly over the black screen */}
+            <QrReader 
+              onResult={handleScanResult} 
+              constraints={{ facingMode: 'environment' }} 
+              containerStyle={{ width: '100%', height: '250px' }} 
+              videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
             <button onClick={() => setIsScanning(false)} style={cancelScanBtn}>Cancel</button>
           </div>
         ) : (
@@ -397,14 +406,15 @@ export default function CustomerUpload() {
                 {securityMode === 'private' && (
                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#9a3412', background: '#ffedd5', padding: '10px', borderRadius: '8px' }}>
                         <input type="checkbox" checked={maskAadhaar} onChange={(e) => setMaskAadhaar(e.target.checked)} style={{ width: '18px', height: '18px' }} />
-                        👁️‍🗨️ Mask Sensitive data (ex: Aadhaar etc, (swipe specific area))
+                        👁️‍🗨️ Mask Sensitive data (ex: IDs etc, (swipe specific area))
                     </label>
                 )}
             </div>
         )}
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px', paddingBottom: activeOrders.length > 0 ? '300px' : '20px' }}>
+      {/* 🟢 FIX 2: Dynamic padding bottom. If tracker is minimized, padding shrinks so buttons stay clickable */}
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px', paddingBottom: activeOrders.length > 0 ? (isTrackerExpanded ? '400px' : '60px') : '20px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           <button type="button" onClick={() => fileInputRef.current.click()} style={uploadBtnStyle}><span style={{ fontSize: '24px' }}>📁</span><br/>Browse Files</button>
           <input type="file" multiple accept=".pdf,image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
@@ -470,15 +480,15 @@ export default function CustomerUpload() {
                                               }}>
                                                   
                                                   <div 
-                                                    onPointerDown={(e) => startDrawing(e, index)}
-                                                    onPointerMove={keepDrawing}
-                                                    onPointerUp={(e) => stopDrawing(e, index)}
-                                                    onPointerCancel={(e) => stopDrawing(e, index)}
-                                                    style={{ 
-                                                        ...getImgSize(item.scale), position: 'relative', display: 'inline-block',
-                                                        touchAction: 'none', 
-                                                        cursor: (securityMode === 'private' && maskAadhaar) ? 'crosshair' : 'default'
-                                                    }}
+                                                      onPointerDown={(e) => startDrawing(e, index)}
+                                                      onPointerMove={keepDrawing}
+                                                      onPointerUp={(e) => stopDrawing(e, index)}
+                                                      onPointerCancel={(e) => stopDrawing(e, index)}
+                                                      style={{ 
+                                                          ...getImgSize(item.scale), position: 'relative', display: 'inline-block',
+                                                          touchAction: 'none', 
+                                                          cursor: (securityMode === 'private' && maskAadhaar) ? 'crosshair' : 'default'
+                                                      }}
                                                   >
                                                       <img 
                                                         src={item.previewUrl} 
@@ -568,8 +578,8 @@ export default function CustomerUpload() {
                                             <label style={labelStyle}>Print Size</label>
                                             <select value={item.scale} onChange={(e) => updateItemSetting(index, 'scale', e.target.value)} style={{...inputStyle, padding: '6px'}}>
                                                 <option value="fit">Fit to A4 (Full Page)</option>
-                                                <option value="aadhaar">Aadhaar Card Size</option>
-                                                <option value="pan">PAN Card Size</option>
+                                                <option value="aadhaar">Card Size (85x54mm)</option>
+                                                <option value="pan">PAN Size (86x54mm)</option>
                                                 <option value="passport">Passport Photo</option>
                                             </select>
                                         </div>
@@ -609,39 +619,46 @@ export default function CustomerUpload() {
 
       {status && <div style={{ ...statusBox, background: status.includes('❌') ? '#fee2e2' : '#dcfce3', color: status.includes('❌') ? '#991b1b' : '#166534' }}>{status}</div>}
 
+      {/* 🟢 FIX 2: Added onClick toggle to the header and conditionally rendering the body */}
       {activeOrders.length > 0 && (
         <div style={trackerOverlay}>
-          <div style={trackerHeader}>
-            <span>🛡️ Subham Privacy Guard Active</span>
-            <button onClick={clearHistory} style={{background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.8)', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline'}}>Clear</button>
+          <div style={trackerHeader} onClick={() => setIsTrackerExpanded(!isTrackerExpanded)}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span>🛡️ Subham Privacy Guard ({activeOrders.length})</span>
+                <span style={{ fontSize: '16px' }}>{isTrackerExpanded ? '🔽' : '🔼'}</span>
+            </div>
+            <button onClick={(e) => { e.stopPropagation(); clearHistory(); }} style={{background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.8)', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline'}}>Clear</button>
           </div>
-          <div style={{ padding: '15px', maxHeight: '400px', overflowY: 'auto' }}>
-            {activeOrders.map((order) => {
-              const step = getStepNumber(order.status);
-              const isCancelled = order.status === 'CANCELLED';
-              const isWiped = order.status === 'WIPED' || isCancelled;
+          
+          {isTrackerExpanded && (
+              <div style={{ padding: '15px', maxHeight: '400px', overflowY: 'auto' }}>
+                {activeOrders.map((order) => {
+                  const step = getStepNumber(order.status);
+                  const isCancelled = order.status === 'CANCELLED';
+                  const isWiped = order.status === 'WIPED' || isCancelled;
 
-              return (
-                <div key={order.jobId} style={orderCard}>
-                  <div style={{ fontWeight: 'bold', fontSize: '13px', marginBottom: '10px', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>📄 {order.fileName}</div>
-                  {isCancelled ? ( <div style={{ color: '#ef4444', fontSize: '12px', fontWeight: 'bold' }}>❌ {order.msg}</div> ) : (
-                    <>
-                      <div style={timelineContainer}>
-                        <div style={stepStyle(step >= 1)}><div style={circleStyle(step >= 1)}>1</div><span style={stepLabel}>Secured</span></div><div style={lineStyle(step >= 2)} />
-                        <div style={stepStyle(step >= 2)}><div style={circleStyle(step >= 2)}>2</div><span style={stepLabel}>Viewed</span></div><div style={lineStyle(step >= 3)} />
-                        <div style={stepStyle(step >= 3)}><div style={circleStyle(step >= 3)}>3</div><span style={stepLabel}>Printed</span></div><div style={lineStyle(step >= 4)} />
-                        <div style={stepStyle(step >= 4)}><div style={circleStyle(step >= 4)}>4</div><span style={stepLabel}>Wiped</span></div>
-                      </div>
-                      <div style={statusMsg}>{order.msg || 'File secured in RAM by Subham Agent.'}</div>
-                      {!isWiped && (
-                        <button onClick={() => handleRevoke(order.jobId)} style={{ width: '100%', padding: '8px', background: '#fee2e2', color: '#991b1b', border: '1px solid #f87171', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', marginTop: '10px', cursor: 'pointer' }}>🛑 Revoke Access & Delete</button>
+                  return (
+                    <div key={order.jobId} style={orderCard}>
+                      <div style={{ fontWeight: 'bold', fontSize: '13px', marginBottom: '10px', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>📄 {order.fileName}</div>
+                      {isCancelled ? ( <div style={{ color: '#ef4444', fontSize: '12px', fontWeight: 'bold' }}>❌ {order.msg}</div> ) : (
+                        <>
+                          <div style={timelineContainer}>
+                            <div style={stepStyle(step >= 1)}><div style={circleStyle(step >= 1)}>1</div><span style={stepLabel}>Secured</span></div><div style={lineStyle(step >= 2)} />
+                            <div style={stepStyle(step >= 2)}><div style={circleStyle(step >= 2)}>2</div><span style={stepLabel}>Viewed</span></div><div style={lineStyle(step >= 3)} />
+                            <div style={stepStyle(step >= 3)}><div style={circleStyle(step >= 3)}>3</div><span style={stepLabel}>Printed</span></div><div style={lineStyle(step >= 4)} />
+                            <div style={stepStyle(step >= 4)}><div style={circleStyle(step >= 4)}>4</div><span style={stepLabel}>Wiped</span></div>
+                          </div>
+                          <div style={statusMsg}>{order.msg || 'File secured in RAM by Subham Agent.'}</div>
+                          {!isWiped && (
+                            <button onClick={() => handleRevoke(order.jobId)} style={{ width: '100%', padding: '8px', background: '#fee2e2', color: '#991b1b', border: '1px solid #f87171', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', marginTop: '10px', cursor: 'pointer' }}>🛑 Revoke Access & Delete</button>
+                          )}
+                        </>
                       )}
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                    </div>
+                  );
+                })}
+              </div>
+          )}
         </div>
       )}
     </div>
@@ -664,7 +681,7 @@ const modalContent = { background: 'white', padding: '25px', borderRadius: '16px
 const mergeBtnStyle = { width: '100%', padding: '15px', borderRadius: '10px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', color: '#1e293b' };
 const actionBtn = { padding: '12px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' };
 const trackerOverlay = { position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '3px solid #2563eb', boxShadow: '0 -10px 25px rgba(0,0,0,0.1)', zIndex: 1000, borderRadius: '20px 20px 0 0' };
-const trackerHeader = { background: '#2563eb', color: 'white', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold', fontSize: '14px' };
+const trackerHeader = { background: '#2563eb', color: 'white', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' };
 const orderCard = { background: '#f8fafc', padding: '15px', borderRadius: '12px', marginBottom: '15px', border: '1px solid #cbd5e1', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' };
 const timelineContainer = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '15px 0' };
 const stepStyle = (active) => ({ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: active ? 1 : 0.4, transition: 'opacity 0.3s' });
