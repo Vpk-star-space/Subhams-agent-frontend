@@ -38,12 +38,34 @@ export default function CustomerUpload() {
   
   const todayDate = new Date().toLocaleDateString('en-GB'); 
   
-  // 🟢 A single, reliable function to process the text once it's caught
+  // 🟢 Core processor for successful scans
   const processSuccessfulScan = (text) => {
       if (!text) return;
       const extractedId = text.includes('/u/') ? text.split('/u/').pop() : text;
       setShopId(extractedId.toUpperCase());
       setIsScanning(false);
+  };
+
+  // 🟢 MEGA-EXTRACTOR: Catch the QR text no matter what format the library uses
+  const handleScanCapture = (result) => {
+      if (!result) return;
+      let text = "";
+      
+      try {
+          if (Array.isArray(result) && result.length > 0) {
+              text = result[0]?.rawValue || result[0]?.text || result[0];
+          } else if (typeof result === "object") {
+              text = result?.rawValue || result?.text;
+          } else if (typeof result === "string") {
+              text = result;
+          }
+      } catch (e) {
+          console.error("Parse error", e);
+      }
+
+      if (text && typeof text === 'string') {
+          processSuccessfulScan(text);
+      }
   };
 
   const [drawState, setDrawState] = useState({ isDrawing: false, startX: 0, startY: 0, currentRect: null });
@@ -397,20 +419,13 @@ export default function CustomerUpload() {
           <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <span style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold', marginBottom: '15px' }}>Point at Shop QR Code</span>
             
-            {/* 🟢 FIXED: REMOVED ALL ABSOLUTE POSITIONING AND PADDING HACKS! */}
-            <div style={{ width: '100%', maxWidth: '300px', borderRadius: '12px', overflow: 'hidden', border: '3px solid #3b82f6', background: '#000' }}>
+            {/* 🟢 THE FIXED SQUARE CONTAINER: Perfectly preserves the camera aspect ratio! */}
+            <div style={{ width: '100%', maxWidth: '300px', aspectRatio: '1 / 1', borderRadius: '12px', overflow: 'hidden', border: '3px solid #3b82f6', background: '#000', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <Scanner 
-                    onScan={(result) => {
-                        if (Array.isArray(result) && result.length > 0 && result[0].rawValue) {
-                            processSuccessfulScan(result[0].rawValue);
-                        }
-                    }}
-                    onResult={(text) => {
-                        if (text) {
-                            processSuccessfulScan(text);
-                        }
-                    }}
+                    onScan={handleScanCapture}
+                    onResult={handleScanCapture}
                     onError={(error) => console.log("Scanner Error:", error)}
+                    components={{ audio: false, finder: true }}
                 />
             </div>
             
