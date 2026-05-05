@@ -37,10 +37,10 @@ export default function CustomerUpload() {
   const [isBlindPreview, setIsBlindPreview] = useState(false);
   
   const todayDate = new Date().toLocaleDateString('en-GB'); 
+  
   // 🟢 NEW: A single, reliable function to process the text once it's caught
   const processSuccessfulScan = (text) => {
       if (!text) return;
-      // Extract the ID whether it's a full URL or just the text
       const extractedId = text.includes('/u/') ? text.split('/u/').pop() : text;
       setShopId(extractedId.toUpperCase());
       setIsScanning(false);
@@ -394,33 +394,26 @@ export default function CustomerUpload() {
       <div style={{...sectionCard, marginBottom: '15px'}}>
         <label style={labelStyle}>Shop ID / షాప్ ID</label>
         {isScanning ? (
-          <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', background: '#0f172a', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '15px' }}>
-            <span style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>Loading Camera...</span>
-            <div style={{ width: '100%', maxWidth: '280px', position: 'relative' }}>
-              <div style={{ paddingTop: '100%', position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '2px solid #3b82f6', background: '#000', minHeight: '280px' }}>
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                  
-                    {/* 🟢 THE BULLETPROOF SCANNER */}
-                    <Scanner 
-                        // Catches Version 2.x formats
-                        onScan={(result) => {
-                            if (Array.isArray(result) && result.length > 0) {
-                                processSuccessfulScan(result[0].rawValue);
-                            }
-                        }}
-                        // Catches Version 1.x formats
-                        onResult={(text) => {
-                            if (text) {
-                                processSuccessfulScan(text);
-                            }
-                        }}
-                        onError={(error) => console.log("Scanner Error:", error)}
-                        components={{ audio: false }} 
-                    />
-                  </div>
-              </div>
+          <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold', marginBottom: '15px' }}>Point at Shop QR Code</span>
+            
+            {/* 🟢 THE FIXED, NATURAL SCANNER CONTAINER */}
+            <div style={{ width: '100%', maxWidth: '300px', overflow: 'hidden', borderRadius: '8px', border: '2px solid #3b82f6' }}>
+                <Scanner 
+                    onScan={(result) => {
+                        if (!result) return;
+                        // Extremely flexible catch:
+                        const text = Array.isArray(result) ? result[0]?.rawValue : (result?.text || result?.rawValue || result);
+                        if (typeof text === 'string') {
+                            processSuccessfulScan(text);
+                        }
+                    }}
+                    onError={(error) => console.log("Scanner Error:", error)}
+                    components={{ audio: false }} // Keep it silent and simple
+                />
             </div>
-            <button onClick={() => setIsScanning(false)} style={{...cancelScanBtn, position: 'relative', left: 'auto', bottom: 'auto', transform: 'none', marginTop: '15px'}}>Cancel Scanner</button>
+            
+            <button onClick={() => setIsScanning(false)} style={{...cancelScanBtn, position: 'relative', left: 'auto', bottom: 'auto', transform: 'none', marginTop: '20px'}}>Cancel Scanner</button>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: '10px' }}>
