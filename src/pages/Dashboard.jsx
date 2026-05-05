@@ -60,7 +60,7 @@ export default function Dashboard() {
     navigate('/');
   }, [navigate]);
 
-  // 🟢 FIX 1: Dynamic secureAxios URL
+  // 🟢 Dynamic secureAxios URL
   const secureAxios = useMemo(() => {
     return axios.create({
       baseURL: `${BACKEND_URL}/api`,
@@ -109,10 +109,9 @@ export default function Dashboard() {
 
  // 🛡️ Fetches hardware status SAFELY
   const checkHardware = useCallback(async () => {
-    // If we don't have auth, OR if a check is already running, STOP and do nothing.
     if (!auth.shopId || !auth.token || isCheckingHardware.current) return;
     
-    isCheckingHardware.current = true; // Lock the door
+    isCheckingHardware.current = true; 
 
     try {
       const res = await secureAxios.get(`/shop/hardware/status/${auth.shopId}`);
@@ -124,13 +123,13 @@ export default function Dashboard() {
     } catch (err) {
       console.error("Hardware check error:", err); 
     } finally {
-      isCheckingHardware.current = false; // Unlock the door when finished or failed
+      isCheckingHardware.current = false; 
     }
   }, [auth.shopId, auth.token, secureAxios]);
 
   
   
-  // 🟢 FIX 3: Fast HTTP Preview (with Explicit Binary Parsing)
+  // 🟢 Fast HTTP Preview (with Explicit Binary Parsing)
   useEffect(() => {
     if (activeJob && !isDrawingMode) {
       const delayTimer = setTimeout(async () => {
@@ -139,12 +138,10 @@ export default function Dashboard() {
                 overrides: { ...printSettings } 
             }, { responseType: 'blob' }); 
             
-            // 🟢 Explicitly tell the browser if it's a PDF or an Image
             const contentType = response.headers['content-type'] || 'application/pdf';
             const fileBlob = new Blob([response.data], { type: contentType });
             const rawUrl = URL.createObjectURL(fileBlob);
             
-            // Only add '#toolbar=0' if it's actually a PDF!
             setPreviewImage(contentType === 'application/pdf' ? rawUrl + '#toolbar=0' : rawUrl);
             
         } catch (error) {
@@ -156,7 +153,7 @@ export default function Dashboard() {
     }
   }, [activeJob, printSettings, isDrawingMode, secureAxios]);
 
-// 🟢 FIX 2: Optimized Socket Connection (No Lag)
+// 🟢 Optimized Socket Connection (No Lag)
   useEffect(() => {
     if (!auth.token || !auth.shopId) {
       navigate('/login');
@@ -198,7 +195,7 @@ export default function Dashboard() {
       clearInterval(securityInterval);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.shopId, auth.token, navigate]); // Clean dependency array
+  }, [auth.shopId, auth.token, navigate]); 
 
   const calculateJobPrice = (job, isForPreview = false) => {
     const settings = isForPreview ? printSettings : job.options;
@@ -243,7 +240,7 @@ export default function Dashboard() {
     setIsDrawingMode(false);
     setZoomLevel(1);
 
-    // 🟢 BUG FIX: Tell the server that the shop owner just viewed the file!
+    // 🟢 Tell the server that the shop owner just viewed the file!
     socket.emit('NOTIFY_VIEWED', { jobId: job.jobId });
   };
 
@@ -532,18 +529,23 @@ export default function Dashboard() {
                         <span style={{ fontWeight: 'bold', color: '#3730a3', fontSize: '15px' }}>📁 {customerName}</span>
                         <span style={{ background: '#16a34a', color: 'white', padding: '4px 10px', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px' }}>Bill: ₹{folderTotal}</span>
                       </div>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white', tableLayout: 'fixed' }}>
-                        <tbody>
+                      
+                      {/* 🟢 THE BULLETPROOF FLEXBOX FIX FOR THE LIST */}
+                      <div style={{ display: 'flex', flexDirection: 'column', background: 'white' }}>
                           {customerJobs.map((job) => (
-                            <tr key={job.jobId} style={{ borderBottom: '1px solid #f1f5f9', background: activeJob?.jobId === job.jobId ? '#f0fdf4' : 'transparent' }}>
+                            <div key={job.jobId} style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                padding: '15px', 
+                                borderBottom: '1px solid #f1f5f9', 
+                                background: activeJob?.jobId === job.jobId ? '#f0fdf4' : 'transparent' 
+                            }}>
                               
-                              {/* 🟢 FIX 1: Max width on the left cell to prevent button pushing */}
-                              <td style={{ padding: '15px', maxWidth: '160px' }}>
-                                {/* 🟢 FIX 2: Added textOverflow: 'ellipsis' to truncate long file names */}
+                              {/* Left Side: Flexible Text Area */}
+                              <div style={{ flex: 1, minWidth: 0, paddingRight: '15px' }}>
                                 <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '14px', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={job.options?.fileName}>
                                   📄 {job.options?.fileName || `Job ${job.jobId.substring(0,6)}`}
                                 </div>
-                                {/* 🟢 FIX 3: Changed the settings tags to flexWrap so they stack nicely */}
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', fontSize: '11px', fontWeight: 'bold' }}>
                                   <span style={{ color: '#475569', background: '#f1f5f9', padding: '3px 6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
                                     {job.options?.copies}x • {job.options?.colorMode === 'color' ? '🎨' : '⚫'} • ₹{calculateJobPrice(job)}
@@ -552,20 +554,19 @@ export default function Dashboard() {
                                   {job.options?.securityMode === 'private' && <span style={{ color: '#ea580c', background: '#ffedd5', padding: '3px 6px', borderRadius: '4px', border: '1px solid #fdba74' }}>🏢 Private Guard</span>}
                                   {(job.options?.isBlindPreview === true || job.options?.isBlindPreview === 'true') && <span style={{ color: '#991b1b', background: '#fee2e2', padding: '3px 6px', borderRadius: '4px', border: '1px solid #fca5a5' }}>🔒 Blind</span>}
                                 </div>
-                              </td>
+                              </div>
                               
-                              {/* 🟢 FIX 4: width: '1%' forces this column to hug the right wall perfectly! */}
-                              <td style={{ padding: '15px', textAlign: 'right', whiteSpace: 'nowrap', width: '1%' }}>
-                                <button onClick={() => handleDelete(job.jobId)} style={{ ...actionBtn, background: '#fee2e2', color: '#b91c1c' }}>🗑️</button>
-                                <button onClick={() => handleView(job)} style={{ ...actionBtn, background: activeJob?.jobId === job.jobId ? '#10b981' : '#f8fafc', color: activeJob?.jobId === job.jobId ? 'white' : '#0f172a', border: '1px solid #cbd5e1' }}>
+                              {/* Right Side: Titanium Un-squishable Buttons */}
+                              <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
+                                <button onClick={() => handleDelete(job.jobId)} style={{ ...actionBtn, background: '#fee2e2', color: '#b91c1c', margin: 0 }}>🗑️</button>
+                                <button onClick={() => handleView(job)} style={{ ...actionBtn, background: activeJob?.jobId === job.jobId ? '#10b981' : '#f8fafc', color: activeJob?.jobId === job.jobId ? 'white' : '#0f172a', border: '1px solid #cbd5e1', margin: 0 }}>
                                    {activeJob?.jobId === job.jobId ? 'Viewing' : 'View'}
                                 </button>
-                              </td>
+                              </div>
 
-                            </tr>
+                            </div>
                           ))}
-                        </tbody>
-                      </table>
+                      </div>
                     </div>
                   )
                 })
@@ -828,7 +829,7 @@ const navBtn = { padding: '8px 16px', color: '#fff', border: 'none', borderRadiu
 const card = { background: '#fff', padding: '25px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' };
 const approveBtn = { padding: '10px 20px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' };
 const rejectBtn = { padding: '10px 20px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' };
-const actionBtn = { padding: '8px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '13px', marginLeft: '5px' };
+const actionBtn = { padding: '8px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }; // Removed marginLeft
 const downloadBtn = { width: '100%', padding: '10px', marginTop: '15px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' };
 const copyIdBtn = { width: '100%', padding: '8px', background: '#e0e7ff', color: '#4f46e5', border: '1px solid #c7d2fe', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' };
 const vaultBtn = { width: '100%', padding: '25px', background: '#0f172a', color: '#facc15', border: '2px solid #334155', borderRadius: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(15, 23, 42, 0.4)' };
