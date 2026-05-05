@@ -4,8 +4,8 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import { QRCodeSVG } from 'qrcode.react'; 
 
-// 🛡️ THE ULTIMATE FIX: Create the socket globally, but tell it NOT to connect yet!
-const socket = io('http://localhost:5000', { autoConnect: false });
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://subhams-vpk.onrender.com';
+const socket = io(BACKEND_URL, { autoConnect: false });
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -57,7 +57,7 @@ export default function Dashboard() {
 
   const secureAxios = useMemo(() => {
     return axios.create({
-      baseURL: 'http://localhost:5000/api',
+      baseURL: 'https://subhams-vpk.onrender.com/api',
       headers: { Authorization: `Bearer ${auth.token}` }
     });
   }, [auth.token]);
@@ -696,7 +696,7 @@ export default function Dashboard() {
                                       }}
                                   >
                                       <img 
-                                        src={`http://localhost:5000/api/jobs/download/${activeJob.jobId}`} 
+                                       src={`${import.meta.env.VITE_BACKEND_URL}/api/jobs/download/${activeJob.jobId}`}
                                         alt="Original File" 
                                         style={{ 
                                             width: '100%', height: '100%', objectFit: 'fill', display: 'block', background: 'white',
