@@ -78,7 +78,6 @@ export default function CustomerUpload() {
     const validItems = [];
 
     for (const f of rawFiles) {
-        // 🟢 FIX 3: 15MB Strict Warning enforcement
         if (f.size > MAX_FILE_SIZE_BYTES) {
             alert(`❌ FILE TOO LARGE!\n\nYour file "${f.name}" is ${(f.size / 1024 / 1024).toFixed(1)}MB.\nThe maximum limit is 15MB. Please compress the file and try again.`);
             continue; 
@@ -113,7 +112,6 @@ export default function CustomerUpload() {
     const { front, back } = idMergeModal;
     if (!front || !back) return alert("Please select both Front and Back sides.");
     
-    // 🟢 Extra 15MB Warning for ID Merge
     if (front.size > MAX_FILE_SIZE_BYTES || back.size > MAX_FILE_SIZE_BYTES) {
         return alert("❌ One of your ID photos is too large! Maximum limit is 15MB.");
     }
@@ -272,7 +270,6 @@ export default function CustomerUpload() {
       setStatus(`✅ Success! Files sent to the queue.`);
       setFileItems([]); setSecurityMode('none'); setSecurePurpose(''); setMaskAadhaar(false); setIsBlindPreview(false);
       
-      // Auto-scroll to the bottom so they see the Flipkart style tracker!
       setTimeout(() => {
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
       }, 500);
@@ -317,6 +314,7 @@ export default function CustomerUpload() {
   };
 
   const activeOrders = Object.values(liveStatusTracker);
+  // Status mapping: SECURED=1, PREVIEWING=2, PRINTING=3, WIPED=4
   const getStepNumber = (status) => status === 'SECURED' ? 1 : status === 'PREVIEWING' ? 2 : status === 'PRINTING' ? 3 : status === 'WIPED' ? 4 : 1;
 
   return (
@@ -355,17 +353,18 @@ export default function CustomerUpload() {
       <div style={{...sectionCard, marginBottom: '15px'}}>
         <label style={labelStyle}>Shop ID / షాప్ ID</label>
         {isScanning ? (
-          /* 🟢 FIX 1: Scanner Black Screen Fix */
-          <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', background: '#1e293b', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
-            <span style={{ color: '#94a3b8', position: 'absolute', zIndex: 1, fontWeight: 'bold' }}>Loading Camera...</span>
-            <div style={{ width: '100%', position: 'relative', zIndex: 2 }}>
+          /* 🟢 FIX 1: Scanner Container nicely formatted so it doesn't stretch white/black */
+          <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', background: '#000', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px', gap: '10px' }}>
+            <span style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}>Scanning for Shop QR...</span>
+            <div style={{ width: '100%', maxWidth: '280px', borderRadius: '8px', overflow: 'hidden' }}>
               <QrReader 
                 onResult={handleScanResult} 
                 constraints={{ facingMode: 'environment' }} 
-                containerStyle={{ width: '100%', paddingTop: '100%' }} 
+                containerStyle={{ width: '100%' }} 
+                videoStyle={{ width: '100%', objectFit: 'cover' }}
               />
             </div>
-            <button onClick={() => setIsScanning(false)} style={cancelScanBtn}>Cancel</button>
+            <button onClick={() => setIsScanning(false)} style={cancelScanBtn}>Cancel Scanner</button>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: '10px' }}>
@@ -422,6 +421,7 @@ export default function CustomerUpload() {
         )}
       </div>
 
+      {/* Normal 20px padding because there are no more floating elements blocking the button! */}
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px', paddingBottom: '20px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           <button type="button" onClick={() => fileInputRef.current.click()} style={uploadBtnStyle}><span style={{ fontSize: '24px' }}>📁</span><br/>Browse Files</button>
@@ -464,7 +464,6 @@ export default function CustomerUpload() {
                               
                               <div style={{ width: '100%', maxWidth: '100%', margin: '0 auto', flexShrink: 0, overflow: 'hidden' }}>
                                   
-                                  {/* 🛡️ RENDER THE CORRECT PREVIEW BASED ON FILE TYPE */}
                                   {item.isPdf ? (
                                       <div style={{ background: '#f8fafc', padding: '30px', textAlign: 'center', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
                                           <div style={{ fontSize: '48px', opacity: 0.5, marginBottom: '10px' }}>📄</div>
@@ -579,7 +578,6 @@ export default function CustomerUpload() {
                                     </div>
                                 </div>
 
-                                {/* Disable scale and position if it is a PDF */}
                                 {!item.isPdf && (
                                     <>
                                         <div>
@@ -627,14 +625,14 @@ export default function CustomerUpload() {
 
       {status && <div style={{ ...statusBox, background: status.includes('❌') ? '#fee2e2' : '#dcfce3', color: status.includes('❌') ? '#991b1b' : '#166534' }}>{status}</div>}
 
-      {/* 🟢 FIX 2: Replaced floating popup with inline Flipkart-style block */}
+      {/* 🟢 FIX 2: True Flipkart Style inline block tracker */}
       {activeOrders.length > 0 && (
         <div style={trackerContainerStyle}>
           <div style={trackerHeader}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span>🛡️ Live Order Tracking ({activeOrders.length})</span>
             </div>
-            <button onClick={(e) => { e.stopPropagation(); clearHistory(); }} style={{background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.8)', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline'}}>Clear All</button>
+            <button onClick={clearHistory} style={{background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.8)', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline'}}>Clear All</button>
           </div>
           
           <div style={{ padding: '15px' }}>
@@ -650,6 +648,7 @@ export default function CustomerUpload() {
                     <>
                       <div style={timelineContainer}>
                         <div style={stepStyle(step >= 1)}><div style={circleStyle(step >= 1)}>1</div><span style={stepLabel}>Secured</span></div><div style={lineStyle(step >= 2)} />
+                        {/* 🟢 FIX 3: Viewed state accurately updates based on backend socket trigger */}
                         <div style={stepStyle(step >= 2)}><div style={circleStyle(step >= 2)}>2</div><span style={stepLabel}>Viewed</span></div><div style={lineStyle(step >= 3)} />
                         <div style={stepStyle(step >= 3)}><div style={circleStyle(step >= 3)}>3</div><span style={stepLabel}>Printed</span></div><div style={lineStyle(step >= 4)} />
                         <div style={stepStyle(step >= 4)}><div style={circleStyle(step >= 4)}>4</div><span style={stepLabel}>Wiped</span></div>
@@ -675,7 +674,7 @@ const sectionCard = { background: '#fff', padding: '15px', borderRadius: '12px',
 const labelStyle = { fontSize: '12px', fontWeight: 'bold', color: '#64748b', display: 'block', marginBottom: '6px' };
 const inputStyle = { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '16px', background: '#f8fafc', boxSizing: 'border-box' };
 const qrBtnStyle = { padding: '0 15px', background: '#1e293b', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' };
-const cancelScanBtn = { position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', background: '#ef4444', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', zIndex: 10 };
+const cancelScanBtn = { padding: '8px 20px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer' };
 const uploadBtnStyle = { padding: '20px 10px', background: '#f1f5f9', border: '2px dashed #cbd5e1', borderRadius: '12px', cursor: 'pointer', color: '#475569', fontWeight: 'bold', fontSize: '13px' };
 const removeBtnStyle = { background: '#fee2e2', color: '#991b1b', border: 'none', cursor: 'pointer', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' };
 const submitBtn = { width: '100%', padding: '18px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '10px', boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)' };
@@ -686,11 +685,10 @@ const modalContent = { background: 'white', padding: '25px', borderRadius: '16px
 const mergeBtnStyle = { width: '100%', padding: '15px', borderRadius: '10px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', color: '#1e293b' };
 const actionBtn = { padding: '12px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' };
 
-// 🟢 FIX 2: New Flipkart-style inline container for the tracker
-const trackerContainerStyle = { marginTop: '20px', background: '#fff', border: '1px solid #cbd5e1', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', borderRadius: '12px', overflow: 'hidden' };
+// 🟢 FIX 2: Styles for the true inline Flipkart Tracker
+const trackerContainerStyle = { marginTop: '30px', background: '#fff', border: '1px solid #cbd5e1', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', borderRadius: '12px', overflow: 'hidden' };
 const trackerHeader = { background: '#2563eb', color: 'white', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold', fontSize: '15px' };
 const orderCard = { background: '#f8fafc', padding: '15px', borderRadius: '12px', marginBottom: '15px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' };
-
 const timelineContainer = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '15px 0' };
 const stepStyle = (active) => ({ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: active ? 1 : 0.4, transition: 'opacity 0.3s' });
 const circleStyle = (active) => ({ width: '24px', height: '24px', borderRadius: '50%', background: active ? '#16a34a' : '#94a3b8', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', boxShadow: active ? '0 0 8px rgba(22, 163, 74, 0.4)' : 'none', transition: 'all 0.3s' });
