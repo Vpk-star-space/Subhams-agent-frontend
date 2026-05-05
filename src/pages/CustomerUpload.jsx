@@ -37,6 +37,14 @@ export default function CustomerUpload() {
   const [isBlindPreview, setIsBlindPreview] = useState(false);
   
   const todayDate = new Date().toLocaleDateString('en-GB'); 
+  // 🟢 NEW: A single, reliable function to process the text once it's caught
+  const processSuccessfulScan = (text) => {
+      if (!text) return;
+      // Extract the ID whether it's a full URL or just the text
+      const extractedId = text.includes('/u/') ? text.split('/u/').pop() : text;
+      setShopId(extractedId.toUpperCase());
+      setIsScanning(false);
+  };
 
   const [drawState, setDrawState] = useState({ isDrawing: false, startX: 0, startY: 0, currentRect: null });
   const [isScanning, setIsScanning] = useState(false);
@@ -391,31 +399,23 @@ export default function CustomerUpload() {
             <div style={{ width: '100%', maxWidth: '280px', position: 'relative' }}>
               <div style={{ paddingTop: '100%', position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '2px solid #3b82f6', background: '#000', minHeight: '280px' }}>
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                   {/* 🟢 FIX: Removed "formats" prop and made the receiver bulletproof! */}
+                  
+                    {/* 🟢 THE BULLETPROOF SCANNER */}
                     <Scanner 
+                        // Catches Version 2.x formats
                         onScan={(result) => {
-                            console.log("Raw Scan Result:", result); // Helps us debug if needed
-                            
-                            let text = '';
-                            // Handle new version (Array)
                             if (Array.isArray(result) && result.length > 0) {
-                                text = result[0].rawValue;
-                            } 
-                            // Handle older versions (String or Object)
-                            else if (typeof result === 'string') {
-                                text = result;
-                            } else if (result && result.text) {
-                                text = result.text;
+                                processSuccessfulScan(result[0].rawValue);
                             }
-
+                        }}
+                        // Catches Version 1.x formats
+                        onResult={(text) => {
                             if (text) {
-                                const extractedId = text.includes('/u/') ? text.split('/u/').pop() : text;
-                                setShopId(extractedId);
-                                setIsScanning(false);
+                                processSuccessfulScan(text);
                             }
                         }}
                         onError={(error) => console.log("Scanner Error:", error)}
-                        components={{ audio: false, finder: true }}
+                        components={{ audio: false }} 
                     />
                   </div>
               </div>
