@@ -124,24 +124,31 @@ export default function Dashboard() {
     }
   }, [auth.shopId, auth.token, secureAxios]);
 
-  // 🟢 FIX 3: Debounce the Preview Request to save CPU and stop the lag!
   
+  
+  // 🟢 FIX 3: Fast HTTP Preview instead of Laggy Sockets!
   useEffect(() => {
     if (activeJob && !isDrawingMode) {
-      
+   
 
-      const delayTimer = setTimeout(() => {
-        socket.emit('REQUEST_PREVIEW', { 
-          jobId: activeJob.jobId, 
-          fileIndex: 0,
-          overrides: { ...printSettings, maskRect: printSettings.maskRectArray } 
-        });
-      }, 600); // Wait 600ms before sending to Render
+      const delayTimer = setTimeout(async () => {
+        try {
+            // Ask for the file via HTTP Blob (super fast, no Base64 text limits!)
+            const response = await secureAxios.post(`/preview-fast/${activeJob.jobId}`, { 
+                overrides: { ...printSettings } 
+            }, { responseType: 'blob' }); // Tell Axios we want a binary file
+            
+            const cleanBlobUrl = URL.createObjectURL(response.data) + '#toolbar=0';
+            setPreviewImage(cleanBlobUrl);
+        } catch (error) {
+            console.error("Fast preview error:", error);
+        }
+      }, 600); // 600ms debounce saves CPU
 
-      return () => clearTimeout(delayTimer); // Cancel if user clicks fast
+      return () => clearTimeout(delayTimer); 
     }
-  }, [activeJob, printSettings, isDrawingMode]);
-  
+  }, [activeJob, printSettings, isDrawingMode, secureAxios]);
+
   // 🟢 FIX 2: Optimized Socket Connection (No Lag)
   useEffect(() => {
     if (!auth.token || !auth.shopId) {
@@ -170,16 +177,7 @@ export default function Dashboard() {
 
     const securityInterval = setInterval(checkHardware, 5000);
 
-    const handlePreview = async (data) => {
-      try {
-        const response = await fetch(data.base64);
-        const blob = await response.blob();
-        const cleanBlobUrl = URL.createObjectURL(blob) + '#toolbar=0';
-        setPreviewImage(cleanBlobUrl);
-      } catch (err) {
-        console.error("Preview load error:", err); 
-      }
-    };
+    
 
     socket.on('RECEIVE_PREVIEW', handlePreview);
     socket.on('NEW_JOB_RECEIVED', () => fetchQueue());
@@ -191,7 +189,7 @@ export default function Dashboard() {
     
     return () => {
       socket.off('connect', handleConnect);
-      socket.off('RECEIVE_PREVIEW', handlePreview);
+     
       socket.off('NEW_JOB_RECEIVED');
       socket.off('AGENT_NEEDS_UPDATE');
       clearInterval(securityInterval);
