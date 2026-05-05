@@ -55,9 +55,10 @@ export default function Dashboard() {
     navigate('/');
   }, [navigate]);
 
+  // 🟢 FIX 1: Dynamic secureAxios URL
   const secureAxios = useMemo(() => {
     return axios.create({
-      baseURL: 'https://subhams-vpk.onrender.com/api',
+      baseURL: `${BACKEND_URL}/api`,
       headers: { Authorization: `Bearer ${auth.token}` }
     });
   }, [auth.token]);
@@ -126,27 +127,32 @@ export default function Dashboard() {
     }
   }, [activeJob, printSettings, isDrawingMode]); 
 
+  // 🟢 FIX 2: Optimized Socket Connection (No Lag)
   useEffect(() => {
     if (!auth.token || !auth.shopId) {
       navigate('/login');
       return;
     }
 
-    // 🛡️ WAKE UP THE SOCKET
-    socket.connect();
-    socket.on('connect', () => {
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    const handleConnect = () => {
         console.log("🌐 Dashboard Connected to Socket. Joining Room:", auth.shopId);
         socket.emit('JOIN_SHOP', { shopId: auth.shopId });
-    });
+    };
+
+    socket.on('connect', handleConnect);
+    if (socket.connected) handleConnect();
 
     if (!initialFetchDone.current) {
         fetchQueue();
         fetchPricing();
-        checkHardware(); // 🌟 BUG FIX: Call instantly on load!
+        checkHardware();
         initialFetchDone.current = true;
     }
 
-    // Then keep checking every 5 seconds
     const securityInterval = setInterval(checkHardware, 5000);
 
     const handlePreview = async (data) => {
@@ -169,13 +175,15 @@ export default function Dashboard() {
     });
     
     return () => {
+      socket.off('connect', handleConnect);
       socket.off('RECEIVE_PREVIEW', handlePreview);
       socket.off('NEW_JOB_RECEIVED');
       socket.off('AGENT_NEEDS_UPDATE');
-      socket.disconnect();
       clearInterval(securityInterval);
+      // Removed socket.disconnect() to fix lag
     };
-  }, [auth, navigate, fetchQueue, fetchPricing, checkHardware]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.shopId, auth.token, navigate]);// Clean dependency array
 
   const calculateJobPrice = (job, isForPreview = false) => {
     const settings = isForPreview ? printSettings : job.options;
@@ -695,8 +703,9 @@ export default function Dashboard() {
                                           touchAction: 'none', cursor: 'crosshair', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                                       }}
                                   >
+                                      {/* 🟢 FIX 3: Dynamic Image SRC */}
                                       <img 
-                                       src={`${import.meta.env.VITE_BACKEND_URL}/api/jobs/download/${activeJob.jobId}`}
+                                        src={`${BACKEND_URL}/api/jobs/download/${activeJob.jobId}`} 
                                         alt="Original File" 
                                         style={{ 
                                             width: '100%', height: '100%', objectFit: 'fill', display: 'block', background: 'white',
