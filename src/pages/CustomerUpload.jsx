@@ -387,17 +387,24 @@ export default function CustomerUpload() {
             <div style={{ width: '100%', maxWidth: '280px', position: 'relative' }}>
               <div style={{ paddingTop: '100%', position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '2px solid #3b82f6', background: '#000', minHeight: '280px' }}>
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                    {/* 🟢 THE NEW SCANNER IS FINALLY HERE */}
-                    <Scanner 
-                        onScan={(result) => {
-                            const text = Array.isArray(result) ? result[0].rawValue : result;
-                            if (text) {
-                                const extractedId = text.split('/u/').pop();
-                                setShopId(extractedId);
-                                setIsScanning(false);
+                   <Scanner 
+                        onScan={(detectedCodes) => {
+                            // Safely extract the text from the new library's format
+                            if (detectedCodes && detectedCodes.length > 0) {
+                                const text = detectedCodes[0].rawValue;
+                                if (text) {
+                                    // Handle both full URLs (http://.../u/ID) AND raw text (SUBHAMS-123)
+                                    const extractedId = text.includes('/u/') ? text.split('/u/').pop() : text;
+                                    setShopId(extractedId);
+                                    setIsScanning(false);
+                                }
                             }
                         }}
-                        onError={(error) => console.log(error)}
+                        onError={(error) => console.log("Scanner Error:", error)}
+                        components={{
+                            audio: false, // Turn off the annoying beep
+                            finder: true  // Show a scanning square targeting box
+                        }}
                     />
                   </div>
               </div>
