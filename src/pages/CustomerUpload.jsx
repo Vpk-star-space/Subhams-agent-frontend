@@ -4,7 +4,6 @@ import axios from 'axios';
 import { Scanner } from '@yudiel/react-qr-scanner'; 
 import { io } from 'socket.io-client'; 
 
-// 🟢 Polling fallback to prevent 1006 WebSocket errors
 const socket = io('https://subhams-vpk.onrender.com', {
     transports: ['websocket', 'polling'],
     reconnectionAttempts: 5
@@ -38,34 +37,11 @@ export default function CustomerUpload() {
   
   const todayDate = new Date().toLocaleDateString('en-GB'); 
   
-  // 🟢 Core processor for successful scans
   const processSuccessfulScan = (text) => {
       if (!text) return;
       const extractedId = text.includes('/u/') ? text.split('/u/').pop() : text;
       setShopId(extractedId.toUpperCase());
       setIsScanning(false);
-  };
-
-  // 🟢 MEGA-EXTRACTOR: Catch the QR text no matter what format the library uses
-  const handleScanCapture = (result) => {
-      if (!result) return;
-      let text = "";
-      
-      try {
-          if (Array.isArray(result) && result.length > 0) {
-              text = result[0]?.rawValue || result[0]?.text || result[0];
-          } else if (typeof result === "object") {
-              text = result?.rawValue || result?.text;
-          } else if (typeof result === "string") {
-              text = result;
-          }
-      } catch (e) {
-          console.error("Parse error", e);
-      }
-
-      if (text && typeof text === 'string') {
-          processSuccessfulScan(text);
-      }
   };
 
   const [drawState, setDrawState] = useState({ isDrawing: false, startX: 0, startY: 0, currentRect: null });
@@ -416,20 +392,22 @@ export default function CustomerUpload() {
       <div style={{...sectionCard, marginBottom: '15px'}}>
         <label style={labelStyle}>Shop ID / షాప్ ID</label>
         {isScanning ? (
-          <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold', marginBottom: '15px' }}>Point at Shop QR Code</span>
+          <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px' }}>
+            <p style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold', margin: '0 0 15px 0', textAlign: 'center' }}>Point camera at Shop QR Code</p>
             
-            {/* 🟢 THE FIXED SQUARE CONTAINER: Perfectly preserves the camera aspect ratio! */}
-            <div style={{ width: '100%', maxWidth: '300px', aspectRatio: '1 / 1', borderRadius: '12px', overflow: 'hidden', border: '3px solid #3b82f6', background: '#000', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            {/* 🟢 THIS IS THE FIX. No CSS constraints. Pure library natural rendering. */}
+            <div style={{ background: '#000' }}>
                 <Scanner 
-                    onScan={handleScanCapture}
-                    onResult={handleScanCapture}
-                    onError={(error) => console.log("Scanner Error:", error)}
-                    components={{ audio: false, finder: true }}
+                    onScan={(result) => {
+                        console.log("Scanner caught:", result);
+                        if (result && result.length > 0 && result[0].rawValue) {
+                            processSuccessfulScan(result[0].rawValue);
+                        }
+                    }}
                 />
             </div>
             
-            <button onClick={() => setIsScanning(false)} style={{...cancelScanBtn, position: 'relative', left: 'auto', bottom: 'auto', transform: 'none', marginTop: '20px'}}>Cancel Scanner</button>
+            <button onClick={() => setIsScanning(false)} style={{ width: '100%', padding: '12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', marginTop: '20px', fontWeight: 'bold', cursor: 'pointer' }}>Cancel Scanner</button>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: '10px' }}>
@@ -737,7 +715,7 @@ const sectionCard = { background: '#fff', padding: '15px', borderRadius: '12px',
 const labelStyle = { fontSize: '12px', fontWeight: 'bold', color: '#64748b', display: 'block', marginBottom: '6px' };
 const inputStyle = { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '16px', background: '#f8fafc', boxSizing: 'border-box' };
 const qrBtnStyle = { padding: '0 15px', background: '#1e293b', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' };
-const cancelScanBtn = { position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', background: '#ef4444', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', zIndex: 10 };
+
 const uploadBtnStyle = { padding: '20px 10px', background: '#f1f5f9', border: '2px dashed #cbd5e1', borderRadius: '12px', cursor: 'pointer', color: '#475569', fontWeight: 'bold', fontSize: '13px' };
 const removeBtnStyle = { background: '#fee2e2', color: '#991b1b', border: 'none', cursor: 'pointer', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' };
 const submitBtn = { width: '100%', padding: '18px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '10px', boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)' };
