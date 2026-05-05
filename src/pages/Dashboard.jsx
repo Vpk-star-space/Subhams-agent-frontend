@@ -48,6 +48,7 @@ export default function Dashboard() {
   });
   
   const initialFetchDone = useRef(false);
+  const isCheckingHardware = useRef(false);
   const uploadLink = `${window.location.origin}/u/${auth.shopId}`;
 
   const handleLogout = useCallback(() => {
@@ -102,9 +103,13 @@ export default function Dashboard() {
     }
   }, [auth.shopId, auth.token, secureAxios, handleLogout]);
 
-  // 🛡️ Fetches hardware status
+ // 🛡️ Fetches hardware status SAFELY
   const checkHardware = useCallback(async () => {
-    if (!auth.shopId || !auth.token) return;
+    // If we don't have auth, OR if a check is already running, STOP and do nothing.
+    if (!auth.shopId || !auth.token || isCheckingHardware.current) return;
+    
+    isCheckingHardware.current = true; // Lock the door
+
     try {
       const res = await secureAxios.get(`/shop/hardware/status/${auth.shopId}`);
       if (res.data.success && res.data.pendingHardware) {
@@ -114,6 +119,8 @@ export default function Dashboard() {
       }
     } catch (err) {
       console.error("Hardware check error:", err); 
+    } finally {
+      isCheckingHardware.current = false; // Unlock the door when finished or failed
     }
   }, [auth.shopId, auth.token, secureAxios]);
 
