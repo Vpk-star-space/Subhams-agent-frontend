@@ -8,8 +8,8 @@ import Manage from './pages/Manage';
 import CustomerUpload from './pages/CustomerUpload';
 
 // 🛑 THE MASTER SWITCH: Change to 'true' to lock down the app for updates!
-const IS_MAINTENANCE_MODE = false; 
-const TARGET_LAUNCH_DATE = new Date("2026-05-06T10:00:00"); // Set your target launch time here
+const IS_MAINTENANCE_MODE = true; 
+const TARGET_LAUNCH_DATE = new Date("2026-05-06T06:00:00"); // Set your target launch time here
 
 // 🛡️ THE PROFESSIONAL BOUNCER
 const ProtectedRoute = ({ children }) => {
