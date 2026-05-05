@@ -1,0 +1,219 @@
+import { useState } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import axios from 'axios';
+import { QRCodeSVG } from 'qrcode.react';
+import { GoogleLogin } from '@react-oauth/google'; 
+import { jwtDecode } from 'jwt-decode';            
+
+export default function Register() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const isBusiness = queryParams.get('role') === 'business';
+  const roleValue = isBusiness ? 'business' : 'individual';
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  
+  // 🌟 THE FIX: Initialize state directly from the teleport location data! No useEffect needed.
+  const [step, setStep] = useState(location.state?.step === 3 ? 3 : 1); 
+  const [shopData, setShopData] = useState(location.state?.step === 3 ? location.state.shopData : null);
+  
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // --- MANUAL REGISTRATION LOGIC ---
+  const handleRequestOTP = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      await axios.post('https://subhams-vpk.onrender.com/api/auth/request-register-otp', { email });
+      setStep(2);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to send OTP.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFinalizeRegister = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const response = await axios.post('https://subhams-vpk.onrender.com/api/auth/verify-register', { 
+        email, 
+        otp, 
+        password,
+        role: roleValue
+      });
+      
+      if (response.data.success) {
+        if (isBusiness) {
+          setShopData(response.data);
+          setStep(3); // Show Business Assets and Download
+        } else {
+          alert("Account created successfully!");
+          navigate('/login?role=individual');
+        }
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Verification failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- 🌟 GOOGLE REGISTRATION LOGIC 🌟 ---
+  const handleGoogleRegister = async (credentialResponse) => {
+    setLoading(true);
+    setError('');
+    try {
+      const decoded = jwtDecode(credentialResponse.credential);
+      const response = await axios.post('https://subhams-vpk.onrender.com/api/auth/google-login', {
+        email: decoded.email,
+        googleId: decoded.sub,
+        role: roleValue
+      });
+      
+      if (response.data.success) {
+        if (isBusiness) {
+          setShopData(response.data); 
+          setStep(3); 
+        } else {
+          alert("Account created successfully!");
+          navigate('/login?role=individual');
+        }
+      }
+    } catch (err) {
+      console.error("Google Registration Error:", err);
+      setError("Google Registration failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- UI RENDER: STEP 1 ---
+  if (step === 1) {
+    return (
+      <div style={containerStyle}>
+        <h2 style={titleStyle}>{isBusiness ? 'Register Shop' : 'Create Account'}</h2>
+        <p style={subTitleStyle}>Step 1: Email Verification</p>
+        
+        <form onSubmit={handleRequestOTP} style={formStyle}>
+          <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
+          {error && <p style={errorStyle}>{error}</p>}
+          <button type="submit" disabled={loading} style={{ ...btnStyle, background: isBusiness ? '#2563eb' : '#10b981' }}>
+            {loading ? 'Sending...' : 'Get Verification Code'}
+          </button>
+        </form>
+
+        <div style={{ display: 'flex', alignItems: 'center', margin: '25px 0' }}>
+          <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+          <span style={{ margin: '0 15px', color: '#94a3b8', fontSize: '14px', fontWeight: 'bold' }}>OR</span>
+          <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <GoogleLogin onSuccess={handleGoogleRegister} onError={() => setError("Google Registration Failed")} theme="outline" shape="pill" />
+        </div>
+
+        <p style={{textAlign: 'center', marginTop: '20px', fontSize: '14px'}}>
+          Already have an account? <Link to={`/login?role=${roleValue}`} style={{color: '#2563eb', fontWeight: 'bold'}}>Login</Link>
+        </p>
+      </div>
+    );
+  }
+
+  // --- UI RENDER: STEP 2 ---
+  if (step === 2) {
+    return (
+      <div style={containerStyle}>
+        <h2 style={titleStyle}>Verify & Secure</h2>
+        <p style={subTitleStyle}>Code sent to: {email}</p>
+        <form onSubmit={handleFinalizeRegister} style={formStyle}>
+          <input type="text" placeholder="6-Digit OTP" value={otp} onChange={(e) => setOtp(e.target.value)} style={inputStyle} required />
+          <input type="password" placeholder="Create Password" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required />
+          {error && <p style={errorStyle}>{error}</p>}
+          <button type="submit" disabled={loading} style={{ ...btnStyle, background: isBusiness ? '#2563eb' : '#10b981' }}>
+            {loading ? 'Finalizing...' : 'Complete Registration'}
+          </button>
+          <button type="button" onClick={() => setStep(1)} style={backBtnStyle}>Back to Email</button>
+        </form>
+      </div>
+    );
+  }
+
+  // --- UI RENDER: STEP 3 (SETUP & DOWNLOAD) ---
+  return (
+    <div style={revealContainerStyle}>
+      <h1 style={{ color: '#10b981', textAlign: 'center' }}>Registration Complete! 🎉</h1>
+      
+      <div style={gridStyle}>
+        <div style={cardStyle}>
+          <h3>Customer QR Code</h3>
+          <QRCodeSVG value={`${window.location.origin}/u/${shopData?.shopId}`} size={150} />
+          <p style={{fontWeight: 'bold', marginTop: '10px'}}>ID: {shopData?.shopId}</p>
+          <button 
+            onClick={() => { navigator.clipboard.writeText(shopData?.shopId); alert("Shop ID Copied!"); }} 
+            style={{ ...copyBtnStyle, marginTop: '10px', backgroundColor: '#3b82f6', color: 'white' }}
+          >
+            📋 Copy Shop ID
+          </button>
+        </div>
+
+        <div style={{ ...cardStyle, background: '#0f172a', color: '#fff' }}>
+          <h3 style={{ color: '#facc15' }}>Agent Key 🔑</h3>
+          <div style={keyBoxStyle}>{shopData?.agentKey}</div>
+          <button 
+            onClick={() => { navigator.clipboard.writeText(shopData?.agentKey); alert("Agent Key Copied!"); }} 
+            style={copyBtnStyle}
+          >
+            📋 Copy Key
+          </button>
+        </div>
+      </div>
+
+      <div style={{ marginTop: '30px', textAlign: 'center', padding: '20px', background: '#f8fafc', borderRadius: '10px', border: '2px dashed #cbd5e1' }}>
+        <h3 style={{ color: '#0f172a', marginBottom: '10px', marginTop: 0 }}>Next Step: Connect Your Printer</h3>
+        <p style={{ color: '#64748b', marginBottom: '15px', fontSize: '0.95rem' }}>
+          Download the Windows Agent, install it on your shop's computer, and paste your keys above to connect your printer to the cloud.
+        </p>
+        <a 
+          href="/Install-SubhamsAgent.exe" 
+          download="Install-SubhamsAgent.exe"
+          style={{
+            backgroundColor: '#2563eb', color: 'white', padding: '12px 24px', 
+            borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold',
+            display: 'inline-block', fontSize: '1.1rem',
+            boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)', transition: 'transform 0.2s'
+          }}
+        >
+          ⬇️ Download Windows Agent (.exe)
+        </a>
+      </div>
+
+      <button onClick={() => navigate('/login?role=business')} style={{...finishBtnStyle, marginTop: '30px'}}>
+        Go to Login Dashboard
+      </button>
+    </div>
+  );
+}
+
+// Styles
+const containerStyle = { maxWidth: '420px', margin: '80px auto', padding: '40px', background: '#fff', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)' };
+const titleStyle = { fontSize: '28px', color: '#0f172a', textAlign: 'center', marginBottom: '5px' };
+const subTitleStyle = { color: '#64748b', fontSize: '14px', textAlign: 'center', marginBottom: '20px' };
+const formStyle = { display: 'flex', flexDirection: 'column', gap: '15px' };
+const inputStyle = { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' };
+const btnStyle = { padding: '14px', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' };
+const errorStyle = { color: '#ef4444', fontSize: '13px', margin: '0', fontWeight: '500' };
+const backBtnStyle = { background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '13px', marginTop: '10px' };
+const revealContainerStyle = { maxWidth: '800px', margin: '40px auto', padding: '40px', background: '#fff', borderRadius: '20px', boxShadow: '0 20px 50px rgba(0,0,0,0.1)' };
+const gridStyle = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginTop: '30px' };
+const cardStyle = { padding: '25px', border: '1px solid #e2e8f0', borderRadius: '12px', textAlign: 'center' };
+const keyBoxStyle = { background: '#1e293b', color: '#10b981', padding: '10px', borderRadius: '8px', wordBreak: 'break-all', margin: '15px 0', fontFamily: 'monospace' };
+const copyBtnStyle = { width: '100%', padding: '10px', background: '#334155', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' };
+const finishBtnStyle = { width: '100%', padding: '15px', background: '#10b981', color: 'white', border: 'none', borderRadius: '10px', marginTop: '30px', fontWeight: 'bold', cursor: 'pointer' };
