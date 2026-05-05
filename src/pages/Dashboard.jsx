@@ -193,7 +193,6 @@ export default function Dashboard() {
     
     return () => {
       socket.off('connect', handleConnect);
-      // 👇 Notice handlePreview is completely gone from here!
       socket.off('NEW_JOB_RECEIVED');
       socket.off('AGENT_NEEDS_UPDATE');
       clearInterval(securityInterval);
@@ -533,27 +532,36 @@ export default function Dashboard() {
                         <span style={{ fontWeight: 'bold', color: '#3730a3', fontSize: '15px' }}>📁 {customerName}</span>
                         <span style={{ background: '#16a34a', color: 'white', padding: '4px 10px', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px' }}>Bill: ₹{folderTotal}</span>
                       </div>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white', tableLayout: 'fixed' }}>
                         <tbody>
                           {customerJobs.map((job) => (
                             <tr key={job.jobId} style={{ borderBottom: '1px solid #f1f5f9', background: activeJob?.jobId === job.jobId ? '#f0fdf4' : 'transparent' }}>
-                              <td style={{ padding: '15px' }}>
-                                <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '14px', marginBottom: '4px' }}>
+                              
+                              {/* 🟢 FIX 1: Max width on the left cell to prevent button pushing */}
+                              <td style={{ padding: '15px', maxWidth: '160px' }}>
+                                {/* 🟢 FIX 2: Added textOverflow: 'ellipsis' to truncate long file names */}
+                                <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '14px', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={job.options?.fileName}>
                                   📄 {job.options?.fileName || `Job ${job.jobId.substring(0,6)}`}
                                 </div>
-                                <div style={{ fontSize: '12px', color: '#475569', display: 'inline-block', background: '#f1f5f9', padding: '3px 8px', borderRadius: '6px', fontWeight: 'bold', border: '1px solid #e2e8f0' }}>
-                                  {job.options?.copies}x • {job.options?.colorMode === 'color' ? '🎨 Color' : '⚫ B&W'} • ₹{calculateJobPrice(job)}
-                                  {job.options?.securityMode === 'govt' && <span style={{ color: '#166534', marginLeft: '5px' }}>• 🏛️ Govt Attested</span>}
-                                  {job.options?.securityMode === 'private' && <span style={{ color: '#ea580c', marginLeft: '5px' }}>• 🏢 Private Guard</span>}
-                                  {(job.options?.isBlindPreview === true || job.options?.isBlindPreview === 'true') && <span style={{ color: '#991b1b', marginLeft: '5px' }}>• 🔒 Blind</span>}
+                                {/* 🟢 FIX 3: Changed the settings tags to flexWrap so they stack nicely */}
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', fontSize: '11px', fontWeight: 'bold' }}>
+                                  <span style={{ color: '#475569', background: '#f1f5f9', padding: '3px 6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                                    {job.options?.copies}x • {job.options?.colorMode === 'color' ? '🎨' : '⚫'} • ₹{calculateJobPrice(job)}
+                                  </span>
+                                  {job.options?.securityMode === 'govt' && <span style={{ color: '#166534', background: '#dcfce3', padding: '3px 6px', borderRadius: '4px', border: '1px solid #86efac' }}>🏛️ Govt Attested</span>}
+                                  {job.options?.securityMode === 'private' && <span style={{ color: '#ea580c', background: '#ffedd5', padding: '3px 6px', borderRadius: '4px', border: '1px solid #fdba74' }}>🏢 Private Guard</span>}
+                                  {(job.options?.isBlindPreview === true || job.options?.isBlindPreview === 'true') && <span style={{ color: '#991b1b', background: '#fee2e2', padding: '3px 6px', borderRadius: '4px', border: '1px solid #fca5a5' }}>🔒 Blind</span>}
                                 </div>
                               </td>
-                              <td style={{ padding: '15px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                              
+                              {/* 🟢 FIX 4: width: '1%' forces this column to hug the right wall perfectly! */}
+                              <td style={{ padding: '15px', textAlign: 'right', whiteSpace: 'nowrap', width: '1%' }}>
                                 <button onClick={() => handleDelete(job.jobId)} style={{ ...actionBtn, background: '#fee2e2', color: '#b91c1c' }}>🗑️</button>
                                 <button onClick={() => handleView(job)} style={{ ...actionBtn, background: activeJob?.jobId === job.jobId ? '#10b981' : '#f8fafc', color: activeJob?.jobId === job.jobId ? 'white' : '#0f172a', border: '1px solid #cbd5e1' }}>
                                    {activeJob?.jobId === job.jobId ? 'Viewing' : 'View'}
                                 </button>
                               </td>
+
                             </tr>
                           ))}
                         </tbody>

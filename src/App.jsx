@@ -7,6 +7,10 @@ import Dashboard from './pages/Dashboard';
 import Manage from './pages/Manage';
 import CustomerUpload from './pages/CustomerUpload';
 
+// 🛑 THE MASTER SWITCH: Change to 'true' to lock down the app for updates!
+const IS_MAINTENANCE_MODE = false; 
+const TARGET_LAUNCH_DATE = new Date("2026-05-06T10:00:00"); // Set your target launch time here
+
 // 🛡️ THE PROFESSIONAL BOUNCER
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('accessToken'); 
@@ -14,6 +18,55 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" replace />; 
   }
   return children; 
+};
+
+// =====================================================================
+// 🚧 THE MAINTENANCE MODE SCREEN
+// =====================================================================
+const MaintenanceScreen = () => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Make the clock tick live every second
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div style={styles.bootContainer}>
+      <div style={styles.shieldContainer}>
+        <div style={styles.spinnerOuter} style={{...styles.spinnerOuter, borderColor: 'rgba(245, 158, 11, 0.2)', borderTopColor: '#f59e0b', animationDuration: '3s'}}></div>
+        <div style={styles.shieldIcon}>🛠️</div>
+      </div>
+      
+      <h1 style={{...styles.brandTitle, color: '#fcd34d'}}>SYSTEM MAINTENANCE</h1>
+      
+      <p style={{...styles.subText, fontSize: '15px', maxWidth: '500px', marginBottom: '40px', color: '#cbd5e1'}}>
+        We are currently deploying the latest Subhams Security Updates to improve your printing experience. The portal is temporarily locked.
+      </p>
+
+      <div style={{ display: 'flex', gap: '20px', width: '100%', maxWidth: '500px' }}>
+        {/* Live Current Time Box */}
+        <div style={{ flex: 1, background: '#1e293b', padding: '20px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
+          <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#94a3b8', fontWeight: 'bold', letterSpacing: '1px' }}>YOUR LOCAL TIME</p>
+          <div style={{ fontSize: '24px', color: '#38bdf8', fontWeight: 'bold', fontVariantNumeric: 'tabular-nums' }}>
+            {currentTime.toLocaleTimeString()}
+          </div>
+        </div>
+
+        {/* Target Launch Box */}
+        <div style={{ flex: 1, background: '#1e293b', padding: '20px', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center' }}>
+          <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#94a3b8', fontWeight: 'bold', letterSpacing: '1px' }}>ESTIMATED LAUNCH</p>
+          <div style={{ fontSize: '16px', color: '#10b981', fontWeight: 'bold', marginBottom: '5px' }}>
+            {TARGET_LAUNCH_DATE.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+          </div>
+          <div style={{ fontSize: '14px', color: '#34d399' }}>
+            {TARGET_LAUNCH_DATE.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // =====================================================================
@@ -83,6 +136,9 @@ export default function App() {
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://subhams-vpk.onrender.com';
     
     const pingServer = async () => {
+      // If maintenance mode is ON, don't bother pinging the server!
+      if (IS_MAINTENANCE_MODE) return; 
+
       try {
         const res = await fetch(`${BACKEND_URL}/api/health`);
         if (res.ok) {
@@ -100,10 +156,17 @@ export default function App() {
     pingServer();
   }, []);
 
+  // 🛑 1. Check Maintenance Mode FIRST
+  if (IS_MAINTENANCE_MODE) {
+    return <MaintenanceScreen />;
+  }
+
+  // 🚀 2. Check Server Bootloader SECOND
   if (!isServerAwake) {
     return <ServerBootloader />;
   }
 
+  // 🌐 3. Render Application FINALLY
   return (
     <BrowserRouter>
       <Routes>
@@ -142,7 +205,7 @@ export default function App() {
 }
 
 // =====================================================================
-// 🎨 BEAUTIFUL STYLES FOR THE BOOTLOADER
+// 🎨 BEAUTIFUL STYLES FOR THE BOOTLOADER & MAINTENANCE
 // =====================================================================
 const styles = {
   bootContainer: {
@@ -155,7 +218,9 @@ const styles = {
     alignItems: 'center',
     fontFamily: "'Inter', sans-serif",
     color: 'white',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    padding: '20px',
+    boxSizing: 'border-box'
   },
   shieldContainer: {
     position: 'relative',

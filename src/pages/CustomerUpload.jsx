@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // 🟢 FIX: Added useNavigate
 import axios from 'axios';
 import { Html5Qrcode } from 'html5-qrcode'; 
 import { io } from 'socket.io-client'; 
@@ -23,13 +23,13 @@ const getOrCreateUserCode = () => {
 
 export default function CustomerUpload() {
   const { shopId: urlShopId } = useParams(); 
+  const navigate = useNavigate(); // 🟢 FIX: Initialize navigate
   
   const [userCode] = useState(getOrCreateUserCode);
   const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_shopId') || '');
   const [customerName, setCustomerName] = useState(localStorage.getItem('subhams_customerName') || '');
   
-  // 🌟 NEW STATE: To track if the Shop ID is real or fake
-  const [shopStatus, setShopStatus] = useState('idle'); // 'idle', 'checking', 'valid', 'invalid'
+  const [shopStatus, setShopStatus] = useState('idle'); 
 
   const uniqueCustomerName = customerName.trim() ? `${customerName.trim()} #${userCode}` : '';
 
@@ -42,7 +42,6 @@ export default function CustomerUpload() {
 
   const [drawState, setDrawState] = useState({ isDrawing: false, startX: 0, startY: 0, currentRect: null });
   
-  // 🟢 SCANNER STATES
   const [isScanning, setIsScanning] = useState(false);
   const [scanSuccess, setScanSuccess] = useState(false);
   const [scannedIdTemp, setScannedIdTemp] = useState('');
@@ -70,7 +69,13 @@ export default function CustomerUpload() {
     localStorage.setItem('subhams_tracker', JSON.stringify(liveStatusTracker));
   }, [shopId, customerName, liveStatusTracker]);
 
-  // 🌟 NEW FEATURE: Live Shop Validation Check
+  // 🟢 FIX 1: Silently update the URL bar so refresh works perfectly!
+  useEffect(() => {
+      if (shopStatus === 'valid' && shopId) {
+          navigate(`/u/${shopId.trim().toUpperCase()}`, { replace: true });
+      }
+  }, [shopId, shopStatus, navigate]);
+
   useEffect(() => {
       const checkShopValidity = async () => {
           if (!shopId || shopId.length < 5) {
@@ -79,34 +84,30 @@ export default function CustomerUpload() {
           }
           setShopStatus('checking');
           try {
-              // We use the pricing route to quietly check if the shop exists in the DB
               const res = await axios.get(`https://subhams-vpk.onrender.com/api/shop/pricing/${shopId}`);
               if (res.data.success) {
                   setShopStatus('valid');
               } else {
                   setShopStatus('invalid');
               }
-          } catch  {
+          } catch {
               setShopStatus('invalid');
           }
       };
 
-      // Debounce the check so it doesn't spam the server on every single letter typed
       const timeoutId = setTimeout(checkShopValidity, 800);
       return () => clearTimeout(timeoutId);
   }, [shopId]);
   
-useEffect(() => {
+  useEffect(() => {
     const joinTrackingRoom = () => {
       if (shopId.trim() && uniqueCustomerName && shopStatus === 'valid') {
-        socket.emit('JOIN_CUSTOMER', { shopId: shopId.toUpperCase(), customerName: uniqueCustomerName });
+        // 🟢 FIX 2: Added .trim() to ensure no invisible spaces break the socket room
+        socket.emit('JOIN_CUSTOMER', { shopId: shopId.toUpperCase().trim(), customerName: uniqueCustomerName });
       }
     };
 
-    // 1. Join immediately when they type a valid name/ID
     joinTrackingRoom();
-
-    // 2. 🟢 CRITICAL TRACKING FIX: If the mobile screen turns off and wakes back up, reconnect instantly!
     socket.on('connect', joinTrackingRoom);
 
     return () => {
@@ -141,7 +142,7 @@ useEffect(() => {
                       setScanSuccess(true);
                       
                       setTimeout(() => {
-                          setShopId(extractedId); // This will trigger the new validation automatically!
+                          setShopId(extractedId); 
                           setScanSuccess(false);
                           setIsScanning(false);
                       }, 1500);
@@ -333,7 +334,7 @@ useEffect(() => {
     try {
       for (const item of fileItems) {
           const formData = new FormData();
-          formData.append('shopId', shopId); 
+          formData.append('shopId', shopId.trim()); 
           formData.append('customerName', uniqueCustomerName); 
           formData.append('copies', item.copies); 
           formData.append('colorMode', item.colorMode);
@@ -498,7 +499,6 @@ useEffect(() => {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', gap: '10px' }}>
-              {/* 🟢 FIX: Added .trim() to onChange to destroy invisible spaces instantly */}
               <input 
                 type="text" 
                 placeholder="SUBHAMS-XXXXXX" 
@@ -515,7 +515,6 @@ useEffect(() => {
               <button type="button" style={qrBtnStyle} onClick={() => setIsScanning(true)}>📷 Scan QR</button>
             </div>
             
-            {/* 🌟 NEW VISUAL FEEDBACK FOR SHOP VALIDITY */}
             {shopStatus === 'checking' && <span style={{ fontSize: '12px', color: '#64748b' }}>⏳ Verifying Shop ID...</span>}
             {shopStatus === 'valid' && <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 'bold' }}>✅ Shop Found & Ready!</span>}
             {shopStatus === 'invalid' && shopId.length > 0 && <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 'bold' }}>❌ Invalid Shop ID. Please check again.</span>}
