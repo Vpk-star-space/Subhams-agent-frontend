@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Scanner } from '@yudiel/react-qr-scanner'; 
 import { io } from 'socket.io-client'; 
 
-// 🟢 FIX: Added polling fallback to prevent 1006 errors
+// 🟢 Polling fallback to prevent 1006 WebSocket errors
 const socket = io('https://subhams-vpk.onrender.com', {
     transports: ['websocket', 'polling'],
     reconnectionAttempts: 5
@@ -38,7 +38,7 @@ export default function CustomerUpload() {
   
   const todayDate = new Date().toLocaleDateString('en-GB'); 
   
-  // 🟢 NEW: A single, reliable function to process the text once it's caught
+  // 🟢 A single, reliable function to process the text once it's caught
   const processSuccessfulScan = (text) => {
       if (!text) return;
       const extractedId = text.includes('/u/') ? text.split('/u/').pop() : text;
@@ -394,22 +394,23 @@ export default function CustomerUpload() {
       <div style={{...sectionCard, marginBottom: '15px'}}>
         <label style={labelStyle}>Shop ID / షాప్ ID</label>
         {isScanning ? (
-          <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold', marginBottom: '15px' }}>Point at Shop QR Code</span>
+          <div style={{ background: '#0f172a', padding: '20px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ color: '#fff', fontSize: '13px', fontWeight: 'bold', marginBottom: '15px' }}>Point at Shop QR Code</span>
             
-            {/* 🟢 THE FIXED, NATURAL SCANNER CONTAINER */}
-            <div style={{ width: '100%', maxWidth: '300px', overflow: 'hidden', borderRadius: '8px', border: '2px solid #3b82f6' }}>
+            {/* 🟢 FIXED: REMOVED ALL ABSOLUTE POSITIONING AND PADDING HACKS! */}
+            <div style={{ width: '100%', maxWidth: '300px', borderRadius: '12px', overflow: 'hidden', border: '3px solid #3b82f6', background: '#000' }}>
                 <Scanner 
                     onScan={(result) => {
-                        if (!result) return;
-                        // Extremely flexible catch:
-                        const text = Array.isArray(result) ? result[0]?.rawValue : (result?.text || result?.rawValue || result);
-                        if (typeof text === 'string') {
+                        if (Array.isArray(result) && result.length > 0 && result[0].rawValue) {
+                            processSuccessfulScan(result[0].rawValue);
+                        }
+                    }}
+                    onResult={(text) => {
+                        if (text) {
                             processSuccessfulScan(text);
                         }
                     }}
                     onError={(error) => console.log("Scanner Error:", error)}
-                    components={{ audio: false }} // Keep it silent and simple
                 />
             </div>
             
