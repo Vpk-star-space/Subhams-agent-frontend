@@ -84,7 +84,7 @@ const MaintenanceScreen = () => {
           మీ సహనానికి ధన్యవాదాలు!
         </p>
         <p style={{ color: '#facc15', fontSize: '13px', fontWeight: 'bold', margin: 0, letterSpacing: '1px' }}>
-          — A. Venkata Pavan Kumar
+          —   Venkata Pavan Kumar
         </p>
       </div>
 
