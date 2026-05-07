@@ -805,16 +805,25 @@ export default function Dashboard() {
                           title="Preview" 
                         />
                     </div>
-                  ) : (
-                    <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#64748b', fontWeight: 'bold' }}>⚙️ Generating Accurate A4 Preview...</div>
+                                    ) : (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#64748b', fontWeight: 'bold', textAlign: 'center' }}>
+                       <span style={{ marginBottom: '8px' }}>⚙️ Generating Accurate A4 Preview...</span>
+                       <span style={{ fontSize: '12px', fontWeight: 'normal', color: '#94a3b8' }}>
+                         (Please wait, free servers may take a few extra seconds to process)
+                       </span>
+                    </div>
                   )}
                 </>
               ) : (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
                   <span style={{ fontSize: '48px', marginBottom: '10px' }}>📄</span>
-                  <p style={{ textAlign: 'center' }}>Select a job to preview content <br/> కంటెంట్‌ను చూడటానికి 'View' క్లిక్ చేయండి</p>
+                  <p style={{ textAlign: 'center', lineHeight: '1.5' }}>
+                    Select a job to preview content <br/> 
+                    కంటెంట్‌ను చూడటానికి 'View' క్లిక్ చేయండి
+                  </p>
                 </div>
               )}
+
             </div>
 
           </div>
