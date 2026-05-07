@@ -106,8 +106,8 @@ export default function CustomerUpload() {
   useEffect(() => {
     trackerRef.current = liveStatusTracker;
   }, [liveStatusTracker]);
-  
- useEffect(() => {
+
+useEffect(() => {
     const joinTrackingRoom = () => {
       if (shopId && shopId.trim() && uniqueCustomerName && shopStatus === 'valid') {
         const cleanShopId = shopId.toUpperCase().trim();
@@ -115,7 +115,7 @@ export default function CustomerUpload() {
         // 1. Join the general room
         socket.emit('JOIN_CUSTOMER', { shopId: cleanShopId, customerName: uniqueCustomerName });
 
-        // 🚨 2. Safely use the Ref to re-sync jobs without breaking ESLint
+        // 2. Re-sync jobs
         Object.keys(trackerRef.current).forEach(jobId => {
            socket.emit('REJOIN_TRACKER', { jobId });
         });
@@ -125,8 +125,18 @@ export default function CustomerUpload() {
     joinTrackingRoom();
     socket.on('connect', joinTrackingRoom);
 
+    // 📱 THE MOBILE WAKE-UP FIX: Instantly sync when the screen turns back on!
+    const handleWakeUp = () => {
+        if (document.visibilityState === 'visible') {
+            console.log("Phone woke up! Force syncing tracker...");
+            joinTrackingRoom();
+        }
+    };
+    document.addEventListener('visibilitychange', handleWakeUp);
+
     return () => {
       socket.off('connect', joinTrackingRoom);
+      document.removeEventListener('visibilitychange', handleWakeUp);
     };
   }, [shopId, uniqueCustomerName, shopStatus]);
 
