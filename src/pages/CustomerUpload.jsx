@@ -99,13 +99,20 @@ export default function CustomerUpload() {
       return () => clearTimeout(timeoutId);
   }, [shopId]);
   
-  // 🟢 Create a safe "mirror" of the tracker that doesn't trigger loops
-  const trackerRef = useRef(liveStatusTracker);
+ const trackerRef = useRef(liveStatusTracker);
 
   // Keep the mirror updated automatically
   useEffect(() => {
     trackerRef.current = liveStatusTracker;
   }, [liveStatusTracker]);
+
+  // 🚨 ADD THIS BLOCK BACK! (These are the "Ears" that hear the server) 🚨
+  useEffect(() => {
+    socket.on('CUSTOMER_TRACKER', (data) => {
+      setLiveStatusTracker(prev => ({ ...prev, [data.jobId]: data }));
+    });
+    return () => socket.off('CUSTOMER_TRACKER');
+  }, []);
 
 useEffect(() => {
     const joinTrackingRoom = () => {
