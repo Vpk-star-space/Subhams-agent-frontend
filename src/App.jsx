@@ -113,7 +113,7 @@ const ServerBootloader = () => {
   useEffect(() => {
     const texts = [
       "Initializing Subhams Security Protocol...",
-      "Waking up cloud infrastructure (This may take ~50s)...",
+      "Waking up cloud infrastructure (This may take few sec)...",
       "Establishing encrypted connection...",
       "Verifying secure hardware tokens...",
       "Booting up print queue engines...",
