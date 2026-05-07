@@ -204,7 +204,7 @@ export default function Register() {
         
         {/* 🟢 THE NEW GITHUB RELEASES DOWNLOAD LINK! */}
         <a 
-          href="https://github.com/Vpk-star-space/Subhams-agent-frontend/releases/download/v1.0.0/Install-SubhamsAgent-v1.0.0.exe" 
+          href="https://github.com/Vpk-star-space/Subhams-agent-frontend/releases/download/v1.0.0/Install-SubhamsAgent.exe" 
        
           style={{
             backgroundColor: '#2563eb', color: 'white', padding: '14px 28px', 
