@@ -99,11 +99,26 @@ export default function CustomerUpload() {
       return () => clearTimeout(timeoutId);
   }, [shopId]);
   
+  // 🟢 Create a safe "mirror" of the tracker that doesn't trigger loops
+  const trackerRef = useRef(liveStatusTracker);
+
+  // Keep the mirror updated automatically
   useEffect(() => {
+    trackerRef.current = liveStatusTracker;
+  }, [liveStatusTracker]);
+  
+ useEffect(() => {
     const joinTrackingRoom = () => {
-      if (shopId.trim() && uniqueCustomerName && shopStatus === 'valid') {
-        // 🟢 FIX 2: Added .trim() to ensure no invisible spaces break the socket room
-        socket.emit('JOIN_CUSTOMER', { shopId: shopId.toUpperCase().trim(), customerName: uniqueCustomerName });
+      if (shopId && shopId.trim() && uniqueCustomerName && shopStatus === 'valid') {
+        const cleanShopId = shopId.toUpperCase().trim();
+        
+        // 1. Join the general room
+        socket.emit('JOIN_CUSTOMER', { shopId: cleanShopId, customerName: uniqueCustomerName });
+
+        // 🚨 2. Safely use the Ref to re-sync jobs without breaking ESLint
+        Object.keys(trackerRef.current).forEach(jobId => {
+           socket.emit('REJOIN_TRACKER', { jobId });
+        });
       }
     };
 
@@ -114,13 +129,6 @@ export default function CustomerUpload() {
       socket.off('connect', joinTrackingRoom);
     };
   }, [shopId, uniqueCustomerName, shopStatus]);
-
-  useEffect(() => {
-    socket.on('CUSTOMER_TRACKER', (data) => {
-      setLiveStatusTracker(prev => ({ ...prev, [data.jobId]: data }));
-    });
-    return () => socket.off('CUSTOMER_TRACKER');
-  }, []);
 
   useEffect(() => {
       let isComponentMounted = true;
