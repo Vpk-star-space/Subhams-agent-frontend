@@ -187,11 +187,17 @@ export default function Dashboard() {
         console.log("🚨 POPUP TRIGGERED: Agent needs update!");
         setNeedsUpdate(true);
     });
+    socket.on('FORCE_KICK_ALL', () => {
+        console.log("🚨 KICKED BY ADMIN!");
+        alert("SECURITY ALERT: Your account has been deleted or disabled by the Administrator.");
+        handleLogout(); // This instantly clears memory and kicks them out!
+    });
     
     return () => {
       socket.off('connect', handleConnect);
       socket.off('NEW_JOB_RECEIVED');
       socket.off('AGENT_NEEDS_UPDATE');
+      socket.off('FORCE_KICK_ALL');
       clearInterval(securityInterval);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
