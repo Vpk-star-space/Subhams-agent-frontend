@@ -805,6 +805,16 @@ useEffect(() => {
             </div>
             <button onClick={clearHistory} style={{background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.8)', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline'}}>Clear All</button>
           </div>
+
+          <footer style={styles.footer}>
+                <p style={styles.footerText}>System Engineered by <strong>Venkata Pavan Kumar</strong></p>
+                <p style={styles.footerContact}>
+                    Contact: <a href="mailto:venkatapavankumar36@gmail.com" style={styles.footerLink}>venkatapavankumar36@gmail.com</a>
+                </p>
+                <p style={styles.footerContact}>
+                    Check out our other app: <a href="https://subhams-vpk.vercel.app/" target="_blank" rel="noopener noreferrer" style={styles.footerLink}>Subhams </a>
+                </p>
+            </footer>
           
           <div style={{ padding: '15px' }}>
             {activeOrders.map((order) => {
@@ -828,6 +838,7 @@ useEffect(() => {
                         <button onClick={() => handleRevoke(order.jobId)} style={{ width: '100%', padding: '8px', background: '#fee2e2', color: '#991b1b', border: '1px solid #f87171', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', marginTop: '10px', cursor: 'pointer' }}>🛑 Revoke Access & Delete</button>
                       )}
                     </>
+                    
                   )}
                 </div>
               );
