@@ -106,23 +106,31 @@ export default function CustomerUpload() {
     trackerRef.current = liveStatusTracker;
   }, [liveStatusTracker]);
 
-  // 🚨 ADD THIS BLOCK BACK! (These are the "Ears" that hear the server) 🚨
+  // 🟢 FIX 1: REPLACE THIS USE-EFFECT IN CustomerUpload.jsx
   useEffect(() => {
     socket.on('CUSTOMER_TRACKER', (data) => {
-      setLiveStatusTracker(prev => ({ ...prev, [data.jobId]: data }));
+      setLiveStatusTracker(prev => ({ 
+          ...prev, 
+          [data.jobId]: { ...(prev[data.jobId] || {}), ...data } // 🛡️ Protects the fileName from disappearing!
+      }));
     });
     return () => socket.off('CUSTOMER_TRACKER');
   }, []);
 
-useEffect(() => {
+// REPLACE THE JOIN TRACKING ROOM USE-EFFECT WITH THIS:
+  useEffect(() => {
     const joinTrackingRoom = () => {
+      // 🟢 FIX 2A: If phone wakes up and socket is dead, force it to reconnect immediately!
+      if (!socket.connected) {
+          socket.connect();
+          return; 
+      }
+
       if (shopId && shopId.trim() && uniqueCustomerName && shopStatus === 'valid') {
         const cleanShopId = shopId.toUpperCase().trim();
-        
-        // 1. Join the general room
         socket.emit('JOIN_CUSTOMER', { shopId: cleanShopId, customerName: uniqueCustomerName });
 
-        // 2. Re-sync jobs
+        // Ask the server for the latest status of all active jobs
         Object.keys(trackerRef.current).forEach(jobId => {
            socket.emit('REJOIN_TRACKER', { jobId });
         });
@@ -132,19 +140,19 @@ useEffect(() => {
     joinTrackingRoom();
     socket.on('connect', joinTrackingRoom);
 
-    // 📱 THE MOBILE WAKE-UP FIX: Instantly sync when the screen turns back on!
+    // 🟢 FIX 2B: The exact trigger that fires when the phone screen turns back on
+    // 🟢 AGGRESSIVE WAKE UP FIX
     const handleWakeUp = () => {
         if (document.visibilityState === 'visible') {
             console.log("Phone woke up! Force syncing tracker...");
-            joinTrackingRoom();
+            if (socket.disconnected) {
+                socket.connect(); // This will automatically fire the 'connect' event below
+            } else {
+                joinTrackingRoom(); // If socket thinks it's alive, force the data refresh anyway!
+            }
         }
     };
     document.addEventListener('visibilitychange', handleWakeUp);
-
-    return () => {
-      socket.off('connect', joinTrackingRoom);
-      document.removeEventListener('visibilitychange', handleWakeUp);
-    };
   }, [shopId, uniqueCustomerName, shopStatus]);
 
   useEffect(() => {

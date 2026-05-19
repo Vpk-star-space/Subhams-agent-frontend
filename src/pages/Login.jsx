@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
-import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google'; // 🟢 FIX: Added GoogleOAuthProvider
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google'; 
 import { jwtDecode } from 'jwt-decode';
 
 export default function Login() {
@@ -16,10 +16,8 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  // 🟢 FIX: State to hold the Google Client ID from your backend
   const [clientId, setClientId] = useState('');
 
-  // 🟢 FIX: Fetch the Google Client ID securely on load
   useEffect(() => {
     axios.get('https://subhams-vpk.onrender.com/api/auth/google-client-id')
       .then(res => {
@@ -38,12 +36,16 @@ export default function Login() {
       const response = await axios.post('https://subhams-vpk.onrender.com/api/auth/login', { email, password });
       
       if (response.data.success) {
-        const { accessToken, refreshToken, role, shopId } = response.data;
+        // 🛑 THE FIX: Extract ownerName (if it exists) alongside the rest
+        const { accessToken, refreshToken, role, shopId, ownerName } = response.data;
+        
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
         
         if (role === 'business') {
           localStorage.setItem('shopId', shopId);
+          // Save the name if the backend sends it, otherwise save the shopId as a backup identity
+          localStorage.setItem('ownerName', ownerName || shopId); 
           navigate('/dashboard');
         } else {
           navigate('/u'); 
@@ -61,18 +63,22 @@ export default function Login() {
       const decoded = jwtDecode(credentialResponse.credential);
       const response = await axios.post('https://subhams-vpk.onrender.com/api/auth/google-login', {
         email: decoded.email,
+        name: decoded.name,
         googleId: decoded.sub,
         role: roleValue
       });
       
       if (response.data.success) {
-        const { accessToken, refreshToken, role, shopId, isNewUser } = response.data;
+        // 🛑 THE FIX: Extract ownerName here too
+        const { accessToken, refreshToken, role, shopId, isNewUser, ownerName } = response.data;
         
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
         
         if (role === 'business') {
           localStorage.setItem('shopId', shopId);
+          localStorage.setItem('ownerName', ownerName || shopId);
+          
           if (isNewUser) {
             navigate('/register?role=business', { state: { shopData: response.data, step: 3 } });
           } else {
@@ -109,7 +115,6 @@ export default function Login() {
       <div style={dividerStyle}><span>OR</span></div>
       
       <div style={{ display: 'flex', justifyContent: 'center', minHeight: '40px' }}>
-        {/* 🟢 FIX: Button is now properly wrapped in the Provider! */}
         {clientId ? (
             <GoogleOAuthProvider clientId={clientId}>
                 <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError("Google Login Failed")} theme="outline" shape="pill" />

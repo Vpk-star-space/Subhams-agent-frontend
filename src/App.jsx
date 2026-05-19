@@ -7,6 +7,9 @@ import Dashboard from './pages/Dashboard';
 import Manage from './pages/Manage';
 import CustomerUpload from './pages/CustomerUpload';
 
+// 🤖 1. IMPORT THE NEW CHATBOT HERE
+import XeroxChatbot from './components/XeroxChatbot'; 
+
 // 🛑 THE MASTER SWITCH: Change to 'true' to lock down the app for updates!
 const IS_MAINTENANCE_MODE = false; 
 const TARGET_LAUNCH_DATE = new Date("2026-05-06T18:00:00"); // Set your target launch time here
@@ -235,6 +238,10 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
+      {/* 🤖 2. ADD THE CHATBOT HERE (Floats over all routes!) */}
+      <XeroxChatbot />
+
     </BrowserRouter>
   );
 }
