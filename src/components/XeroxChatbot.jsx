@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Send, X, CheckCircle, Globe, Sparkles } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
@@ -76,7 +76,6 @@ const XeroxChatbot = () => {
 
     const location = useLocation();
     const currentPath = location.pathname;
-    const chatEndRef = useRef(null);
 
     const isOwnerPage = currentPath.includes('/dashboard') || currentPath.includes('/manage');
     let ownerName = localStorage.getItem('ownerName'); 
@@ -109,14 +108,22 @@ const XeroxChatbot = () => {
         ]);
     };
 
-  useEffect(() => {
-        if (messages.length > 1) {
-            // 🟢 Normal conversation: Scroll to bottom gently
-            chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        } else if (messages.length === 1) {
-            // 🟢 First message (Greeting): Force scroll to the TOP
-            const chatBody = document.getElementById('subhams-chat-body');
-            if (chatBody) chatBody.scrollTop = 0;
+    // 🟢 INTELLIGENT SCROLL FIX (Solves the text cut-off issue!)
+    useEffect(() => {
+        const chatBody = document.getElementById('subhams-chat-body');
+        if (!chatBody) return;
+
+        if (messages.length === 1) {
+            // Very first message: Stay exactly at the top
+            chatBody.scrollTop = 0;
+        } else {
+            // New messages: Smooth scroll to the bottom of the container
+            setTimeout(() => {
+                chatBody.scrollTo({
+                    top: chatBody.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 100);
         }
     }, [messages]);
 
@@ -242,6 +249,7 @@ const XeroxChatbot = () => {
                        letter-spacing: 0.5px;
                    }
 
+                   /* 🟢 PERFECT NATIVE MOBILE UI (Fixes Screenshot 2 Issue) */
                    @media (max-width: 768px) {
                        .subhams-premium-btn {
                            padding: 16px;
@@ -254,11 +262,14 @@ const XeroxChatbot = () => {
                            display: none !important; 
                        }
                        .mobile-chat-window {
-                           width: 90vw !important;
-                           height: 80vh !important;
-                           max-height: 550px !important;
-                           bottom: 20px !important;
-                           right: 5vw !important;
+                           width: 100vw !important;
+                           height: 85dvh !important; 
+                           max-height: 85dvh !important;
+                           bottom: 0 !important; /* Docks completely to the bottom */
+                           right: 0 !important;
+                           border-radius: 24px 24px 0 0 !important; /* Native bottom-sheet curve */
+                           border: none !important;
+                           box-shadow: 0 -10px 40px rgba(0,0,0,0.2) !important;
                        }
                    }
                `}
@@ -280,13 +291,14 @@ const XeroxChatbot = () => {
                        </div>
                        <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
                            <button onClick={toggleLanguage} style={styles.langBtn}>
-                               {language === "EN" ? <span style={{fontSize:'12px', fontWeight:'900'}}>అ</span> : <Globe size={12} />}
+                               {language === "EN" ? <span style={{fontSize:'12px', fontWeight:'900'}}></span> : <Globe size={12} />}
                                {language === "EN" ? "తెలుగు" : "English"}
                            </button>
                            <X size={22} onClick={() => setIsOpen(false)} style={{cursor:'pointer', opacity: 0.7, transition: '0.2s'}} onMouseEnter={(e)=>e.currentTarget.style.opacity=1} onMouseLeave={(e)=>e.currentTarget.style.opacity=0.7}/>
                        </div>
                    </div>
                    
+                   {/* 🟢 ADDED ID HERE FOR INTELLIGENT SCROLLING */}
                    <div id="subhams-chat-body" style={styles.body}>
                        <div style={styles.securityNote}>
                            <CheckCircle size={12} color="#10b981" /> End-To-End Encrypted Session
@@ -313,11 +325,10 @@ const XeroxChatbot = () => {
                                    </div>
                                </div>
 
-                               {/* 🟢 THE NEW SMART CHIPS UI FOR OPTIONS */}
                                {msg.options && msg.options.length > 0 && (
                                    <div style={{
                                        display: 'flex',
-                                       flexWrap: 'wrap', // Wraps horizontally!
+                                       flexWrap: 'wrap', 
                                        gap: '8px',
                                        marginTop: '10px',
                                        opacity: msg.optionsDisabled ? 0.45 : 1,
@@ -349,7 +360,6 @@ const XeroxChatbot = () => {
                        ))}
                        
                        {loading && <div style={{fontSize: '14px', color: '#94a3b8', paddingLeft: '10px', fontStyle: 'italic'}}>Subhams is typing...</div>}
-                       <div ref={chatEndRef} />
                    </div>
 
                    <div style={styles.footer}>
@@ -371,7 +381,8 @@ const XeroxChatbot = () => {
 };
 
 const styles = {
-    chatWindow: { position: 'fixed', bottom: '24px', right: '24px', width: '390px', height: '600px', maxHeight: '85vh', backgroundColor: '#f8fafc', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', zIndex: 99999, overflow: 'hidden', border: '1px solid #e2e8f0' },
+    /* 🟢 DESKTOP UI: Wider (390px) and Taller (700px) to comfortably fit long text */
+    chatWindow: { position: 'fixed', bottom: '24px', right: '24px', width: '390px', height: '700px', maxHeight: '85vh', backgroundColor: '#f8fafc', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', zIndex: 99999, overflow: 'hidden', border: '1px solid #e2e8f0' },
     header: { padding: '14px 18px', backgroundColor: '#0f172a', color: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
     langBtn: { backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '6px 10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' },
     body: { flex: 1, padding: '16px', overflowY: 'auto' },
@@ -379,9 +390,10 @@ const styles = {
     botBubble: { backgroundColor: '#ffffff', padding: '14px', borderRadius: '0 14px 14px 14px', width: '100%', maxWidth: '92%', fontSize: '13.5px', lineHeight: '1.5', boxShadow: '0 2px 4px rgba(0,0,0,0.03)', color: '#1e293b', border: '1px solid #e2e8f0' },
     userBubble: { background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#ffffff', padding: '12px 16px', borderRadius: '14px 0 14px 14px', alignSelf: 'flex-end', maxWidth: '85%', fontSize: '13.5px', boxShadow: '0 4px 10px rgba(16,185,129,0.2)', fontWeight: '500' },
     
-    /* 🟢 UPDATED SMART CHIP STYLES */
-   menuItem: { padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '20px', cursor: 'pointer', backgroundColor: '#ffffff', fontWeight: '600', fontSize: '12px', color: '#0f172a', transition: 'all 0.2s ease', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' },
-    menuMainLinkItem: { padding: '6px 14px', border: '1px solid #10b981', borderRadius: '20px', cursor: 'pointer', backgroundColor: '#ecfdf5', fontWeight: '700', fontSize: '12px', color: '#047857', transition: 'all 0.2s ease' },
+    /* 🟢 BUTTON SIZING: Compact to fit beautifully side-by-side */
+    menuItem: { padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '20px', cursor: 'pointer', backgroundColor: '#ffffff', fontWeight: '600', fontSize: '12.5px', color: '#0f172a', transition: 'all 0.2s ease', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' },
+    menuMainLinkItem: { padding: '6px 14px', border: '1px solid #10b981', borderRadius: '20px', cursor: 'pointer', backgroundColor: '#ecfdf5', fontWeight: '700', fontSize: '12.5px', color: '#047857', transition: 'all 0.2s ease' },
+    
     footer: { padding: '12px 16px', backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '10px', alignItems: 'center' },
     input: { flex: 1, padding: '12px 16px', borderRadius: '20px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '13px', backgroundColor: '#f1f5f9', color: '#0f172a', fontWeight: '500' },
     sendBtn: { background: '#10b981', color: '#fff', border: 'none', borderRadius: '50%', width: '42px', height: '42px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 8px rgba(16, 185, 129, 0.2)' }
