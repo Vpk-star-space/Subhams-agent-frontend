@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, X, MessageCircle, CheckCircle, Globe, Printer } from 'lucide-react';
+import { Send, X, CheckCircle, Globe,Sparkles } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 
@@ -15,7 +15,7 @@ const getGreetingTime = (lang) => {
         return "Good Evening";
     } else {
         if (hour < 12) return "శుభోదయం";
-        if (hour < 18) return "శుభాహ్నం";
+        if (hour < 18) return "శుభ మధ్యాహ్నం"; 
         return "శుభ సాయంత్రం";
     }
 };
@@ -29,7 +29,6 @@ const getDictionary = (path, lang, name, teName) => {
             greeting: lang === "EN" 
                 ? `${timeGreeting}, **${name}**! 👨‍💼 Welcome to your Subhams Command Center. How may I assist with your operations today?`
                 : `${timeGreeting}, **${teName}**! 👨‍💼 మీ కమాండ్ సెంటర్‌కు స్వాగతం. ఈరోజు నేను ఎలా సహాయపడగలను?`,
-            // 🚀 THE NEW 6 ADVANCED SHOP MENUS
             options: lang === "EN"
                 ? ["📊 Queue & Analytics", "🛡️ Security Matrix", "📲 QR & Onboarding", "🖥️ Windows Agent", "⚙️ Server Limits", "👑 Architect Support"]
                 : ["📊 క్యూ & అనలిటిక్స్", "🛡️ సెక్యూరిటీ మ్యాట్రిక్స్", "📲 QR ద్వారా పొందండి", "🖥️ విండోస్ ఏజెంట్", "⚙️ సర్వర్ పరిమితులు", "👑 అడ్మిన్ సపోర్ట్"],
@@ -57,7 +56,6 @@ const getDictionary = (path, lang, name, teName) => {
         greeting: lang === "EN" 
             ? `${timeGreeting}, **${name}**! 🙏 I am Subhams Intelligence. How may I streamline your printing experience today?`
             : `${timeGreeting}, **${teName}**! 🙏 నేను సుభమ్స్ AI సిస్టమ్. నేను మీకు ఎలా సహాయపడగలను?`,
-        // 🚀 THE NEW 6 ADVANCED CUSTOMER MENUS
         options: lang === "EN"
             ? ["🛡️ Print Modes (Govt/Private)", "🪪 Smart ID Merge", "🔍 Track Print Status", "📦 Upload Rules", "👑 Contact Support"]
             : ["🛡️ ప్రింట్ మోడ్‌లు", "🪪 స్మార్ట్ ID మెర్జ్", "🔍 ప్రింట్ స్టేటస్ ట్రాక్", "📦 అప్‌లోడ్ రూల్స్", "👑 అడ్మిన్ సపోర్ట్"],
@@ -92,8 +90,6 @@ const XeroxChatbot = () => {
     const customerName = rawName.trim();
     const teluguName = (customerName === "Guest" || customerName === "Shop Partner") ? "మిత్రమా" : customerName;
 
-    const currentDict = getDictionary(currentPath, language, customerName, teluguName);
-
     const handleOpenChat = () => {
         const freshDict = getDictionary(currentPath, language, customerName, teluguName);
         setMessages([
@@ -111,8 +107,12 @@ const XeroxChatbot = () => {
         ]);
     };
 
+    // 🟢 BUG FIX: Only auto-scroll if there are MULTIPLE messages. 
+    // This stops the chat from hiding the initial greeting!
     useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (messages.length > 1) {
+            chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
     }, [messages]);
 
     const handleSendMessage = async (text, isMenuAction = false) => {
@@ -123,19 +123,23 @@ const XeroxChatbot = () => {
         setInput("");
         setLoading(true);
 
-        if (isMenuAction && (text === "Return to Main Menu" || text === "ప్రధాన మెనూకు తిరిగి వెళ్లండి" || text === "Back to Categories")) {
+        const currentDict = getDictionary(currentPath, language, customerName, teluguName);
+        
+        const lowerInput = text.toLowerCase().trim();
+        const isReturnTrigger = lowerInput === "return to main menu" || lowerInput === "ప్రధాన మెనూకు తిరిగి వెళ్లండి" || lowerInput === "back to categories";
+
+        if (isMenuAction && isReturnTrigger) {
             setTimeout(() => {
-                const updatedDict = getDictionary(currentPath, language, customerName, teluguName);
                 setMessages(prev => [...prev, {
                     sender: 'bot',
-                    text: updatedDict.menuHeader,
-                    options: updatedDict.options,
+                    text: currentDict.menuHeader,
+                    options: currentDict.options,
                     optionsDisabled: false,
                     time: getCurrentTime()
                 }]);
                 setLoading(false);
-            }, 500);
-            return;
+            }, 400);
+            return; 
         }
 
         try {
@@ -149,16 +153,16 @@ const XeroxChatbot = () => {
                     lang: language, 
                     path: currentPath,
                     userName: customerName,
-                    teName: teluguName
+                    teName: teluguName,
+                    localHour: new Date().getHours() 
                 }, 
                 { headers: { Authorization: token ? `Bearer ${token}` : '' } } 
             );
 
-            // 🚀 THE MAGIC: The frontend now accepts sub-menus directly from your backend!
             setMessages(prev => [...prev, { 
                 sender: 'bot', 
                 text: res.data.reply,
-                options: res.data.options || [currentDict.menuLabel],
+                options: res.data.options || (res.data.isMainTrigger ? currentDict.options : [currentDict.menuLabel]),
                 isMainMenuTrigger: res.data.isMainTrigger !== undefined ? res.data.isMainTrigger : true,
                 optionsDisabled: false,
                 time: getCurrentTime()
@@ -179,72 +183,132 @@ const XeroxChatbot = () => {
         }
     };
 
-    return (
+   return (
         <>
             <style>
                 {`
-                    @keyframes professionalPulse {
-                        0% { transform: scale(1); box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); }
-                        50% { transform: scale(1.05); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5); }
-                        100% { transform: scale(1); box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); }
+                    /* 🔥 UN-CACHEABLE ANIMATIONS FOR THE BUTTON */
+                    @keyframes gradientShift {
+                        0% { background-position: 0% 50%; }
+                        50% { background-position: 100% 50%; }
+                        100% { background-position: 0% 50%; }
                     }
-                    .subhams-help-btn {
-                        animation: professionalPulse 2.5s infinite ease-in-out;
+                    
+                    @keyframes ringPulse {
+                        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5), 0 10px 20px rgba(0,0,0,0.2); }
+                        70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0), 0 10px 20px rgba(0,0,0,0.2); }
+                        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0), 0 10px 20px rgba(0,0,0,0.2); }
                     }
-                    .subhams-help-btn:hover {
-                        animation: none;
-                        transform: scale(1.05);
+
+                    .chat-force-font, .chat-force-font * {
+                        font-family: 'Inter', system-ui, sans-serif !important;
+                    }
+
+                    /* 🟢 THE PREMIUM BUTTON CSS (Moved from inline to here for mobile support) */
+                    .subhams-premium-btn {
+                        position: fixed;
+                        bottom: 30px;
+                        right: 30px;
+                        padding: 14px 28px;
+                        border-radius: 999px;
+                        background: linear-gradient(135deg, #059669 0%, #10b981 50%, #2563eb 100%);
+                        background-size: 200% 200%;
+                        animation: gradientShift 4s ease infinite, ringPulse 2.5s infinite;
+                        color: #ffffff;
+                        border: 1px solid rgba(255, 255, 255, 0.4);
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        z-index: 99999;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        backdrop-filter: blur(10px);
+                    }
+
+                    .subhams-premium-btn:hover {
+                        transform: translateY(-5px) scale(1.05);
+                        border-color: #ffffff;
+                        animation: gradientShift 4s ease infinite; /* Pauses the pulse on hover */
+                        box-shadow: 0 15px 35px rgba(16, 185, 129, 0.6);
+                    }
+
+                    .btn-text-glow {
+                        font-family: 'Inter', sans-serif;
+                        font-weight: 800;
+                        font-size: 15px;
+                        letter-spacing: 0.5px;
+                    }
+
+                    /* 📱 PERFECT MOBILE SIZING */
+                    @media (max-width: 768px) {
+                        .subhams-premium-btn {
+                            padding: 16px; /* Makes it a perfect circle */
+                            border-radius: 50%;
+                            bottom: 20px;
+                            right: 20px;
+                            gap: 0;
+                        }
+                        .btn-text-glow { 
+                            display: none !important; /* Hides text on phones */
+                        }
+                        .mobile-chat-window {
+                            width: 90vw !important;
+                            height: 80vh !important;
+                            max-height: 550px !important;
+                            bottom: 20px !important;
+                            right: 5vw !important;
+                        }
                     }
                 `}
             </style>
 
             {!isOpen ? (
-                <button 
-                    onClick={handleOpenChat} 
-                    className="subhams-help-btn"
-                    style={styles.floatingBtn}
-                >
-                    <MessageCircle size={22} /> 
-                    <span style={{fontWeight:'800', fontSize: '14.5px', letterSpacing: '0.3px'}}>✨ Ask Subhams</span>
+                <button onClick={handleOpenChat} className="subhams-premium-btn">
+                    <Sparkles size={22} color="#ffffff" strokeWidth={2.5} /> 
+                    <span className="btn-text-glow">
+                        Ask Subhams
+                    </span>
                 </button>
             ) : (
-                <div style={styles.chatWindow}>
+                <div className="mobile-chat-window chat-force-font" style={styles.chatWindow}>
                     <div style={styles.header}>
-                        <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
-                            <Printer size={20} />
-                            <div style={{fontWeight:'700', fontSize:'15px', letterSpacing: '0.3px'}}>Subhams Intelligence</div>
+                        <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                            {/* 🟢 Also updated the header icon to match! */}
+                            <Sparkles size={20} color="#34d399" />
+                            <div style={{fontWeight:'800', fontSize:'15px', letterSpacing: '0.3px'}}>Subhams Intelligence</div>
                         </div>
-                        <div style={{display:'flex', gap:'14px', alignItems:'center'}}>
+                        <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
                             <button onClick={toggleLanguage} style={styles.langBtn}>
-                                {language === "EN" ? <span style={{fontSize:'14px', fontWeight:'900'}}>అ</span> : <Globe size={13} />}
+                                {language === "EN" ? <span style={{fontSize:'12px', fontWeight:'900'}}>అ</span> : <Globe size={12} />}
                                 {language === "EN" ? "తెలుగు" : "English"}
                             </button>
-                            <X size={22} onClick={() => setIsOpen(false)} style={{cursor:'pointer', opacity: 0.8}} />
+                            <X size={22} onClick={() => setIsOpen(false)} style={{cursor:'pointer', opacity: 0.7, transition: '0.2s'}} onMouseEnter={(e)=>e.currentTarget.style.opacity=1} onMouseLeave={(e)=>e.currentTarget.style.opacity=0.7}/>
                         </div>
                     </div>
-
+                    {/* ... rest of your chat code remains exactly the same ... */}
                     <div style={styles.body}>
                         <div style={styles.securityNote}>
-                            <CheckCircle size={13} color="#10b981" /> End-To-End Encrypted Session
+                            <CheckCircle size={12} color="#10b981" /> End-To-End Encrypted Session
                         </div>
 
                         {messages.map((msg, idx) => (
-                            <div key={idx} style={{display: 'flex', flexDirection: 'column', alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start', marginBottom: '16px'}}>
+                            <div key={idx} style={{display: 'flex', flexDirection: 'column', alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start', marginBottom: '14px'}}>
                                 
                                 <div style={msg.sender === 'bot' ? styles.botBubble : styles.userBubble}>
                                     <span dangerouslySetInnerHTML={{ __html: msg.text.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') }} />
                                     
                                     <div style={{
                                         fontSize: '10px', 
-                                        color: msg.sender === 'bot' ? '#94a3b8' : '#bfdbfe', 
+                                        color: msg.sender === 'bot' ? '#94a3b8' : '#d1fae5', 
                                         textAlign: 'right', 
-                                        marginTop: '4px',
+                                        marginTop: '6px',
                                         display: 'flex',
                                         justifyContent: 'flex-end',
                                         alignItems: 'center',
-                                        gap: '4px'
+                                        gap: '4px',
+                                        fontWeight: '600'
                                     }}>
-                                        {msg.time} {msg.sender === 'user' && <span style={{color: '#60a5fa'}}>✓✓</span>}
+                                        {msg.time} {msg.sender === 'user' && <span style={{color: '#ffffff'}}>✓✓</span>}
                                     </div>
                                 </div>
 
@@ -269,7 +333,7 @@ const XeroxChatbot = () => {
                             </div>
                         ))}
                         
-                        {loading && <div style={{fontSize: '20px', color: '#94a3b8', paddingLeft: '10px'}}>...</div>}
+                        {loading && <div style={{fontSize: '14px', color: '#94a3b8', paddingLeft: '10px', fontStyle: 'italic'}}>Subhams is typing...</div>}
                         <div ref={chatEndRef} />
                     </div>
 
@@ -279,10 +343,10 @@ const XeroxChatbot = () => {
                             value={input} 
                             onChange={(e) => setInput(e.target.value)} 
                             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(input)}
-                            placeholder={currentDict.placeholder}
+                            placeholder={getDictionary(currentPath, language, customerName, teluguName).placeholder}
                         />
                         <button onClick={() => handleSendMessage(input)} style={styles.sendBtn}>
-                            <Send size={16} />
+                            <Send size={16} strokeWidth={2.5} />
                         </button>
                     </div>
                 </div>
@@ -292,20 +356,23 @@ const XeroxChatbot = () => {
 };
 
 const styles = {
-    floatingBtn: { position: 'fixed', bottom: '30px', right: '30px', backgroundColor: '#2563eb', color: '#fff', padding: '14px 24px', borderRadius: '30px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', zIndex: 9999, transition: '0.3s ease' },
-    chatWindow: { position: 'fixed', bottom: '20px', right: '20px', width: '380px', height: '620px', backgroundColor: '#f8fafc', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', zIndex: 9999, overflow: 'hidden', border: '1px solid #e2e8f0' },
-    header: { padding: '16px', backgroundColor: '#0f172a', color: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #334155' },
-    langBtn: { backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold', transition: '0.2s' },
+    /* 🟢 SIZING FIX: Height is now 560px (shorter) to prevent laptop screen overflow */
+    chatWindow: { position: 'fixed', bottom: '24px', right: '24px', width: '360px', height: '560px', maxHeight: '85vh', backgroundColor: '#f8fafc', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', zIndex: 99999, overflow: 'hidden', border: '1px solid #e2e8f0' },
+    header: { padding: '14px 18px', backgroundColor: '#0f172a', color: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+    langBtn: { backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '6px 10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' },
     body: { flex: 1, padding: '16px', overflowY: 'auto' },
-    securityNote: { textAlign: 'center', fontSize: '11px', color: '#64748b', marginBottom: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' },
-    botBubble: { backgroundColor: '#ffffff', padding: '14px 16px', borderRadius: '0 16px 16px 16px', width: '100%', maxWidth: '92%', fontSize: '14px', lineHeight: '1.6', boxShadow: '0 2px 4px rgba(0,0,0,0.04)', color: '#1e293b', border: '1px solid #f1f5f9' },
-    userBubble: { backgroundColor: '#2563eb', color: '#ffffff', padding: '12px 16px', borderRadius: '16px 0 16px 16px', alignSelf: 'flex-end', maxWidth: '85%', fontSize: '14px', boxShadow: '0 2px 4px rgba(37,99,235,0.2)' },
-    menuWrapper: { display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px', width: '100%' },
-    menuItem: { padding: '12px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', backgroundColor: '#ffffff', fontWeight: '600', fontSize: '13px', color: '#0f172a', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' },
-    menuMainLinkItem: { padding: '8px 16px', border: '1px solid #3b82f6', borderRadius: '20px', cursor: 'pointer', backgroundColor: '#eff6ff', fontWeight: 'bold', fontSize: '12px', color: '#1d4ed8', textAlign: 'center', display: 'inline-block', marginTop: '6px' },
-    footer: { padding: '14px 16px', backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '10px' },
-    input: { flex: 1, padding: '12px 16px', borderRadius: '24px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '13px', backgroundColor: '#f8fafc', color: '#0f172a' },
-    sendBtn: { backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '50%', width: '42px', height: '42px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)', transition: '0.2s' }
+    securityNote: { textAlign: 'center', fontSize: '10px', color: '#64748b', marginBottom: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px', fontWeight: '800', textTransform: 'uppercase' },
+    botBubble: { backgroundColor: '#ffffff', padding: '14px', borderRadius: '0 14px 14px 14px', width: '100%', maxWidth: '92%', fontSize: '13.5px', lineHeight: '1.5', boxShadow: '0 2px 4px rgba(0,0,0,0.03)', color: '#1e293b', border: '1px solid #e2e8f0' },
+    userBubble: { background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#ffffff', padding: '12px 16px', borderRadius: '14px 0 14px 14px', alignSelf: 'flex-end', maxWidth: '85%', fontSize: '13.5px', boxShadow: '0 4px 10px rgba(16,185,129,0.2)', fontWeight: '500' },
+    
+    /* 🟢 SPACING FIX: Tighter menu items so they fit neatly on the screen */
+    menuWrapper: { display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px', width: '100%' },
+    menuItem: { padding: '10px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', backgroundColor: '#ffffff', fontWeight: '600', fontSize: '13px', color: '#0f172a', transition: '0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' },
+    menuMainLinkItem: { padding: '8px 16px', border: '1px solid #10b981', borderRadius: '16px', cursor: 'pointer', backgroundColor: '#ecfdf5', fontWeight: '700', fontSize: '12px', color: '#047857', textAlign: 'center', display: 'inline-block', marginTop: '6px' },
+    
+    footer: { padding: '12px 16px', backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '10px', alignItems: 'center' },
+    input: { flex: 1, padding: '12px 16px', borderRadius: '20px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '13px', backgroundColor: '#f1f5f9', color: '#0f172a', fontWeight: '500' },
+    sendBtn: { background: '#10b981', color: '#fff', border: 'none', borderRadius: '50%', width: '42px', height: '42px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 8px rgba(16, 185, 129, 0.2)' }
 };
 
 export default XeroxChatbot;
