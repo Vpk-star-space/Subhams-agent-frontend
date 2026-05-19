@@ -109,9 +109,14 @@ const XeroxChatbot = () => {
         ]);
     };
 
-    useEffect(() => {
+  useEffect(() => {
         if (messages.length > 1) {
-            chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            // 🟢 Normal conversation: Scroll to bottom gently
+            chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        } else if (messages.length === 1) {
+            // 🟢 First message (Greeting): Force scroll to the TOP
+            const chatBody = document.getElementById('subhams-chat-body');
+            if (chatBody) chatBody.scrollTop = 0;
         }
     }, [messages]);
 
@@ -282,7 +287,7 @@ const XeroxChatbot = () => {
                        </div>
                    </div>
                    
-                   <div style={styles.body}>
+                   <div id="subhams-chat-body" style={styles.body}>
                        <div style={styles.securityNote}>
                            <CheckCircle size={12} color="#10b981" /> End-To-End Encrypted Session
                        </div>
@@ -366,7 +371,7 @@ const XeroxChatbot = () => {
 };
 
 const styles = {
-    chatWindow: { position: 'fixed', bottom: '24px', right: '24px', width: '360px', height: '680px', maxHeight: '85vh', backgroundColor: '#f8fafc', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', zIndex: 99999, overflow: 'hidden', border: '1px solid #e2e8f0' },
+    chatWindow: { position: 'fixed', bottom: '24px', right: '24px', width: '390px', height: '600px', maxHeight: '85vh', backgroundColor: '#f8fafc', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', zIndex: 99999, overflow: 'hidden', border: '1px solid #e2e8f0' },
     header: { padding: '14px 18px', backgroundColor: '#0f172a', color: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
     langBtn: { backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '6px 10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' },
     body: { flex: 1, padding: '16px', overflowY: 'auto' },
@@ -375,9 +380,8 @@ const styles = {
     userBubble: { background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#ffffff', padding: '12px 16px', borderRadius: '14px 0 14px 14px', alignSelf: 'flex-end', maxWidth: '85%', fontSize: '13.5px', boxShadow: '0 4px 10px rgba(16,185,129,0.2)', fontWeight: '500' },
     
     /* 🟢 UPDATED SMART CHIP STYLES */
-    menuItem: { padding: '8px 14px', border: '1px solid #cbd5e1', borderRadius: '24px', cursor: 'pointer', backgroundColor: '#ffffff', fontWeight: '600', fontSize: '12.5px', color: '#0f172a', transition: 'all 0.2s ease', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' },
-    menuMainLinkItem: { padding: '8px 16px', border: '1px solid #10b981', borderRadius: '24px', cursor: 'pointer', backgroundColor: '#ecfdf5', fontWeight: '700', fontSize: '12.5px', color: '#047857', transition: 'all 0.2s ease' },
-    
+   menuItem: { padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '20px', cursor: 'pointer', backgroundColor: '#ffffff', fontWeight: '600', fontSize: '12px', color: '#0f172a', transition: 'all 0.2s ease', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' },
+    menuMainLinkItem: { padding: '6px 14px', border: '1px solid #10b981', borderRadius: '20px', cursor: 'pointer', backgroundColor: '#ecfdf5', fontWeight: '700', fontSize: '12px', color: '#047857', transition: 'all 0.2s ease' },
     footer: { padding: '12px 16px', backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '10px', alignItems: 'center' },
     input: { flex: 1, padding: '12px 16px', borderRadius: '20px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '13px', backgroundColor: '#f1f5f9', color: '#0f172a', fontWeight: '500' },
     sendBtn: { background: '#10b981', color: '#fff', border: 'none', borderRadius: '50%', width: '42px', height: '42px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 8px rgba(16, 185, 129, 0.2)' }
