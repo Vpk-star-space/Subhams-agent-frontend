@@ -30,8 +30,8 @@ const getDictionary = (path, lang, name, teName) => {
                 ? `${timeGreeting}, **${name}**! 👨‍💼 Welcome to your Subhams Command Center. How may I assist with your operations today?`
                 : `${timeGreeting}, **${teName}**! 👨‍💼 మీ కమాండ్ సెంటర్‌కు స్వాగతం. ఈరోజు నేను ఎలా సహాయపడగలను?`,
             options: lang === "EN"
-                ? ["📊 Queue & Analytics", "🛡️ Security Matrix", "📲 QR & Onboarding", "🖥️ Windows Agent", "⚙️ Server Limits", "❓ How Subhams Works", "🌐 Our Other Projects", "⏱️ Email & OTP Delays","👑 Architect Support"]
-                : ["📊 క్యూ & అనలిటిక్స్", "🛡️ సెక్యూరిటీ మ్యాట్రిక్స్", "📲 QR ద్వారా పొందండి", "🖥️ విండోస్ ఏజెంట్", "⚙️ సర్వర్ పరిమితులు", "❓ ఎలా పనిచేస్తుంది", "🌐 మా ఇతర ప్రాజెక్ట్‌లు", "⏱️ OTP ఆలస్యం గురించి","👑 అడ్మిన్ సపోర్ట్"],
+                ? ["📊 Queue & Analytics", "🛡️ Security Matrix", "📲 QR & Onboarding", "🖥️ Windows Agent", "⚙️ Server Limits", "✨ What is Subhams?","❓ How Subhams Works", "🌐 Our Other Projects", "⏱️ Email & OTP Delays","👑 Architect Support"]
+                : ["📊 క్యూ & అనలిటిక్స్", "🛡️ సెక్యూరిటీ మ్యాట్రిక్స్", "📲 QR ద్వారా పొందండి", "🖥️ విండోస్ ఏజెంట్", "⚙️ సర్వర్ పరిమితులు","✨ సుభమ్స్ అంటే ఏమిటి?", "❓ ఎలా పనిచేస్తుంది", "🌐 మా ఇతర ప్రాజెక్ట్‌లు", "⏱️ OTP ఆలస్యం గురించి","👑 అడ్మిన్ సపోర్ట్"],
             menuLabel: lang === "EN" ? "Return to Main Menu" : "ప్రధాన మెనూకు తిరిగి వెళ్లండి",
             menuHeader: lang === "EN" ? "Please select a strategic category:" : "దయచేసి ఒక వర్గాన్ని ఎంచుకోండి:",
             placeholder: lang === "EN" ? "Query the system..." : "వ్యవస్థ గురించి అడగండి..."
@@ -57,8 +57,8 @@ const getDictionary = (path, lang, name, teName) => {
             ? `${timeGreeting}, **${name}**! 🙏 I am Subhams Intelligence. How may I streamline your printing experience today?`
             : `${timeGreeting}, **${teName}**! 🙏 నేను సుభమ్స్ AI సిస్టమ్. నేను మీకు ఎలా సహాయపడగలను?`,
         options: lang === "EN"
-            ? ["🛡️ Print Modes (Govt/Private)", "🪪 Smart ID Merge", "🔍 Track Print Status", "📦 Upload Rules", "❓ How Subhams Works", "🌐 Our Other Projects", "⏱️ Email & OTP Delays","👑 Contact Support"]
-            : ["🛡️ ప్రింట్ మోడ్‌లు", "🪪 స్మార్ట్ ID మెర్జ్", "🔍 ప్రింట్ స్టేటస్ ట్రాక్", "📦 అప్‌లోడ్ రూల్స్","❓ ఎలా పనిచేస్తుంది", "🌐 మా ఇతర ప్రాజెక్ట్‌లు", "⏱️ OTP ఆలస్యం గురించి", "👑 అడ్మిన్ సపోర్ట్"],
+            ? ["🛡️ Print Modes (Govt/Private)", "🪪 Smart ID Merge", "🔍 Track Print Status", "📦 Upload Rules", "✨ What is Subhams?", "❓ How Subhams Works", "🌐 Our Other Projects", "⏱️ Email & OTP Delays","👑 Contact Support"]
+            : ["🛡️ ప్రింట్ మోడ్‌లు", "🪪 స్మార్ట్ ID మెర్జ్", "🔍 ప్రింట్ స్టేటస్ ట్రాక్", "📦 అప్‌లోడ్ రూల్స్","✨ సుభమ్స్ అంటే ఏమిటి?","❓ ఎలా పనిచేస్తుంది", "🌐 మా ఇతర ప్రాజెక్ట్‌లు", "⏱️ OTP ఆలస్యం గురించి", "👑 అడ్మిన్ సపోర్ట్"],
         menuLabel: lang === "EN" ? "Return to Main Menu" : "ప్రధాన మెనూకు తిరిగి వెళ్లండి",
         menuHeader: lang === "EN" ? "Select an inquiry category:" : "ఒక వర్గాన్ని ఎంచుకోండి:",
         placeholder: lang === "EN" ? "Submit your query..." : "మీ ప్రశ్నను టైప్ చేయండి..."
