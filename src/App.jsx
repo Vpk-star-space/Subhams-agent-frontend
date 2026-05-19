@@ -6,7 +6,8 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Manage from './pages/Manage';
 import CustomerUpload from './pages/CustomerUpload';
-
+// Add this line with your other imports
+import LandingPage from './pages/LandingPage';
 // 🤖 1. IMPORT THE NEW CHATBOT HERE
 import XeroxChatbot from './components/XeroxChatbot'; 
 
@@ -208,7 +209,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
+        {/* Google lands here first (The LandingPage) */}
+  <Route path="/" element={<LandingPage />} />
+  
+  {/* Users go here to choose Individual or Business */}
+  <Route path="/portal" element={<Home />} />
         
         {/* 👤 OPEN UPLOAD ROUTE */}
         <Route path="/u/:shopId" element={<CustomerUpload />} />
