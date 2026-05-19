@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, X, CheckCircle, Globe,Sparkles } from 'lucide-react';
+import { Send, X, CheckCircle, Globe, Sparkles } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 
@@ -10,13 +10,15 @@ const getCurrentTime = () => {
 const getGreetingTime = (lang) => {
     const hour = new Date().getHours();
     if (lang === "EN") {
-        if (hour < 12) return "Good Morning";
-        if (hour < 18) return "Good Afternoon";
-        return "Good Evening";
+        if (hour < 3) return "Good Day 🌙";
+        if (hour < 12) return "Good Morning 🌅";
+        if (hour < 17) return "Good Afternoon ☀️";
+        return "Good Evening 🌇";
     } else {
-        if (hour < 12) return "శుభోదయం";
-        if (hour < 18) return "శుభ మధ్యాహ్నం"; 
-        return "శుభ సాయంత్రం";
+        if (hour < 3) return "శుభ దినం 🌙";
+        if (hour < 12) return "శుభోదయం 🌅";
+        if (hour < 17) return "శుభ మధ్యాహ్నం ☀️"; 
+        return "శుభ సాయంత్రం 🌇";
     }
 };
 
@@ -32,7 +34,7 @@ const getDictionary = (path, lang, name, teName) => {
             options: lang === "EN"
                 ? ["📊 Queue & Analytics", "🛡️ Security Matrix", "📲 QR & Onboarding", "🖥️ Windows Agent", "⚙️ Server Limits", "✨ What is Subhams?","❓ How Subhams Works", "🌐 Our Other Projects", "⏱️ Email & OTP Delays","👑 Architect Support"]
                 : ["📊 క్యూ & అనలిటిక్స్", "🛡️ సెక్యూరిటీ మ్యాట్రిక్స్", "📲 QR ద్వారా పొందండి", "🖥️ విండోస్ ఏజెంట్", "⚙️ సర్వర్ పరిమితులు","✨ సుభమ్స్ అంటే ఏమిటి?", "❓ ఎలా పనిచేస్తుంది", "🌐 మా ఇతర ప్రాజెక్ట్‌లు", "⏱️ OTP ఆలస్యం గురించి","👑 అడ్మిన్ సపోర్ట్"],
-            menuLabel: lang === "EN" ? "Return to Main Menu" : "ప్రధాన మెనూకు తిరిగి వెళ్లండి",
+            menuLabel: lang === "EN" ? "🏠 Return to Main Menu" : "🏠 ప్రధాన మెనూకు వెళ్లండి",
             menuHeader: lang === "EN" ? "Please select a strategic category:" : "దయచేసి ఒక వర్గాన్ని ఎంచుకోండి:",
             placeholder: lang === "EN" ? "Query the system..." : "వ్యవస్థ గురించి అడగండి..."
         };
@@ -44,9 +46,9 @@ const getDictionary = (path, lang, name, teName) => {
                 ? `${timeGreeting}! 🏪 Welcome to the Subhams Business Portal. Do you require assistance with your setup?`
                 : `${timeGreeting}! 🏪 సుభమ్స్ బిజినెస్ పోర్టల్‌కు స్వాగతం. సెటప్ చేయడంలో మీకు సహాయం కావాలా?`,
             options: lang === "EN"
-                ? ["🖥️ Desktop Agent Setup", "🛡️ Windows SmartScreen Fix", "⏱️ Email & OTP Delays","👑 Contact Architect"]
-                : ["🖥️ డెస్క్‌టాప్ ఏజెంట్ సెటప్", "🛡️ విండోస్ స్మార్ట్‌స్క్రీన్ ఫిక్స్", "⏱️ OTP ఆలస్యం గురించి","👑 అడ్మిన్‌ను సంప్రదించండి"],
-            menuLabel: lang === "EN" ? "Return to Main Menu" : "ప్రధాన మెనూకు తిరిగి వెళ్లండి",
+                ? ["🖥️ Desktop Agent Setup", "🛡️ Windows SmartScreen Fix", "✨ What is Subhams?", "❓ How Subhams Works", "🌐 Our Other Projects", "⏱️ Email & OTP Delays","👑 Contact Architect"]
+                : ["🖥️ డెస్క్‌టాప్ ఏజెంట్ సెటప్", "🛡️ విండోస్ స్మార్ట్‌స్క్రీన్ ఫిక్స్", "✨ సుభమ్స్ అంటే ఏమిటి?", "❓ ఎలా పనిచేస్తుంది", "🌐 మా ఇతర ప్రాజెక్ట్‌లు", "⏱️ OTP ఆలస్యం గురించి","👑 అడ్మిన్‌ను సంప్రదించండి"],
+            menuLabel: lang === "EN" ? "🏠 Return to Main Menu" : "🏠 ప్రధాన మెనూకు వెళ్లండి",
             menuHeader: lang === "EN" ? "Setup & configuration options:" : "సెటప్ ఎంపికలు:",
             placeholder: lang === "EN" ? "Ask for onboarding help..." : "సెటప్ సహాయం కోసం అడగండి..."
         };
@@ -59,7 +61,7 @@ const getDictionary = (path, lang, name, teName) => {
         options: lang === "EN"
             ? ["🛡️ Print Modes (Govt/Private)", "🪪 Smart ID Merge", "🔍 Track Print Status", "📦 Upload Rules", "✨ What is Subhams?", "❓ How Subhams Works", "🌐 Our Other Projects", "⏱️ Email & OTP Delays","👑 Contact Support"]
             : ["🛡️ ప్రింట్ మోడ్‌లు", "🪪 స్మార్ట్ ID మెర్జ్", "🔍 ప్రింట్ స్టేటస్ ట్రాక్", "📦 అప్‌లోడ్ రూల్స్","✨ సుభమ్స్ అంటే ఏమిటి?","❓ ఎలా పనిచేస్తుంది", "🌐 మా ఇతర ప్రాజెక్ట్‌లు", "⏱️ OTP ఆలస్యం గురించి", "👑 అడ్మిన్ సపోర్ట్"],
-        menuLabel: lang === "EN" ? "Return to Main Menu" : "ప్రధాన మెనూకు తిరిగి వెళ్లండి",
+        menuLabel: lang === "EN" ? "🏠 Return to Main Menu" : "🏠 ప్రధాన మెనూకు వెళ్లండి",
         menuHeader: lang === "EN" ? "Select an inquiry category:" : "ఒక వర్గాన్ని ఎంచుకోండి:",
         placeholder: lang === "EN" ? "Submit your query..." : "మీ ప్రశ్నను టైప్ చేయండి..."
     };
@@ -107,8 +109,6 @@ const XeroxChatbot = () => {
         ]);
     };
 
-    // 🟢 BUG FIX: Only auto-scroll if there are MULTIPLE messages. 
-    // This stops the chat from hiding the initial greeting!
     useEffect(() => {
         if (messages.length > 1) {
             chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -126,7 +126,7 @@ const XeroxChatbot = () => {
         const currentDict = getDictionary(currentPath, language, customerName, teluguName);
         
         const lowerInput = text.toLowerCase().trim();
-        const isReturnTrigger = lowerInput === "return to main menu" || lowerInput === "ప్రధాన మెనూకు తిరిగి వెళ్లండి" || lowerInput === "back to categories";
+        const isReturnTrigger = lowerInput.includes("return to main menu") || lowerInput.includes("ప్రధాన మెనూ") || lowerInput === "back";
 
         if (isMenuAction && isReturnTrigger) {
             setTimeout(() => {
@@ -184,180 +184,189 @@ const XeroxChatbot = () => {
     };
 
    return (
-        <>
-            <style>
-                {`
-                    /* 🔥 UN-CACHEABLE ANIMATIONS FOR THE BUTTON */
-                    @keyframes gradientShift {
-                        0% { background-position: 0% 50%; }
-                        50% { background-position: 100% 50%; }
-                        100% { background-position: 0% 50%; }
-                    }
-                    
-                    @keyframes ringPulse {
-                        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5), 0 10px 20px rgba(0,0,0,0.2); }
-                        70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0), 0 10px 20px rgba(0,0,0,0.2); }
-                        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0), 0 10px 20px rgba(0,0,0,0.2); }
-                    }
+       <>
+           <style>
+               {`
+                   @keyframes gradientShift {
+                       0% { background-position: 0% 50%; }
+                       50% { background-position: 100% 50%; }
+                       100% { background-position: 0% 50%; }
+                   }
+                   
+                   @keyframes ringPulse {
+                       0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5), 0 10px 20px rgba(0,0,0,0.2); }
+                       70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0), 0 10px 20px rgba(0,0,0,0.2); }
+                       100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0), 0 10px 20px rgba(0,0,0,0.2); }
+                   }
 
-                    .chat-force-font, .chat-force-font * {
-                        font-family: 'Inter', system-ui, sans-serif !important;
-                    }
+                   .chat-force-font, .chat-force-font * {
+                       font-family: 'Inter', system-ui, sans-serif !important;
+                   }
 
-                    /* 🟢 THE PREMIUM BUTTON CSS (Moved from inline to here for mobile support) */
-                    .subhams-premium-btn {
-                        position: fixed;
-                        bottom: 30px;
-                        right: 30px;
-                        padding: 14px 28px;
-                        border-radius: 999px;
-                        background: linear-gradient(135deg, #059669 0%, #10b981 50%, #2563eb 100%);
-                        background-size: 200% 200%;
-                        animation: gradientShift 4s ease infinite, ringPulse 2.5s infinite;
-                        color: #ffffff;
-                        border: 1px solid rgba(255, 255, 255, 0.4);
-                        cursor: pointer;
-                        display: flex;
-                        align-items: center;
-                        gap: 10px;
-                        z-index: 99999;
-                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                        backdrop-filter: blur(10px);
-                    }
+                   .subhams-premium-btn {
+                       position: fixed;
+                       bottom: 30px;
+                       right: 30px;
+                       padding: 14px 28px;
+                       border-radius: 999px;
+                       background: linear-gradient(135deg, #059669 0%, #10b981 50%, #2563eb 100%);
+                       background-size: 200% 200%;
+                       animation: gradientShift 4s ease infinite, ringPulse 2.5s infinite;
+                       color: #ffffff;
+                       border: 1px solid rgba(255, 255, 255, 0.4);
+                       cursor: pointer;
+                       display: flex;
+                       align-items: center;
+                       gap: 10px;
+                       z-index: 99999;
+                       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                       backdrop-filter: blur(10px);
+                   }
 
-                    .subhams-premium-btn:hover {
-                        transform: translateY(-5px) scale(1.05);
-                        border-color: #ffffff;
-                        animation: gradientShift 4s ease infinite; /* Pauses the pulse on hover */
-                        box-shadow: 0 15px 35px rgba(16, 185, 129, 0.6);
-                    }
+                   .subhams-premium-btn:hover {
+                       transform: translateY(-5px) scale(1.05);
+                       border-color: #ffffff;
+                       animation: gradientShift 4s ease infinite;
+                       box-shadow: 0 15px 35px rgba(16, 185, 129, 0.6);
+                   }
 
-                    .btn-text-glow {
-                        font-family: 'Inter', sans-serif;
-                        font-weight: 800;
-                        font-size: 15px;
-                        letter-spacing: 0.5px;
-                    }
+                   .btn-text-glow {
+                       font-family: 'Inter', sans-serif;
+                       font-weight: 800;
+                       font-size: 15px;
+                       letter-spacing: 0.5px;
+                   }
 
-                    /* 📱 PERFECT MOBILE SIZING */
-                    @media (max-width: 768px) {
-                        .subhams-premium-btn {
-                            padding: 16px; /* Makes it a perfect circle */
-                            border-radius: 50%;
-                            bottom: 20px;
-                            right: 20px;
-                            gap: 0;
-                        }
-                        .btn-text-glow { 
-                            display: none !important; /* Hides text on phones */
-                        }
-                        .mobile-chat-window {
-                            width: 90vw !important;
-                            height: 80vh !important;
-                            max-height: 550px !important;
-                            bottom: 20px !important;
-                            right: 5vw !important;
-                        }
-                    }
-                `}
-            </style>
+                   @media (max-width: 768px) {
+                       .subhams-premium-btn {
+                           padding: 16px;
+                           border-radius: 50%;
+                           bottom: 20px;
+                           right: 20px;
+                           gap: 0;
+                       }
+                       .btn-text-glow { 
+                           display: none !important; 
+                       }
+                       .mobile-chat-window {
+                           width: 90vw !important;
+                           height: 80vh !important;
+                           max-height: 550px !important;
+                           bottom: 20px !important;
+                           right: 5vw !important;
+                       }
+                   }
+               `}
+           </style>
 
-            {!isOpen ? (
-                <button onClick={handleOpenChat} className="subhams-premium-btn">
-                    <Sparkles size={22} color="#ffffff" strokeWidth={2.5} /> 
-                    <span className="btn-text-glow">
-                        Ask Subhams
-                    </span>
-                </button>
-            ) : (
-                <div className="mobile-chat-window chat-force-font" style={styles.chatWindow}>
-                    <div style={styles.header}>
-                        <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
-                            {/* 🟢 Also updated the header icon to match! */}
-                            <Sparkles size={20} color="#34d399" />
-                            <div style={{fontWeight:'800', fontSize:'15px', letterSpacing: '0.3px'}}>Subhams Intelligence</div>
-                        </div>
-                        <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
-                            <button onClick={toggleLanguage} style={styles.langBtn}>
-                                {language === "EN" ? <span style={{fontSize:'12px', fontWeight:'900'}}>అ</span> : <Globe size={12} />}
-                                {language === "EN" ? "తెలుగు" : "English"}
-                            </button>
-                            <X size={22} onClick={() => setIsOpen(false)} style={{cursor:'pointer', opacity: 0.7, transition: '0.2s'}} onMouseEnter={(e)=>e.currentTarget.style.opacity=1} onMouseLeave={(e)=>e.currentTarget.style.opacity=0.7}/>
-                        </div>
-                    </div>
-                    {/* ... rest of your chat code remains exactly the same ... */}
-                    <div style={styles.body}>
-                        <div style={styles.securityNote}>
-                            <CheckCircle size={12} color="#10b981" /> End-To-End Encrypted Session
-                        </div>
+           {!isOpen ? (
+               <button onClick={handleOpenChat} className="subhams-premium-btn">
+                   <Sparkles size={22} color="#ffffff" strokeWidth={2.5} /> 
+                   <span className="btn-text-glow">
+                       Ask Subhams
+                   </span>
+               </button>
+           ) : (
+               <div className="mobile-chat-window chat-force-font" style={styles.chatWindow}>
+                   <div style={styles.header}>
+                       <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                           <Sparkles size={20} color="#34d399" />
+                           <div style={{fontWeight:'800', fontSize:'15px', letterSpacing: '0.3px'}}>Subhams Intelligence</div>
+                       </div>
+                       <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
+                           <button onClick={toggleLanguage} style={styles.langBtn}>
+                               {language === "EN" ? <span style={{fontSize:'12px', fontWeight:'900'}}>అ</span> : <Globe size={12} />}
+                               {language === "EN" ? "తెలుగు" : "English"}
+                           </button>
+                           <X size={22} onClick={() => setIsOpen(false)} style={{cursor:'pointer', opacity: 0.7, transition: '0.2s'}} onMouseEnter={(e)=>e.currentTarget.style.opacity=1} onMouseLeave={(e)=>e.currentTarget.style.opacity=0.7}/>
+                       </div>
+                   </div>
+                   
+                   <div style={styles.body}>
+                       <div style={styles.securityNote}>
+                           <CheckCircle size={12} color="#10b981" /> End-To-End Encrypted Session
+                       </div>
 
-                        {messages.map((msg, idx) => (
-                            <div key={idx} style={{display: 'flex', flexDirection: 'column', alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start', marginBottom: '14px'}}>
-                                
-                                <div style={msg.sender === 'bot' ? styles.botBubble : styles.userBubble}>
-                                    <span dangerouslySetInnerHTML={{ __html: msg.text.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') }} />
-                                    
-                                    <div style={{
-                                        fontSize: '10px', 
-                                        color: msg.sender === 'bot' ? '#94a3b8' : '#d1fae5', 
-                                        textAlign: 'right', 
-                                        marginTop: '6px',
-                                        display: 'flex',
-                                        justifyContent: 'flex-end',
-                                        alignItems: 'center',
-                                        gap: '4px',
-                                        fontWeight: '600'
-                                    }}>
-                                        {msg.time} {msg.sender === 'user' && <span style={{color: '#ffffff'}}>✓✓</span>}
-                                    </div>
-                                </div>
+                       {messages.map((msg, idx) => (
+                           <div key={idx} style={{display: 'flex', flexDirection: 'column', alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start', marginBottom: '14px'}}>
+                               
+                               <div style={msg.sender === 'bot' ? styles.botBubble : styles.userBubble}>
+                                   <span dangerouslySetInnerHTML={{ __html: msg.text.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') }} />
+                                   
+                                   <div style={{
+                                       fontSize: '10px', 
+                                       color: msg.sender === 'bot' ? '#94a3b8' : '#d1fae5', 
+                                       textAlign: 'right', 
+                                       marginTop: '6px',
+                                       display: 'flex',
+                                       justifyContent: 'flex-end',
+                                       alignItems: 'center',
+                                       gap: '4px',
+                                       fontWeight: '600'
+                                   }}>
+                                       {msg.time} {msg.sender === 'user' && <span style={{color: '#ffffff'}}>✓✓</span>}
+                                   </div>
+                               </div>
 
-                                {msg.options && msg.options.length > 0 && (
-                                    <div style={{
-                                        ...styles.menuWrapper,
-                                        opacity: msg.optionsDisabled ? 0.45 : 1,
-                                        pointerEvents: msg.optionsDisabled ? 'none' : 'auto',
-                                        width: msg.isMainMenuTrigger ? 'auto' : '100%'
-                                    }}>
-                                        {msg.options.map((opt, i) => (
-                                            <div 
-                                                key={i} 
-                                                onClick={() => handleSendMessage(opt, msg.isMainMenuTrigger)} 
-                                                style={msg.isMainMenuTrigger ? styles.menuMainLinkItem : styles.menuItem}
-                                            >
-                                                {opt}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                        
-                        {loading && <div style={{fontSize: '14px', color: '#94a3b8', paddingLeft: '10px', fontStyle: 'italic'}}>Subhams is typing...</div>}
-                        <div ref={chatEndRef} />
-                    </div>
+                               {/* 🟢 THE NEW SMART CHIPS UI FOR OPTIONS */}
+                               {msg.options && msg.options.length > 0 && (
+                                   <div style={{
+                                       display: 'flex',
+                                       flexWrap: 'wrap', // Wraps horizontally!
+                                       gap: '8px',
+                                       marginTop: '10px',
+                                       opacity: msg.optionsDisabled ? 0.45 : 1,
+                                       pointerEvents: msg.optionsDisabled ? 'none' : 'auto',
+                                       justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start'
+                                   }}>
+                                       {msg.options.map((opt, i) => (
+                                           <button 
+                                               key={i} 
+                                               onClick={() => handleSendMessage(opt, msg.isMainMenuTrigger)} 
+                                               style={msg.isMainMenuTrigger ? styles.menuMainLinkItem : styles.menuItem}
+                                               onMouseOver={(e) => {
+                                                   e.currentTarget.style.backgroundColor = msg.isMainMenuTrigger ? '#d1fae5' : '#f8fafc';
+                                                   e.currentTarget.style.transform = 'translateY(-2px)';
+                                                   e.currentTarget.style.boxShadow = '0 3px 6px rgba(0,0,0,0.08)';
+                                               }}
+                                               onMouseOut={(e) => {
+                                                   e.currentTarget.style.backgroundColor = msg.isMainMenuTrigger ? '#ecfdf5' : '#ffffff';
+                                                   e.currentTarget.style.transform = 'translateY(0)';
+                                                   e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.02)';
+                                               }}
+                                           >
+                                               {opt}
+                                           </button>
+                                       ))}
+                                   </div>
+                               )}
+                           </div>
+                       ))}
+                       
+                       {loading && <div style={{fontSize: '14px', color: '#94a3b8', paddingLeft: '10px', fontStyle: 'italic'}}>Subhams is typing...</div>}
+                       <div ref={chatEndRef} />
+                   </div>
 
-                    <div style={styles.footer}>
-                        <input 
-                            style={styles.input} 
-                            value={input} 
-                            onChange={(e) => setInput(e.target.value)} 
-                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(input)}
-                            placeholder={getDictionary(currentPath, language, customerName, teluguName).placeholder}
-                        />
-                        <button onClick={() => handleSendMessage(input)} style={styles.sendBtn}>
-                            <Send size={16} strokeWidth={2.5} />
-                        </button>
-                    </div>
-                </div>
-            )}
-        </>
-    );
+                   <div style={styles.footer}>
+                       <input 
+                           style={styles.input} 
+                           value={input} 
+                           onChange={(e) => setInput(e.target.value)} 
+                           onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(input)}
+                           placeholder={getDictionary(currentPath, language, customerName, teluguName).placeholder}
+                       />
+                       <button onClick={() => handleSendMessage(input)} style={styles.sendBtn}>
+                           <Send size={16} strokeWidth={2.5} />
+                       </button>
+                   </div>
+               </div>
+           )}
+       </>
+   );
 };
 
 const styles = {
-    /* 🟢 SIZING FIX: Height is now 560px (shorter) to prevent laptop screen overflow */
-    chatWindow: { position: 'fixed', bottom: '24px', right: '24px', width: '360px', height: '560px', maxHeight: '85vh', backgroundColor: '#f8fafc', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', zIndex: 99999, overflow: 'hidden', border: '1px solid #e2e8f0' },
+    chatWindow: { position: 'fixed', bottom: '24px', right: '24px', width: '360px', height: '680px', maxHeight: '85vh', backgroundColor: '#f8fafc', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', zIndex: 99999, overflow: 'hidden', border: '1px solid #e2e8f0' },
     header: { padding: '14px 18px', backgroundColor: '#0f172a', color: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
     langBtn: { backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '6px 10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' },
     body: { flex: 1, padding: '16px', overflowY: 'auto' },
@@ -365,10 +374,9 @@ const styles = {
     botBubble: { backgroundColor: '#ffffff', padding: '14px', borderRadius: '0 14px 14px 14px', width: '100%', maxWidth: '92%', fontSize: '13.5px', lineHeight: '1.5', boxShadow: '0 2px 4px rgba(0,0,0,0.03)', color: '#1e293b', border: '1px solid #e2e8f0' },
     userBubble: { background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#ffffff', padding: '12px 16px', borderRadius: '14px 0 14px 14px', alignSelf: 'flex-end', maxWidth: '85%', fontSize: '13.5px', boxShadow: '0 4px 10px rgba(16,185,129,0.2)', fontWeight: '500' },
     
-    /* 🟢 SPACING FIX: Tighter menu items so they fit neatly on the screen */
-    menuWrapper: { display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px', width: '100%' },
-    menuItem: { padding: '10px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', backgroundColor: '#ffffff', fontWeight: '600', fontSize: '13px', color: '#0f172a', transition: '0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' },
-    menuMainLinkItem: { padding: '8px 16px', border: '1px solid #10b981', borderRadius: '16px', cursor: 'pointer', backgroundColor: '#ecfdf5', fontWeight: '700', fontSize: '12px', color: '#047857', textAlign: 'center', display: 'inline-block', marginTop: '6px' },
+    /* 🟢 UPDATED SMART CHIP STYLES */
+    menuItem: { padding: '8px 14px', border: '1px solid #cbd5e1', borderRadius: '24px', cursor: 'pointer', backgroundColor: '#ffffff', fontWeight: '600', fontSize: '12.5px', color: '#0f172a', transition: 'all 0.2s ease', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' },
+    menuMainLinkItem: { padding: '8px 16px', border: '1px solid #10b981', borderRadius: '24px', cursor: 'pointer', backgroundColor: '#ecfdf5', fontWeight: '700', fontSize: '12.5px', color: '#047857', transition: 'all 0.2s ease' },
     
     footer: { padding: '12px 16px', backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '10px', alignItems: 'center' },
     input: { flex: 1, padding: '12px 16px', borderRadius: '20px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '13px', backgroundColor: '#f1f5f9', color: '#0f172a', fontWeight: '500' },
