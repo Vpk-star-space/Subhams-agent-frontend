@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // 🟢 FIX: Added useNavigate
+import { useParams, useNavigate } from 'react-router-dom'; 
 import axios from 'axios';
 import { Html5Qrcode } from 'html5-qrcode'; 
 import { io } from 'socket.io-client'; 
@@ -23,7 +23,7 @@ const getOrCreateUserCode = () => {
 
 export default function CustomerUpload() {
   const { shopId: urlShopId } = useParams(); 
-  const navigate = useNavigate(); // 🟢 FIX: Initialize navigate
+  const navigate = useNavigate(); 
   
   const [userCode] = useState(getOrCreateUserCode);
   const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_shopId') || '');
@@ -50,7 +50,7 @@ export default function CustomerUpload() {
   const [activePreviewIndex, setActivePreviewIndex] = useState(null);
   const [status, setStatus] = useState('');
   const [isUploading, setIsUploading] = useState(false);
-const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warning Modal State
+  const [showMaskWarning, setShowMaskWarning] = useState(false);
 
   const [idMergeModal, setIdMergeModal] = useState({ open: false, front: null, back: null });
   const frontInputRef = useRef(null);
@@ -70,7 +70,6 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
     localStorage.setItem('subhams_tracker', JSON.stringify(liveStatusTracker));
   }, [shopId, customerName, liveStatusTracker]);
 
-  // 🟢 FIX 1: Silently update the URL bar so refresh works perfectly!
   useEffect(() => {
       if (shopStatus === 'valid' && shopId) {
           navigate(`/u/${shopId.trim().toUpperCase()}`, { replace: true });
@@ -100,28 +99,24 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
       return () => clearTimeout(timeoutId);
   }, [shopId]);
   
- const trackerRef = useRef(liveStatusTracker);
+  const trackerRef = useRef(liveStatusTracker);
 
-  // Keep the mirror updated automatically
   useEffect(() => {
     trackerRef.current = liveStatusTracker;
   }, [liveStatusTracker]);
 
-  // 🟢 FIX 1: REPLACE THIS USE-EFFECT IN CustomerUpload.jsx
   useEffect(() => {
     socket.on('CUSTOMER_TRACKER', (data) => {
       setLiveStatusTracker(prev => ({ 
           ...prev, 
-          [data.jobId]: { ...(prev[data.jobId] || {}), ...data } // 🛡️ Protects the fileName from disappearing!
+          [data.jobId]: { ...(prev[data.jobId] || {}), ...data } 
       }));
     });
     return () => socket.off('CUSTOMER_TRACKER');
   }, []);
 
-// REPLACE THE JOIN TRACKING ROOM USE-EFFECT WITH THIS:
   useEffect(() => {
     const joinTrackingRoom = () => {
-      // 🟢 FIX 2A: If phone wakes up and socket is dead, force it to reconnect immediately!
       if (!socket.connected) {
           socket.connect();
           return; 
@@ -131,7 +126,6 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
         const cleanShopId = shopId.toUpperCase().trim();
         socket.emit('JOIN_CUSTOMER', { shopId: cleanShopId, customerName: uniqueCustomerName });
 
-        // Ask the server for the latest status of all active jobs
         Object.keys(trackerRef.current).forEach(jobId => {
            socket.emit('REJOIN_TRACKER', { jobId });
         });
@@ -141,19 +135,20 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
     joinTrackingRoom();
     socket.on('connect', joinTrackingRoom);
 
-    // 🟢 FIX 2B: The exact trigger that fires when the phone screen turns back on
-    // 🟢 AGGRESSIVE WAKE UP FIX
     const handleWakeUp = () => {
         if (document.visibilityState === 'visible') {
-            console.log("Phone woke up! Force syncing tracker...");
             if (socket.disconnected) {
-                socket.connect(); // This will automatically fire the 'connect' event below
+                socket.connect(); 
             } else {
-                joinTrackingRoom(); // If socket thinks it's alive, force the data refresh anyway!
+                joinTrackingRoom(); 
             }
         }
     };
     document.addEventListener('visibilitychange', handleWakeUp);
+    return () => {
+        socket.off('connect', joinTrackingRoom);
+        document.removeEventListener('visibilitychange', handleWakeUp);
+    }
   }, [shopId, uniqueCustomerName, shopStatus]);
 
   useEffect(() => {
@@ -191,12 +186,8 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
 
       return () => {
           isComponentMounted = false;
-          if (html5QrCode) {
-              if (html5QrCode.isScanning) {
-                  html5QrCode.stop().catch(console.error);
-              } else {
-                  html5QrCode.clear().catch(console.error);
-              }
+          if (html5QrCode && html5QrCode.isScanning) {
+              html5QrCode.stop().catch(console.error);
           }
       };
   }, [isScanning, scanSuccess]);
@@ -218,7 +209,7 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
             colorMode: 'bw',
             scale: 'fit',        
             position: 'top-left', 
-           previewUrl: URL.createObjectURL(f),
+            previewUrl: URL.createObjectURL(f),
             isPdf: !isImage,
             maskRectArray: [],
             rotate: 0 
@@ -301,16 +292,16 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
       setFileItems(updated);
   };
 
+  // 🟢 MASK DRAWING LOGIC WITH PERFECT COORDINATE TRACKING
   const startDrawing = (e, index) => {
       if (securityMode !== 'private' || !maskAadhaar || fileItems[index].isPdf) return;
       const rect = e.currentTarget.getBoundingClientRect();
       const clientX = e.clientX || (e.touches && e.touches[0].clientX);
       const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-      
       if (!clientX || !clientY) return;
 
-      const x = (clientX - rect.left) / rect.width * 100;
-      const y = (clientY - rect.top) / rect.height * 100;
+      const x = ((clientX - rect.left) / rect.width) * 100;
+      const y = ((clientY - rect.top) / rect.height) * 100;
       
       setDrawState({ isDrawing: true, startX: x, startY: y, currentRect: { x, y, width: 0, height: 0 } });
       if(e.pointerId) e.currentTarget.setPointerCapture(e.pointerId);
@@ -321,18 +312,25 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
       const rect = e.currentTarget.getBoundingClientRect();
       const clientX = e.clientX || (e.touches && e.touches[0].clientX);
       const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-      
       if (!clientX || !clientY) return;
 
-      const currentX = (clientX - rect.left) / rect.width * 100;
-      const currentY = (clientY - rect.top) / rect.height * 100;
+      const currentX = ((clientX - rect.left) / rect.width) * 100;
+      const currentY = ((clientY - rect.top) / rect.height) * 100;
 
       const x = Math.max(0, Math.min(drawState.startX, currentX));
       const y = Math.max(0, Math.min(drawState.startY, currentY));
-      const width = Math.min(100 - x, Math.abs(currentX - drawState.startX));
-      const height = Math.min(100 - y, Math.abs(currentY - drawState.startY));
+      const width = Math.abs(currentX - drawState.startX);
+      const height = Math.abs(currentY - drawState.startY);
 
-      setDrawState(prev => ({ ...prev, currentRect: { x, y, width, height } }));
+      setDrawState(prev => ({ 
+          ...prev, 
+          currentRect: { 
+              x: Math.min(x, 100), 
+              y: Math.min(y, 100), 
+              width: Math.min(width, 100 - x), 
+              height: Math.min(height, 100 - y) 
+          } 
+      }));
   };
 
   const stopDrawing = (e, index) => {
@@ -351,9 +349,33 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
       setFileItems(updatedFileItems);
   };
 
-  
+  const moveLastMask = (index, direction) => {
+      const updated = [...fileItems];
+      const masks = updated[index].maskRectArray;
+      if (masks.length === 0) return;
+      const last = { ...masks[masks.length - 1] };
+      if (direction === 'left') last.x = Math.max(0, last.x - 2);
+      if (direction === 'right') last.x = Math.min(100 - last.width, last.x + 2);
+      if (direction === 'up') last.y = Math.max(0, last.y - 2);
+      if (direction === 'down') last.y = Math.min(100 - last.height, last.y + 2);
+      masks[masks.length - 1] = last;
+      setFileItems(updated);
+  };
 
-  const executeUpload = async () => { // 🟢 Must be async!
+  const resizeLastMask = (index, type) => {
+      const updated = [...fileItems];
+      const masks = updated[index].maskRectArray;
+      if (masks.length === 0) return;
+      const last = { ...masks[masks.length - 1] };
+      if (type === 'w+') last.width = Math.min(100 - last.x, last.width + 2);
+      if (type === 'w-') last.width = Math.max(2, last.width - 2);
+      if (type === 'h+') last.height = Math.min(100 - last.y, last.height + 2);
+      if (type === 'h-') last.height = Math.max(2, last.height - 2);
+      masks[masks.length - 1] = last;
+      setFileItems(updated);
+  };
+
+  const executeUpload = async () => { 
     setIsUploading(true);
     setStatus('📤 Sending files to Printer...');
     setActivePreviewIndex(null); 
@@ -386,7 +408,6 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
           }
 
           formData.append('documents', item.file);
-          // 🟢 FIX: Use 'response' as defined here
           const response = await axios.post('https://subhams-vpk.onrender.com/api/jobs/upload', formData);
           
           setLiveStatusTracker(prev => ({
@@ -408,10 +429,10 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
     }
   };
 
-  const handleSubmit = async (e) => { // 🟢 Changed to async just in case
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!shopId) return alert("Please enter a Shop ID.");
-    if (shopStatus === 'invalid') return alert("❌ The Shop ID you entered does not exist. Please check it again.");
+    if (shopStatus === 'invalid') return alert("❌ The Shop ID you entered does not exist.");
     if (!customerName.trim()) return alert("Please enter your name.");
     if (fileItems.length === 0) return alert("Please add at least one file.");
 
@@ -419,7 +440,6 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
         return alert("Please enter the purpose of the document to generate the security stamp.");
     }
 
-    // 🟢 MASK WARNING CHECK
     if (securityMode === 'private' && maskAadhaar) {
         const forgotToMask = fileItems.some(item => !item.isPdf && item.maskRectArray.length === 0);
         if (forgotToMask) {
@@ -428,7 +448,7 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
         }
     }
 
-    await executeUpload(); // 🟢 Correctly calling the async function here!
+    await executeUpload(); 
   };
 
   const handleRevoke = (jobId) => {
@@ -493,7 +513,6 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
 
  return (
     <div style={containerStyle}>
-      {/* --- ID MERGE MODAL --- */}
       {idMergeModal.open && (
         <div style={modalOverlay}>
           <div style={modalContent}>
@@ -517,7 +536,6 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
         </div>
       )}
 
-      {/* 🟢 NEW MASK WARNING MODAL PLACED HERE */}
       {showMaskWarning && (
         <div style={modalOverlay}>
           <div style={{...modalContent, border: '3px solid #ef4444', textAlign: 'center'}}>
@@ -683,163 +701,161 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
 
                   {activePreviewIndex === index && (
                       <div style={{ background: '#fff', padding: '15px', borderTop: '1px solid #cbd5e1' }}>
-                          
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                              
                               <div style={{ width: '100%', maxWidth: '100%', margin: '0 auto', flexShrink: 0, overflow: 'hidden' }}>
                                   
                                  {item.isPdf ? (
-    <div style={{ position: 'relative', width: '100%', height: '400px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #cbd5e1' }}>
-        {/* 🟢 FIX: Interactive PDF Viewer for the Customer */}
-        <iframe src={`${item.previewUrl}#view=FitH`} style={{ width: '100%', height: '100%', border: 'none' }} title="PDF Preview" />
-        <div style={{ position: 'absolute', top: '10px', left: '10px', background: '#0f172a', color: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(0,0,0,0.3)', pointerEvents: 'none' }}>
-            📄 PDF Document
-        </div>
-    </div>
-) : (
-                                      <>
-                                          <div style={{ 
-                                              width: '100%', aspectRatio: '1 / 1.414', background: '#f8fafc', 
-                                              borderRadius: '4px', position: 'relative', overflow: 'hidden', boxSizing: 'border-box',
-                                              padding: (securityMode === 'govt' || securityMode === 'private') ? '6px' : '0', 
-                                              border: (securityMode === 'govt' || securityMode === 'private') ? '2px solid #0f172a' : '1px solid #cbd5e1'
-                                          }}>
-                                              <div style={{ 
-                                                  height: (securityMode === 'govt' || securityMode === 'private') ? '75%' : '100%', 
-                                                  display: 'flex', padding: '4px', boxSizing: 'border-box', position: 'relative',
-                                                  justifyContent: getJustify(item.position), alignItems: getAlign(item.position)
-                                              }}>
-                                                  
-                                                 <div 
-    onPointerDown={(e) => {
-        // Only trigger drawing if the click target is actually the image or inside the wrapper box
-        const container = e.currentTarget;
-        const rect = container.getBoundingClientRect();
-        
-        // ⚡ EXACT POSITION FIX: Calculate drawing offsets relative to element space
-        const startX = ((e.clientX - rect.left) / rect.width) * 100;
-        const startY = ((e.clientY - rect.top) / rect.height) * 100;
-        
-        // Ensure your startDrawing function passes these normalized percentage coordinates
-        if (securityMode === 'private' && maskAadhaar) {
-            e.preventDefault(); // Prevents accidental text selections / dragging on phones
-            container.setPointerCapture(e.pointerId); // Locks pointer tracking to this window
-            startDrawing(e, index, startX, startY);
-        }
-    }}
-    onPointerMove={(e) => {
-        if (!drawState.isDrawing) return;
-        const container = e.currentTarget;
-        const rect = container.getBoundingClientRect();
-        
-        const currentX = ((e.clientX - rect.left) / rect.width) * 100;
-        const currentY = ((e.clientY - rect.top) / rect.height) * 100;
-        
-        keepDrawing(e, currentX, currentY);
-    }}
-    onPointerUp={(e) => {
-        if (drawState.isDrawing) {
-            e.currentTarget.releasePointerCapture(e.pointerId);
-            stopDrawing(e, index);
-        }
-    }}
-    onPointerCancel={(e) => {
-        if (drawState.isDrawing) {
-            e.currentTarget.releasePointerCapture(e.pointerId);
-            stopDrawing(e, index);
-        }
-    }}
-    style={{ 
-        ...getImgSize(item.scale), 
-        position: 'relative', 
-        display: 'inline-block',
-        // 🛡️ STABLE SCREEN FIX: Disables automatic phone gestures from moving the canvas while drawing
-        touchAction: (securityMode === 'private' && maskAadhaar) ? 'none' : 'auto', 
-        cursor: (securityMode === 'private' && maskAadhaar) ? 'crosshair' : 'default',
-        userSelect: 'none',
-        WebkitUserSelect: 'none'
-    }}
->
-    <img 
-        src={item.previewUrl} 
-        alt="Preview" 
-        style={{
-            width: '100%', 
-            height: '100%', 
-            // ⚡ COMPRESSION CORRECTION: Change to 'fill' or 'cover' if your wrapper container matches 
-            // the aspect ratio exactly. If you must use 'contain', ensure your canvas matching logic 
-            // calculates image aspect offsets inside startDrawing.
-            objectFit: 'fill', 
-            filter: `${item.colorMode === 'bw' ? 'grayscale(100%) contrast(120%) ' : ''}${isBlindPreview ? 'blur(4px) ' : ''}`.trim() || 'none',
-            transform: `rotate(${item.rotate || 0}deg)`,
-            transition: 'transform 0.3s ease, filter 0.3s ease',
-            userSelect: 'none',
-            pointerEvents: 'none' // Crucial: prevents the image drag-ghosting on long press
-        }} 
-        draggable={false} 
-    />
-    
-    {item.maskRectArray.map((rect, rectIndex) => (
-        <div key={rectIndex} style={{
-            position: 'absolute',
-            left: `${rect.x}%`, top: `${rect.y}%`,
-            width: `${rect.width}%`, height: `${rect.height}%`,
-            backgroundColor: 'black', opacity: 0.95,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            pointerEvents: 'none' // Makes existing boxes transparent to new drawing interactions
-        }}>
-            <span style={{color: 'white', fontSize: '6px', fontWeight: 'bold'}}>XXXX XXXX</span>
-        </div>
-    ))}
+                                    <div style={{ position: 'relative', width: '100%', height: '400px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #cbd5e1' }}>
+                                        <iframe src={`${item.previewUrl}#view=FitH`} style={{ width: '100%', height: '100%', border: 'none' }} title="PDF Preview" />
+                                        <div style={{ position: 'absolute', top: '10px', left: '10px', background: '#0f172a', color: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(0,0,0,0.3)', pointerEvents: 'none' }}>
+                                            📄 PDF Document
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        
+                                        {/* 🟢 MASK CONTROLS (ADDED BUTTONS HERE) */}
+                                        {securityMode === 'private' && maskAadhaar && (
+                                            <div style={{ background: '#fff', padding: '10px', borderRadius: '8px', border: '2px dashed #cbd5e1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', color: '#1e293b', textAlign: 'center' }}>
+                                                    Mask Tools / మాస్క్ సాధనాలు
+                                                </p>
+                                                
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const newRect = { x: 30, y: 45, width: 40, height: 10 };
+                                                        const updated = [...fileItems];
+                                                        updated[index].maskRectArray.push(newRect);
+                                                        setFileItems(updated);
+                                                    }}
+                                                    style={{ width: '100%', padding: '8px', background: '#2563eb', color: 'white', borderRadius: '6px', border: 'none', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}
+                                                >
+                                                    ➕ Add Mask / మాస్క్ బాక్స్ జోడించండి
+                                                </button>
 
-    {drawState.isDrawing && drawState.currentRect && (
-         <div style={{
-            position: 'absolute',
-            left: `${drawState.currentRect.x}%`, top: `${drawState.currentRect.y}%`,
-            width: `${drawState.currentRect.width}%`, height: `${drawState.currentRect.height}%`,
-            backgroundColor: 'black', opacity: 0.5, border: '1px dashed yellow',
-            pointerEvents: 'none'
-        }}></div>
-    )}
-</div>
+                                                {item.maskRectArray.length > 0 && (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px' }}>
+                                                            <button type="button" onClick={() => moveLastMask(index, 'left')} style={controlBtn}>⬅️</button>
+                                                            <button type="button" onClick={() => moveLastMask(index, 'up')} style={controlBtn}>⬆️</button>
+                                                            <button type="button" onClick={() => moveLastMask(index, 'down')} style={controlBtn}>⬇️</button>
+                                                            <button type="button" onClick={() => moveLastMask(index, 'right')} style={controlBtn}>➡️</button>
+                                                        </div>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px' }}>
+                                                            <button type="button" onClick={() => resizeLastMask(index, 'w-')} style={sizeBtn}>Narrow</button>
+                                                            <button type="button" onClick={() => resizeLastMask(index, 'w+')} style={sizeBtn}>Wider</button>
+                                                            <button type="button" onClick={() => resizeLastMask(index, 'h-')} style={sizeBtn}>Slim</button>
+                                                            <button type="button" onClick={() => resizeLastMask(index, 'h+')} style={sizeBtn}>Tall</button>
+                                                        </div>
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => undoLastMask(index)} 
+                                                            style={{ marginTop: '5px', padding: '6px', background: '#fee2e2', color: '#991b1b', border: '1px solid #ef4444', borderRadius: '4px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer', width: '100%' }}
+                                                        >
+                                                            ↩️ Undo Last Box
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
 
+                                        <div style={{ 
+                                            width: '100%', 
+                                            aspectRatio: '1 / 1.414', 
+                                            background: '#f8fafc', 
+                                            borderRadius: '4px', 
+                                            position: 'relative', 
+                                            overflow: 'hidden', 
+                                            boxSizing: 'border-box',
+                                            padding: (securityMode === 'govt' || securityMode === 'private') ? '6px' : '0', 
+                                            border: (securityMode === 'govt' || securityMode === 'private') ? '2px solid #0f172a' : '1px solid #cbd5e1'
+                                        }}>
+                                            <div style={{ 
+                                                height: (securityMode === 'govt' || securityMode === 'private') ? '75%' : '100%', 
+                                                display: 'flex', 
+                                                padding: '4px', 
+                                                boxSizing: 'border-box', 
+                                                position: 'relative',
+                                                justifyContent: getJustify(item.position), 
+                                                alignItems: getAlign(item.position)
+                                            }}>
+                                                <div 
+                                                    onPointerDown={(e) => startDrawing(e, index)}
+                                                    onPointerMove={keepDrawing}
+                                                    onPointerUp={(e) => stopDrawing(e, index)}
+                                                    onPointerCancel={(e) => stopDrawing(e, index)}
+                                                    style={{ 
+                                                        ...getImgSize(item.scale), 
+                                                        position: 'relative', 
+                                                        display: 'inline-block',
+                                                        touchAction: (securityMode === 'private' && maskAadhaar) ? 'none' : 'auto', 
+                                                        cursor: (securityMode === 'private' && maskAadhaar) ? 'crosshair' : 'default',
+                                                        userSelect: 'none',
+                                                        WebkitUserSelect: 'none'
+                                                    }}
+                                                >
+                                                    <img 
+                                                        src={item.previewUrl} 
+                                                        alt="Preview" 
+                                                        style={{
+                                                            width: '100%', 
+                                                            height: '100%', 
+                                                            objectFit: 'fill', 
+                                                            filter: `${item.colorMode === 'bw' ? 'grayscale(100%) contrast(120%) ' : ''}${isBlindPreview ? 'blur(4px) ' : ''}`.trim() || 'none',
+                                                            transform: `rotate(${item.rotate || 0}deg)`,
+                                                            transition: 'transform 0.3s ease, filter 0.3s ease',
+                                                            userSelect: 'none',
+                                                            pointerEvents: 'none' 
+                                                        }} 
+                                                        draggable={false} 
+                                                    />
+                                                    
+                                                    {item.maskRectArray.map((rect, rectIndex) => (
+                                                        <div key={rectIndex} style={{
+                                                            position: 'absolute',
+                                                            left: `${rect.x}%`, top: `${rect.y}%`,
+                                                            width: `${rect.width}%`, height: `${rect.height}%`,
+                                                            backgroundColor: 'black', opacity: 0.95,
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            pointerEvents: 'none' 
+                                                        }}>
+                                                            <span style={{color: 'white', fontSize: '6px', fontWeight: 'bold'}}>XXXX XXXX</span>
+                                                        </div>
+                                                    ))}
 
-                                                  {securityMode === 'private' && (
-                                                      <div style={getWatermarkStyle(securePurpose ? `${securePurpose.toUpperCase()} - ${todayDate}` : 'PRIVATE USE')}></div>
-                                                  )}
-                                              </div>
+                                                    {drawState.isDrawing && drawState.currentRect && (
+                                                         <div style={{
+                                                            position: 'absolute',
+                                                            left: `${drawState.currentRect.x}%`, top: `${drawState.currentRect.y}%`,
+                                                            width: `${drawState.currentRect.width}%`, height: `${drawState.currentRect.height}%`,
+                                                            backgroundColor: 'black', opacity: 0.5, border: '1px dashed yellow',
+                                                            pointerEvents: 'none'
+                                                        }}></div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            
+                                            {securityMode === 'private' && (
+                                                <div style={getWatermarkStyle(securePurpose ? `${securePurpose.toUpperCase()} - ${todayDate}` : 'PRIVATE USE')}></div>
+                                            )}
+                                        </div>
 
-                                              {(securityMode === 'govt' || securityMode === 'private') && (
-                                                  <div style={{ height: '25%', borderTop: '1.5px solid #0f172a', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '2px' }}>
-                                                      <div style={{ fontSize: '4.5px', color: '#0f172a', lineHeight: '1.2' }}>
-                                                          <strong>DECLARATION & ATTESTATION</strong><br/>
-                                                          To: <span style={{color: '#2563eb', fontWeight: 'bold'}}>{securePurpose || '[Enter Purpose]'}</span><br/>
-                                                          Date: <strong>{todayDate}</strong> &nbsp;&nbsp; Sign: ______
-                                                      </div>
-                                                      <div style={{ position: 'absolute', bottom: '2px', right: '2px', width: '8px', height: '8px', background: '#0f172a' }}></div>
-                                                  </div>
-                                              )}
-                                          </div>
-                                          
-                                          {securityMode === 'private' && maskAadhaar && (
-                                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-                                                  <p style={{fontSize: '11px', color: '#b45309', margin: 0, fontWeight: 'bold'}}>👆 Zoom using your phone. Swipe to draw multiple boxes.</p>
-                                                  <button 
-                                                      type="button" 
-                                                      onClick={() => undoLastMask(index)} 
-                                                      disabled={item.maskRectArray.length === 0}
-                                                      style={{ fontSize: '11px', padding: '5px 10px', background: item.maskRectArray.length > 0 ? '#fee2e2' : '#f1f5f9', color: item.maskRectArray.length > 0 ? '#991b1b' : '#94a3b8', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: item.maskRectArray.length > 0 ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
-                                                  >
-                                                      ↩️ Undo Mask
-                                                  </button>
-                                              </div>
-                                          )}
-                                      </>
-                                  )}
+                                        {(securityMode === 'govt' || securityMode === 'private') && (
+                                            <div style={{ height: '25%', borderTop: '1.5px solid #0f172a', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '2px' }}>
+                                                <div style={{ fontSize: '4.5px', color: '#0f172a', lineHeight: '1.2' }}>
+                                                    <strong>DECLARATION & ATTESTATION</strong><br/>
+                                                    To: <span style={{color: '#2563eb', fontWeight: 'bold'}}>{securePurpose || '[Enter Purpose]'}</span><br/>
+                                                    Date: <strong>{todayDate}</strong> &nbsp;&nbsp; Sign: ______
+                                                </div>
+                                                <div style={{ position: 'absolute', bottom: '2px', right: '2px', width: '8px', height: '8px', background: '#0f172a' }}></div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                               </div>
 
                               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                {/* 🟢 GRID CHANGED TO 3 COLUMNS: Copies | Color | Rotate */}
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                                     <div>
                                         <label style={labelStyle}>Copies</label>
@@ -851,7 +867,6 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
                                             <option value="bw">B&W</option><option value="color">Color</option>
                                         </select>
                                     </div>
-                                    {/* 🟢 ROTATE BUTTON PLACED SAFELY HERE */}
                                     {!item.isPdf && (
                                         <div>
                                             <label style={labelStyle}>Rotate</label>
@@ -868,7 +883,6 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
 
                                 {!item.isPdf && (
                                     <>
-                                        {/* 🟢 PRINT SIZE DROPDOWN FIXED (No buttons inside it) */}
                                         <div style={{ marginTop: '5px' }}>
                                             <label style={labelStyle}>Print Size</label>
                                             <select value={item.scale} onChange={(e) => updateItemSetting(index, 'scale', e.target.value)} style={{...inputStyle, padding: '6px'}}>
@@ -923,7 +937,6 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
             </div>
             <button onClick={clearHistory} style={{background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.8)', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline'}}>Clear All</button>
           </div>
-
           
           <div style={{ padding: '15px' }}>
             {activeOrders.map((order) => {
@@ -947,7 +960,6 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
                         <button onClick={() => handleRevoke(order.jobId)} style={{ width: '100%', padding: '8px', background: '#fee2e2', color: '#991b1b', border: '1px solid #f87171', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', marginTop: '10px', cursor: 'pointer' }}>🛑 Revoke Access & Delete</button>
                       )}
                     </>
-                    
                   )}
                 </div>
               );
@@ -974,6 +986,8 @@ const modalOverlay = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
 const modalContent = { background: 'white', padding: '25px', borderRadius: '16px', width: '90%', maxWidth: '350px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' };
 const mergeBtnStyle = { width: '100%', padding: '15px', borderRadius: '10px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', color: '#1e293b' };
 const actionBtn = { padding: '12px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' };
+const controlBtn = { padding: '10px 5px', background: '#e2e8f0', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' };
+const sizeBtn = { padding: '10px 5px', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', color: '#92400e' };
 
 const trackerContainerStyle = { marginTop: '30px', background: '#fff', border: '1px solid #cbd5e1', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', borderRadius: '12px', overflow: 'hidden' };
 const trackerHeader = { background: '#2563eb', color: 'white', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold', fontSize: '15px' };
