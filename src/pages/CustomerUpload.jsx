@@ -710,51 +710,99 @@ const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warn
                                                   justifyContent: getJustify(item.position), alignItems: getAlign(item.position)
                                               }}>
                                                   
-                                                  <div 
-                                                      onPointerDown={(e) => startDrawing(e, index)}
-                                                      onPointerMove={keepDrawing}
-                                                      onPointerUp={(e) => stopDrawing(e, index)}
-                                                      onPointerCancel={(e) => stopDrawing(e, index)}
-                                                      style={{ 
-                                                          ...getImgSize(item.scale), position: 'relative', display: 'inline-block',
-                                                          touchAction: 'none', 
-                                                          cursor: (securityMode === 'private' && maskAadhaar) ? 'crosshair' : 'default'
-                                                      }}
-                                                  >
-                                                      <img 
-    src={item.previewUrl} 
-    alt="Preview" 
-    style={{
-        width: '100%', height: '100%', 
-        objectFit: 'contain', /* 🟢 This prevents the image from getting squished when rotated! */
-        filter: `${item.colorMode === 'bw' ? 'grayscale(100%) contrast(120%) ' : ''}${isBlindPreview ? 'blur(4px) ' : ''}`.trim() || 'none',
-        transform: `rotate(${item.rotate || 0}deg)`,
-        transition: 'transform 0.3s ease, filter 0.3s ease'
-    }} 
-    draggable={false} 
-/>
-                                                      
-                                                      {item.maskRectArray.map((rect, rectIndex) => (
-                                                          <div key={rectIndex} style={{
-                                                              position: 'absolute',
-                                                              left: `${rect.x}%`, top: `${rect.y}%`,
-                                                              width: `${rect.width}%`, height: `${rect.height}%`,
-                                                              backgroundColor: 'black', opacity: 0.95,
-                                                              display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                                          }}>
-                                                              <span style={{color: 'white', fontSize: '6px', fontWeight: 'bold'}}>XXXX XXXX</span>
-                                                          </div>
-                                                      ))}
+                                                 <div 
+    onPointerDown={(e) => {
+        // Only trigger drawing if the click target is actually the image or inside the wrapper box
+        const container = e.currentTarget;
+        const rect = container.getBoundingClientRect();
+        
+        // ⚡ EXACT POSITION FIX: Calculate drawing offsets relative to element space
+        const startX = ((e.clientX - rect.left) / rect.width) * 100;
+        const startY = ((e.clientY - rect.top) / rect.height) * 100;
+        
+        // Ensure your startDrawing function passes these normalized percentage coordinates
+        if (securityMode === 'private' && maskAadhaar) {
+            e.preventDefault(); // Prevents accidental text selections / dragging on phones
+            container.setPointerCapture(e.pointerId); // Locks pointer tracking to this window
+            startDrawing(e, index, startX, startY);
+        }
+    }}
+    onPointerMove={(e) => {
+        if (!drawState.isDrawing) return;
+        const container = e.currentTarget;
+        const rect = container.getBoundingClientRect();
+        
+        const currentX = ((e.clientX - rect.left) / rect.width) * 100;
+        const currentY = ((e.clientY - rect.top) / rect.height) * 100;
+        
+        keepDrawing(e, currentX, currentY);
+    }}
+    onPointerUp={(e) => {
+        if (drawState.isDrawing) {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+            stopDrawing(e, index);
+        }
+    }}
+    onPointerCancel={(e) => {
+        if (drawState.isDrawing) {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+            stopDrawing(e, index);
+        }
+    }}
+    style={{ 
+        ...getImgSize(item.scale), 
+        position: 'relative', 
+        display: 'inline-block',
+        // 🛡️ STABLE SCREEN FIX: Disables automatic phone gestures from moving the canvas while drawing
+        touchAction: (securityMode === 'private' && maskAadhaar) ? 'none' : 'auto', 
+        cursor: (securityMode === 'private' && maskAadhaar) ? 'crosshair' : 'default',
+        userSelect: 'none',
+        WebkitUserSelect: 'none'
+    }}
+>
+    <img 
+        src={item.previewUrl} 
+        alt="Preview" 
+        style={{
+            width: '100%', 
+            height: '100%', 
+            // ⚡ COMPRESSION CORRECTION: Change to 'fill' or 'cover' if your wrapper container matches 
+            // the aspect ratio exactly. If you must use 'contain', ensure your canvas matching logic 
+            // calculates image aspect offsets inside startDrawing.
+            objectFit: 'fill', 
+            filter: `${item.colorMode === 'bw' ? 'grayscale(100%) contrast(120%) ' : ''}${isBlindPreview ? 'blur(4px) ' : ''}`.trim() || 'none',
+            transform: `rotate(${item.rotate || 0}deg)`,
+            transition: 'transform 0.3s ease, filter 0.3s ease',
+            userSelect: 'none',
+            pointerEvents: 'none' // Crucial: prevents the image drag-ghosting on long press
+        }} 
+        draggable={false} 
+    />
+    
+    {item.maskRectArray.map((rect, rectIndex) => (
+        <div key={rectIndex} style={{
+            position: 'absolute',
+            left: `${rect.x}%`, top: `${rect.y}%`,
+            width: `${rect.width}%`, height: `${rect.height}%`,
+            backgroundColor: 'black', opacity: 0.95,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            pointerEvents: 'none' // Makes existing boxes transparent to new drawing interactions
+        }}>
+            <span style={{color: 'white', fontSize: '6px', fontWeight: 'bold'}}>XXXX XXXX</span>
+        </div>
+    ))}
 
-                                                      {drawState.isDrawing && drawState.currentRect && (
-                                                           <div style={{
-                                                              position: 'absolute',
-                                                              left: `${drawState.currentRect.x}%`, top: `${drawState.currentRect.y}%`,
-                                                              width: `${drawState.currentRect.width}%`, height: `${drawState.currentRect.height}%`,
-                                                              backgroundColor: 'black', opacity: 0.5, border: '1px dashed yellow'
-                                                          }}></div>
-                                                      )}
-                                                  </div>
+    {drawState.isDrawing && drawState.currentRect && (
+         <div style={{
+            position: 'absolute',
+            left: `${drawState.currentRect.x}%`, top: `${drawState.currentRect.y}%`,
+            width: `${drawState.currentRect.width}%`, height: `${drawState.currentRect.height}%`,
+            backgroundColor: 'black', opacity: 0.5, border: '1px dashed yellow',
+            pointerEvents: 'none'
+        }}></div>
+    )}
+</div>
+
 
                                                   {securityMode === 'private' && (
                                                       <div style={getWatermarkStyle(securePurpose ? `${securePurpose.toUpperCase()} - ${todayDate}` : 'PRIVATE USE')}></div>

@@ -22,9 +22,11 @@ export default function Dashboard() {
   const [jobs, setJobs] = useState([]);
   const [activeJob, setActiveJob] = useState(null); 
   const [previewImage, setPreviewImage] = useState(null);
-  const iframeRef = useRef(null);
+ 
   // 🚨 Hardware Security State
   const [pendingHardware, setPendingHardware] = useState(null);
+   const iframeRef = useRef(null);
+ const [isWindowActive, setIsWindowActive] = useState(true);
 
   const [pricing, setPricing] = useState({ bw: 2, color: 10, aadhaar: 30, passport: 20 });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -167,15 +169,47 @@ useEffect(() => {
 }, [activeJob, fetchQueue]);
 
 useEffect(() => {
+  const triggerLock = () => setIsWindowActive(false);
+  const releaseLock = () => setIsWindowActive(true);
+
   const handleKeyDown = (e) => {
-   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+    const key = e.key.toLowerCase();
+    const isMetaOrCtrl = e.ctrlKey || e.metaKey;
+
+    // 1. Block Print (Ctrl + P)
+    if (isMetaOrCtrl && key === 'p') {
       e.preventDefault();
-      alert("Printing from browser is disabled!");
+      alert("🚫 Printing is strictly disabled!");
+      return;
     }
-   };
-   window.addEventListener('keydown', handleKeyDown);
-  return () => window.removeEventListener('keydown', handleKeyDown);
- }, []);
+
+    // 2. Block Save (Ctrl + S)
+    if (isMetaOrCtrl && key === 's') {
+      e.preventDefault();
+      alert("🚫 Saving files is disabled!");
+      return;
+    }
+
+    // 3. Catch immediate hardware screenshot keypresses
+    if (e.key === 'PrintScreen' || key === 'printscreen' || (e.metaKey && e.shiftKey && (key === '3' || key === '4'))) {
+      triggerLock(); 
+      e.preventDefault();
+      alert("🚫 Screenshots are blocked!");
+      return;
+    }
+  };
+
+  // Wire directly into window indicators for instant response
+  window.addEventListener('blur', triggerLock);
+  window.addEventListener('focus', releaseLock);
+  window.addEventListener('keydown', handleKeyDown);
+
+  return () => {
+    window.removeEventListener('blur', triggerLock);
+    window.removeEventListener('focus', releaseLock);
+    window.removeEventListener('keydown', handleKeyDown);
+  };
+}, []);
 
 // 🟢 Optimized Socket Connection (No Lag)
   useEffect(() => {
@@ -840,7 +874,7 @@ useEffect(() => {
                               </button>
                           </div>
                       </div>
-                ) : previewImage ? (
+            ) : previewImage ? (
   <div 
     style={{ 
       position: 'relative', 
@@ -852,7 +886,22 @@ useEffect(() => {
     }} 
     onContextMenu={(e) => e.preventDefault()}
   >
-    {/* 🟢 SCROLL BUTTONS: Now target the scrollable container instead of the iframe */}
+    {/* 🛡️ PURE CSS PROTECTION */}
+    <style>{`
+      @media print {
+        body { display: none !important; }
+      }
+      /* Watermark Styling */
+      .watermark-tile {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://w3.org' version='1.1' height='100px' width='100px'><text transform='translate(20, 100) rotate(-45)' fill='rgba(255,0,0,0.15)' font-size='20'>🚫 NO PRINT</text></svg>");
+        pointer-events: none;
+        z-index: 50;
+      }
+    `}</style>
+
+    {/* 🟢 SCROLL BUTTONS */}
     <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', marginTop: '10px' }}>
         <button 
             type="button" 
@@ -872,50 +921,54 @@ useEffect(() => {
         >⬇️ Scroll Down</button>
     </div>
 
-    {/* 🟢 PREVIEW CONTAINER WITH NATIVE SCROLLING */}
+    {/* 🟢 PREVIEW CONTAINER */}
     <div 
         id="secure-scroll-box"
         style={{ 
             position: 'relative', 
             width: '100%', 
             height: '500px', 
-            overflowY: 'auto', // Allows vertical scrolling of the wrapper box
+            overflowY: 'auto', 
             border: '1px solid #e2e8f0', 
             borderRadius: '8px',
-            background: 'white'
+            background: '#222' 
         }}
     >
+        {/* 🛡️ PERMANENT WATERMARK LAYER (The screenshot killer) */}
+        <div className="watermark-tile" />
         
-        {/* 🛡️ THE INVISIBLE SHIELD: Perfectly tracks the document height to stop taps/clicks */}
+        {/* 🛡️ INVISIBLE CLICK SHIELD */}
         <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '3000px', // Large height to guarantee coverage over long documents
-            zIndex: 10,
-            background: 'transparent',
-            touchAction: 'none',
-            userSelect: 'none'
+            position: 'absolute', top: 0, left: 0, width: '100%', height: '3000px', 
+            zIndex: 40, background: 'transparent'
         }} />
 
-        {/* 🟢 IFRAME: Tall height ensures the parent div handles the scroll physics */}
-        <iframe 
-            ref={iframeRef}
-            src={previewImage} 
-            style={{ 
-                width: '100%', 
-                height: '3000px', // Matches shield height to display full pages without internal iframe scrollbars
-                border: 'none',
-                pointerEvents: 'none',
-                filter: `${printSettings.colorMode === 'bw' ? 'grayscale(100%) ' : ''}${printSettings.isBlindPreview ? 'blur(4px)' : ''}`.trim() || 'none',
-                transition: 'filter 0.3s ease'
-            }} 
-            title="Preview" 
-        />
+        {/* 🟢 IFRAME CONTAINER WITH CONDITIONAL BLUR */}
+        <div style={{ 
+          width: '100%', 
+          height: '100%',
+          // 🛡️ FOCUS BLUR: Still useful for basic users, even if not instant
+          filter: !isWindowActive ? 'blur(20px) grayscale(100%)' : 'none',
+          transition: 'filter 0.1s' 
+        }}>
+            <iframe 
+                ref={iframeRef}
+                src={previewImage} 
+                style={{ 
+                    width: '100%', 
+                    height: '3000px', 
+                    border: 'none',
+                    pointerEvents: 'none',
+                    filter: `${printSettings?.colorMode === 'bw' ? 'grayscale(100%) ' : ''}${printSettings?.isBlindPreview ? 'blur(4px)' : ''}`.trim() || 'none'
+                }} 
+                title="Preview" 
+            />
+        </div>
     </div>
   </div>
 ) : (
+
+
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#64748b', fontWeight: 'bold', textAlign: 'center' }}>
                        <span style={{ marginBottom: '8px' }}>⚙️ Generating Accurate A4 Preview...</span>
                        <span style={{ fontSize: '12px', fontWeight: 'normal', color: '#94a3b8' }}>
