@@ -50,6 +50,7 @@ export default function CustomerUpload() {
   const [activePreviewIndex, setActivePreviewIndex] = useState(null);
   const [status, setStatus] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+const [showMaskWarning, setShowMaskWarning] = useState(false); // 🟢 NEW: Warning Modal State
 
   const [idMergeModal, setIdMergeModal] = useState({ open: false, front: null, back: null });
   const frontInputRef = useRef(null);
@@ -217,9 +218,10 @@ export default function CustomerUpload() {
             colorMode: 'bw',
             scale: 'fit',        
             position: 'top-left', 
-            previewUrl: isImage ? URL.createObjectURL(f) : null,
+           previewUrl: URL.createObjectURL(f),
             isPdf: !isImage,
-            maskRectArray: [] 
+            maskRectArray: [],
+            rotate: 0 
         });
     }
 
@@ -275,7 +277,7 @@ export default function CustomerUpload() {
 
       canvas.toBlob((blob) => {
           const mergedFile = new File([blob], `Smart_Merged_ID_${Date.now()}.jpg`, { type: 'image/jpeg' });
-          setFileItems([...fileItems, { file: mergedFile, copies: 1, colorMode: 'color', scale: 'fit', position: 'top-left', previewUrl: URL.createObjectURL(mergedFile), isPdf: false, maskRectArray: [] }]);
+          setFileItems([...fileItems, { file: mergedFile, copies: 1, colorMode: 'color', scale: 'fit', position: 'top-left', previewUrl: URL.createObjectURL(mergedFile), isPdf: false, maskRectArray: [], rotate: 0 }]);
           setIdMergeModal({ open: false, front: null, back: null });
           setIsUploading(false); setStatus('');
       }, 'image/jpeg', 0.9);
@@ -349,17 +351,9 @@ export default function CustomerUpload() {
       setFileItems(updatedFileItems);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!shopId) return alert("Please enter a Shop ID.");
-    if (shopStatus === 'invalid') return alert("❌ The Shop ID you entered does not exist. Please check it again.");
-    if (!customerName.trim()) return alert("Please enter your name.");
-    if (fileItems.length === 0) return alert("Please add at least one file.");
+  
 
-    if (securityMode !== 'none' && !securePurpose.trim()) {
-        return alert("Please enter the purpose of the document to generate the security stamp.");
-    }
-
+  const executeUpload = async () => { // 🟢 Must be async!
     setIsUploading(true);
     setStatus('📤 Sending files to Printer...');
     setActivePreviewIndex(null); 
@@ -374,6 +368,7 @@ export default function CustomerUpload() {
           formData.append('fileName', item.file.name); 
           formData.append('scale', item.scale);
           formData.append('position', item.position);
+          formData.append('rotate', item.rotate || 0);
           
           formData.append('securityMode', securityMode);
           formData.append('isBlindPreview', isBlindPreview); 
@@ -391,10 +386,11 @@ export default function CustomerUpload() {
           }
 
           formData.append('documents', item.file);
-          const res = await axios.post('https://subhams-vpk.onrender.com/api/jobs/upload', formData);
+          // 🟢 FIX: Use 'response' as defined here
+          const response = await axios.post('https://subhams-vpk.onrender.com/api/jobs/upload', formData);
           
           setLiveStatusTracker(prev => ({
-            ...prev, [res.data.jobId]: { jobId: res.data.jobId, fileName: item.file.name, status: 'SECURED', msg: 'File securely added to queue.' }
+            ...prev, [response.data.jobId]: { jobId: response.data.jobId, fileName: item.file.name, status: 'SECURED', msg: 'File securely added to queue.' }
           }));
       }
       
@@ -410,6 +406,29 @@ export default function CustomerUpload() {
     } finally {
       setIsUploading(false); setTimeout(() => setStatus(''), 5000); 
     }
+  };
+
+  const handleSubmit = async (e) => { // 🟢 Changed to async just in case
+    e.preventDefault();
+    if (!shopId) return alert("Please enter a Shop ID.");
+    if (shopStatus === 'invalid') return alert("❌ The Shop ID you entered does not exist. Please check it again.");
+    if (!customerName.trim()) return alert("Please enter your name.");
+    if (fileItems.length === 0) return alert("Please add at least one file.");
+
+    if (securityMode !== 'none' && !securePurpose.trim()) {
+        return alert("Please enter the purpose of the document to generate the security stamp.");
+    }
+
+    // 🟢 MASK WARNING CHECK
+    if (securityMode === 'private' && maskAadhaar) {
+        const forgotToMask = fileItems.some(item => !item.isPdf && item.maskRectArray.length === 0);
+        if (forgotToMask) {
+            setShowMaskWarning(true);
+            return; 
+        }
+    }
+
+    await executeUpload(); // 🟢 Correctly calling the async function here!
   };
 
   const handleRevoke = (jobId) => {
@@ -472,8 +491,9 @@ export default function CustomerUpload() {
     );
   }
 
-  return (
+ return (
     <div style={containerStyle}>
+      {/* --- ID MERGE MODAL --- */}
       {idMergeModal.open && (
         <div style={modalOverlay}>
           <div style={modalContent}>
@@ -492,6 +512,30 @@ export default function CustomerUpload() {
             <div style={{display: 'flex', gap: '10px', marginTop: '25px'}}>
               <button onClick={() => setIdMergeModal({open: false, front: null, back: null})} style={{...actionBtn, background: '#fee2e2', color: '#991b1b', flex: 1}}>Cancel</button>
               <button onClick={processIdMerge} disabled={!idMergeModal.front || !idMergeModal.back || isUploading} style={{...actionBtn, background: '#2563eb', color: 'white', flex: 2}}>Stitch & Add ✅</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🟢 NEW MASK WARNING MODAL PLACED HERE */}
+      {showMaskWarning && (
+        <div style={modalOverlay}>
+          <div style={{...modalContent, border: '3px solid #ef4444', textAlign: 'center'}}>
+            <div style={{fontSize: '50px', marginBottom: '10px'}}>⚠️</div>
+            <h3 style={{marginTop: 0, color: '#991b1b'}}>Wait! You Forgot to Mask</h3>
+            <p style={{fontSize: '14px', color: '#b91c1c', fontWeight: 'bold', marginBottom: '10px'}}>
+              మీరు 'Mask' ఆప్షన్ సెలెక్ట్ చేశారు, కానీ ఇమేజ్‌పై ఎక్కడా బ్లాక్ బాక్స్ గీయలేదు!
+            </p>
+            <p style={{fontSize: '12px', color: '#475569', marginBottom: '20px', lineHeight: '1.5'}}>
+              You enabled masking but didn't draw any masks. The shopkeeper will see your full document. If you trust them, click Send. Otherwise, go back and draw the masks.
+            </p>
+            <div style={{display: 'flex', gap: '10px'}}>
+              <button onClick={() => setShowMaskWarning(false)} style={{...actionBtn, background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1', flex: 1}}>
+                ⬅️ Go Back 
+              </button>
+              <button onClick={() => { setShowMaskWarning(false); executeUpload(); }} style={{...actionBtn, background: '#ef4444', color: 'white', flex: 1}}>
+                Send Anyway ➡️
+              </button>
             </div>
           </div>
         </div>
@@ -644,15 +688,15 @@ export default function CustomerUpload() {
                               
                               <div style={{ width: '100%', maxWidth: '100%', margin: '0 auto', flexShrink: 0, overflow: 'hidden' }}>
                                   
-                                  {item.isPdf ? (
-                                      <div style={{ background: '#f8fafc', padding: '30px', textAlign: 'center', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                                          <div style={{ fontSize: '48px', opacity: 0.5, marginBottom: '10px' }}>📄</div>
-                                          <h4 style={{ margin: '0 0 5px 0', color: '#0f172a' }}>PDF Document Selected</h4>
-                                          <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
-                                              Multi-page PDF files will be printed exactly as they are. <br/> Masking and size adjustments are disabled for PDFs.
-                                          </p>
-                                      </div>
-                                  ) : (
+                                 {item.isPdf ? (
+    <div style={{ position: 'relative', width: '100%', height: '400px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #cbd5e1' }}>
+        {/* 🟢 FIX: Interactive PDF Viewer for the Customer */}
+        <iframe src={`${item.previewUrl}#view=FitH`} style={{ width: '100%', height: '100%', border: 'none' }} title="PDF Preview" />
+        <div style={{ position: 'absolute', top: '10px', left: '10px', background: '#0f172a', color: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(0,0,0,0.3)', pointerEvents: 'none' }}>
+            📄 PDF Document
+        </div>
+    </div>
+) : (
                                       <>
                                           <div style={{ 
                                               width: '100%', aspectRatio: '1 / 1.414', background: '#f8fafc', 
@@ -678,15 +722,17 @@ export default function CustomerUpload() {
                                                       }}
                                                   >
                                                       <img 
-                                                        src={item.previewUrl} 
-                                                        alt="Preview" 
-                                                        style={{
-                                                            width: '100%', height: '100%', objectFit: 'fill',
-                                                            filter: `${item.colorMode === 'bw' ? 'grayscale(100%) contrast(120%) ' : ''}${isBlindPreview ? 'blur(4px) ' : ''}`.trim() || 'none',
-                                                            transition: 'filter 0.3s ease'
-                                                        }} 
-                                                        draggable={false} 
-                                                      />
+    src={item.previewUrl} 
+    alt="Preview" 
+    style={{
+        width: '100%', height: '100%', 
+        objectFit: 'contain', /* 🟢 This prevents the image from getting squished when rotated! */
+        filter: `${item.colorMode === 'bw' ? 'grayscale(100%) contrast(120%) ' : ''}${isBlindPreview ? 'blur(4px) ' : ''}`.trim() || 'none',
+        transform: `rotate(${item.rotate || 0}deg)`,
+        transition: 'transform 0.3s ease, filter 0.3s ease'
+    }} 
+    draggable={false} 
+/>
                                                       
                                                       {item.maskRectArray.map((rect, rectIndex) => (
                                                           <div key={rectIndex} style={{
@@ -745,7 +791,8 @@ export default function CustomerUpload() {
                               </div>
 
                               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                {/* 🟢 GRID CHANGED TO 3 COLUMNS: Copies | Color | Rotate */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                                     <div>
                                         <label style={labelStyle}>Copies</label>
                                         <input type="number" min="1" value={item.copies} onChange={(e) => updateItemSetting(index, 'copies', e.target.value)} style={{...inputStyle, padding: '6px'}} />
@@ -756,11 +803,25 @@ export default function CustomerUpload() {
                                             <option value="bw">B&W</option><option value="color">Color</option>
                                         </select>
                                     </div>
+                                    {/* 🟢 ROTATE BUTTON PLACED SAFELY HERE */}
+                                    {!item.isPdf && (
+                                        <div>
+                                            <label style={labelStyle}>Rotate</label>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => updateItemSetting(index, 'rotate', ((item.rotate || 0) + 90) % 360)} 
+                                                style={{...inputStyle, padding: '6px', background: '#e0e7ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontWeight: 'bold', cursor: 'pointer', height: '33px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}
+                                            >
+                                                ↻ {item.rotate || 0}°
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {!item.isPdf && (
                                     <>
-                                        <div>
+                                        {/* 🟢 PRINT SIZE DROPDOWN FIXED (No buttons inside it) */}
+                                        <div style={{ marginTop: '5px' }}>
                                             <label style={labelStyle}>Print Size</label>
                                             <select value={item.scale} onChange={(e) => updateItemSetting(index, 'scale', e.target.value)} style={{...inputStyle, padding: '6px'}}>
                                                 <option value="fit">Fit to A4 (Full Page)</option>
@@ -769,6 +830,7 @@ export default function CustomerUpload() {
                                                 <option value="passport">Passport Photo</option>
                                             </select>
                                         </div>
+
                                         {item.scale !== 'fit' && (
                                             <div style={{ background: '#f1f5f9', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                                                 <label style={{...labelStyle, textAlign: 'center', marginBottom: '8px'}}>Placement on Paper</label>

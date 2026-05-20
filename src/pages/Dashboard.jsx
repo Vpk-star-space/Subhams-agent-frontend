@@ -22,7 +22,7 @@ export default function Dashboard() {
   const [jobs, setJobs] = useState([]);
   const [activeJob, setActiveJob] = useState(null); 
   const [previewImage, setPreviewImage] = useState(null);
-  
+  const iframeRef = useRef(null);
   // 🚨 Hardware Security State
   const [pendingHardware, setPendingHardware] = useState(null);
 
@@ -48,7 +48,8 @@ export default function Dashboard() {
     secureDate: '',
     maskAadhaar: false,
     maskRectArray: [], 
-    isBlindPreview: false 
+    isBlindPreview: false,
+    rotate: 0 
   });
   
   const initialFetchDone = useRef(false);
@@ -142,7 +143,7 @@ export default function Dashboard() {
             const fileBlob = new Blob([response.data], { type: contentType });
             const rawUrl = URL.createObjectURL(fileBlob);
             
-            setPreviewImage(contentType === 'application/pdf' ? rawUrl + '#toolbar=0' : rawUrl);
+          setPreviewImage(rawUrl); // 🟢 FIX: Removed #toolbar=0 so the native PDF pagination shows up!
             
         } catch (error) {
             console.error("Fast preview error:", error);
@@ -152,6 +153,29 @@ export default function Dashboard() {
       return () => clearTimeout(delayTimer); 
     }
   }, [activeJob, printSettings, isDrawingMode, secureAxios]);
+
+useEffect(() => {
+    socket.on('JOB_EXPIRED', (data) => {
+        if (activeJob && activeJob.jobId === data.jobId) {
+            setActiveJob(null);
+            setPreviewImage(null);
+            alert("⚠️ The file was automatically removed due to timeout.");
+        }
+        fetchQueue();
+    });
+    return () => socket.off('JOB_EXPIRED');
+}, [activeJob, fetchQueue]);
+
+useEffect(() => {
+  const handleKeyDown = (e) => {
+   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+      e.preventDefault();
+      alert("Printing from browser is disabled!");
+    }
+   };
+   window.addEventListener('keydown', handleKeyDown);
+  return () => window.removeEventListener('keydown', handleKeyDown);
+ }, []);
 
 // 🟢 Optimized Socket Connection (No Lag)
   useEffect(() => {
@@ -238,7 +262,8 @@ export default function Dashboard() {
       secureDate: job.options?.secureDate || new Date().toLocaleDateString('en-GB'),
       maskAadhaar: job.options?.maskAadhaar === true || job.options?.maskAadhaar === 'true' || parsedMaskArray.length > 0,
       maskRectArray: parsedMaskArray,
-      isBlindPreview: job.options?.isBlindPreview === true || job.options?.isBlindPreview === 'true'
+      isBlindPreview: job.options?.isBlindPreview === true || job.options?.isBlindPreview === 'true',
+      rotate: job.options?.rotate ? parseInt(job.options.rotate) : 0
     });
     
     setActiveJob(job);
@@ -256,6 +281,7 @@ export default function Dashboard() {
         fileIndex: 0,
         overrides: {
             ...printSettings,
+            rotate: printSettings.rotate,
             maskRect: printSettings.maskRectArray, 
             copies: activeJob?.options?.copies || 1
         } 
@@ -590,21 +616,39 @@ export default function Dashboard() {
                    )}
 
                    <div style={{ background: '#fff', padding: '15px', borderRadius: '12px', marginBottom: '15px', border: '1px solid #cbd5e1', display: 'flex', gap: '15px', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
-                        <div>
-                           <label style={controlLabel}>Requested Copies</label>
-                           <div style={{ ...controlInput, background: '#e2e8f0', color: '#475569', fontWeight: 'bold' }}>
-                              {activeJob.options?.copies || 1}
-                           </div>
-                        </div>
-                        <div>
-                           <label style={controlLabel}>Color</label>
-                           <select value={printSettings.colorMode} onChange={(e) => { setPreviewImage(null); setPrintSettings({...printSettings, colorMode: e.target.value}); }} style={controlInput}>
-                              <option value="bw">B&W</option>
-                              <option value="color">Color</option>
-                           </select>
-                        </div>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         
+                       {/* 🟢 TOP ROW: 3-Column Grid for Copies, Color, and Rotate (ALWAYS VISIBLE) */}
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+    <div>
+        <label style={controlLabel}>Copies</label>
+        <div style={{ ...controlInput, background: '#e2e8f0', color: '#475569', fontWeight: 'bold', textAlign: 'center', height: '33px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {activeJob.options?.copies || 1}
+        </div>
+    </div>
+    
+    <div>
+        <label style={controlLabel}>Color</label>
+        <select value={printSettings.colorMode} onChange={(e) => { setPreviewImage(null); setPrintSettings({...printSettings, colorMode: e.target.value}); }} style={{...controlInput, height: '33px'}}>
+            <option value="bw">B&W</option>
+            <option value="color">Color</option>
+        </select>
+    </div>
+
+    {/* 🟢 FIX: No conditional check here! The Rotate button will now ALWAYS show up, even for PDFs. */}
+    <div>
+        <label style={controlLabel}>Rotate</label>
+        <button 
+            type="button" 
+            onClick={() => { setPreviewImage(null); setPrintSettings({...printSettings, rotate: ((printSettings.rotate || 0) + 90) % 360}); }} 
+            style={{...controlInput, background: '#e0e7ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontWeight: 'bold', cursor: 'pointer', height: '33px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}
+        >
+            ↻ {printSettings.rotate || 0}°
+        </button>
+    </div>
+</div>
+                        
+                        {/* 🟢 BOTTOM ROW: Print Size Dropdown */}
                         {!isActivePdf && (
                           <div>
                              <label style={controlLabel}>Physical Print Size</label>
@@ -741,9 +785,12 @@ export default function Dashboard() {
                                         src={`${BACKEND_URL}/api/jobs/download/${activeJob.jobId}`} 
                                         alt="Original File" 
                                         style={{ 
-                                            width: '100%', height: '100%', objectFit: 'fill', display: 'block', background: 'white',
+                                            width: '100%', height: '100%', 
+                                            objectFit: 'fill', /* 🟢 FIX: Must be 'fill' to ensure mask coordinates align perfectly with backend canvas! */
+                                            display: 'block', background: 'white',
                                             filter: `${printSettings.colorMode === 'bw' ? 'grayscale(100%) contrast(120%) ' : ''}${printSettings.isBlindPreview ? 'blur(4px)' : ''}`.trim() || 'none',
-                                            transition: 'filter 0.3s ease'
+                                            transform: `rotate(${printSettings.rotate || 0}deg)`, /* 🟢 Visually rotates the image */
+                                            transition: 'transform 0.3s ease, filter 0.3s ease'
                                         }} 
                                         draggable={false}
                                         onError={(e) => { e.target.style.display = 'none'; alert("Cannot draw mask on PDF files. Please use an image file."); setIsDrawingMode(false); }}
@@ -793,25 +840,82 @@ export default function Dashboard() {
                               </button>
                           </div>
                       </div>
-                  ) : previewImage ? (
-                    // 🛡️ THE INVISIBLE SHIELD: Blocks right clicking on the PDF Preview
-                    <div style={{ position: 'relative', width: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ position: 'absolute', inset: 0, zIndex: 50, cursor: 'not-allowed' }} title="Secure Preview - Interaction Disabled"></div>
-                        <iframe 
-                          src={previewImage} 
-                          style={{ 
-                            width: '100%', 
-                            flex: 1, 
-                            border: '1px solid #e2e8f0', 
-                            borderRadius: '8px', 
-                            background: 'white',
-                            filter: `${printSettings.colorMode === 'bw' ? 'grayscale(100%) ' : ''}${printSettings.isBlindPreview ? 'blur(4px)' : ''}`.trim() || 'none',
-                            transition: 'filter 0.3s ease'
-                          }} 
-                          title="Preview" 
-                        />
-                    </div>
-                                    ) : (
+                ) : previewImage ? (
+  <div 
+    style={{ 
+      position: 'relative', 
+      width: '100%', 
+      flex: 1, 
+      display: 'flex', 
+      flexDirection: 'column', 
+      minHeight: '400px' 
+    }} 
+    onContextMenu={(e) => e.preventDefault()}
+  >
+    {/* 🟢 SCROLL BUTTONS: Now target the scrollable container instead of the iframe */}
+    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', marginTop: '10px' }}>
+        <button 
+            type="button" 
+            onClick={() => {
+              const container = document.getElementById('secure-scroll-box');
+              if (container) container.scrollBy({ top: -300, behavior: 'smooth' });
+            }} 
+            style={zoomBtn}
+        >⬆️ Scroll Up</button>
+        <button 
+            type="button" 
+            onClick={() => {
+              const container = document.getElementById('secure-scroll-box');
+              if (container) container.scrollBy({ top: 300, behavior: 'smooth' });
+            }} 
+            style={zoomBtn}
+        >⬇️ Scroll Down</button>
+    </div>
+
+    {/* 🟢 PREVIEW CONTAINER WITH NATIVE SCROLLING */}
+    <div 
+        id="secure-scroll-box"
+        style={{ 
+            position: 'relative', 
+            width: '100%', 
+            height: '500px', 
+            overflowY: 'auto', // Allows vertical scrolling of the wrapper box
+            border: '1px solid #e2e8f0', 
+            borderRadius: '8px',
+            background: 'white'
+        }}
+    >
+        
+        {/* 🛡️ THE INVISIBLE SHIELD: Perfectly tracks the document height to stop taps/clicks */}
+        <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '3000px', // Large height to guarantee coverage over long documents
+            zIndex: 10,
+            background: 'transparent',
+            touchAction: 'none',
+            userSelect: 'none'
+        }} />
+
+        {/* 🟢 IFRAME: Tall height ensures the parent div handles the scroll physics */}
+        <iframe 
+            ref={iframeRef}
+            src={previewImage} 
+            style={{ 
+                width: '100%', 
+                height: '3000px', // Matches shield height to display full pages without internal iframe scrollbars
+                border: 'none',
+                pointerEvents: 'none',
+                filter: `${printSettings.colorMode === 'bw' ? 'grayscale(100%) ' : ''}${printSettings.isBlindPreview ? 'blur(4px)' : ''}`.trim() || 'none',
+                transition: 'filter 0.3s ease'
+            }} 
+            title="Preview" 
+        />
+    </div>
+  </div>
+) : (
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#64748b', fontWeight: 'bold', textAlign: 'center' }}>
                        <span style={{ marginBottom: '8px' }}>⚙️ Generating Accurate A4 Preview...</span>
                        <span style={{ fontSize: '12px', fontWeight: 'normal', color: '#94a3b8' }}>

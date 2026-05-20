@@ -59,8 +59,8 @@ const getDictionary = (path, lang, name, teName) => {
             ? `${timeGreeting}, **${name}**! 🙏 I am Subhams Intelligence. How may I streamline your printing experience today?`
             : `${timeGreeting}, **${teName}**! 🙏 నేను సుభమ్స్ AI సిస్టమ్. నేను మీకు ఎలా సహాయపడగలను?`,
         options: lang === "EN"
-            ? ["🛡️ Print Modes (Govt/Private)", "🪪 Smart ID Merge", "🔍 Track Print Status", "📦 Upload Rules", "✨ What is Subhams?", "❓ How Subhams Works", "🌐 Our Other Projects", "⏱️ Email & OTP Delays","👑 Contact Support"]
-            : ["🛡️ ప్రింట్ మోడ్‌లు", "🪪 స్మార్ట్ ID మెర్జ్", "🔍 ప్రింట్ స్టేటస్ ట్రాక్", "📦 అప్‌లోడ్ రూల్స్","✨ సుభమ్స్ అంటే ఏమిటి?","❓ ఎలా పనిచేస్తుంది", "🌐 మా ఇతర ప్రాజెక్ట్‌లు", "⏱️ OTP ఆలస్యం గురించి", "👑 అడ్మిన్ సపోర్ట్"],
+            ? ["🛡️ Print Modes (Govt/Private)","🎛️ Copies & Color Setup", "🪪 Smart ID Merge","🔒 Sensitive Info Print Out", "🔍 Track Print Status", "📦 Upload Rules", "✨ What is Subhams?", "❓ How Subhams Works", "🌐 Our Other Projects", "⏱️ Email & OTP Delays","👑 Contact Support"]
+            : ["🛡️ ప్రింట్ మోడ్‌లు (Govt/Private)","🎛️ కలర్ & కాపీల సెట్టింగ్స్", "🪪 స్మార్ట్ ID మెర్జ్","🔒 సున్నితమైన పత్రాల ప్రింటింగ్", "🔍 ప్రింట్ స్టేటస్ ట్రాక్", "📦 అప్‌లోడ్ రూల్స్","✨ సుభమ్స్ అంటే ఏమిటి?","❓ ఎలా పనిచేస్తుంది", "🌐 మా ఇతర ప్రాజెక్ట్‌లు", "⏱️ OTP ఆలస్యం గురించి", "👑 అడ్మిన్ సపోర్ట్"],
         menuLabel: lang === "EN" ? "🏠 Return to Main Menu" : "🏠 ప్రధాన మెనూకు వెళ్లండి",
         menuHeader: lang === "EN" ? "Select an inquiry category:" : "ఒక వర్గాన్ని ఎంచుకోండి:",
         placeholder: lang === "EN" ? "Submit your query..." : "మీ ప్రశ్నను టైప్ చేయండి..."
