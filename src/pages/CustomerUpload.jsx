@@ -40,7 +40,8 @@ export default function CustomerUpload() {
   
   const todayDate = new Date().toLocaleDateString('en-GB'); 
 
-  const [drawState, setDrawState] = useState({ isDrawing: false, startX: 0, startY: 0, currentRect: null });
+  // 🟢 FIX: Added currentX and currentY to track the magnifier's exact location
+  const [drawState, setDrawState] = useState({ isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0, currentRect: null });
   
   const [isScanning, setIsScanning] = useState(false);
   const [scanSuccess, setScanSuccess] = useState(false);
@@ -50,7 +51,7 @@ export default function CustomerUpload() {
   const [activePreviewIndex, setActivePreviewIndex] = useState(null);
   const [status, setStatus] = useState('');
   const [isUploading, setIsUploading] = useState(false);
-  const [showMaskWarning, setShowMaskWarning] = useState(false);
+  const [showMaskWarning, setShowMaskWarning] = useState(false); 
 
   const [idMergeModal, setIdMergeModal] = useState({ open: false, front: null, back: null });
   const frontInputRef = useRef(null);
@@ -292,9 +293,9 @@ export default function CustomerUpload() {
       setFileItems(updated);
   };
 
-  // 🟢 MASK DRAWING LOGIC WITH PERFECT COORDINATE TRACKING
   const startDrawing = (e, index) => {
       if (securityMode !== 'private' || !maskAadhaar || fileItems[index].isPdf) return;
+      e.preventDefault(); 
       const rect = e.currentTarget.getBoundingClientRect();
       const clientX = e.clientX || (e.touches && e.touches[0].clientX);
       const clientY = e.clientY || (e.touches && e.touches[0].clientY);
@@ -303,12 +304,13 @@ export default function CustomerUpload() {
       const x = ((clientX - rect.left) / rect.width) * 100;
       const y = ((clientY - rect.top) / rect.height) * 100;
       
-      setDrawState({ isDrawing: true, startX: x, startY: y, currentRect: { x, y, width: 0, height: 0 } });
+      setDrawState({ isDrawing: true, startX: x, startY: y, currentX: x, currentY: y, currentRect: { x, y, width: 0, height: 0 } });
       if(e.pointerId) e.currentTarget.setPointerCapture(e.pointerId);
   };
 
   const keepDrawing = (e) => {
       if (!drawState.isDrawing) return;
+      e.preventDefault(); 
       const rect = e.currentTarget.getBoundingClientRect();
       const clientX = e.clientX || (e.touches && e.touches[0].clientX);
       const clientY = e.clientY || (e.touches && e.touches[0].clientY);
@@ -324,6 +326,8 @@ export default function CustomerUpload() {
 
       setDrawState(prev => ({ 
           ...prev, 
+          currentX: currentX, 
+          currentY: currentY, 
           currentRect: { 
               x: Math.min(x, 100), 
               y: Math.min(y, 100), 
@@ -339,7 +343,7 @@ export default function CustomerUpload() {
           updatedFileItems[index].maskRectArray.push(drawState.currentRect);
           setFileItems(updatedFileItems);
       }
-      setDrawState({ isDrawing: false, startX: 0, startY: 0, currentRect: null });
+      setDrawState({ isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0, currentRect: null });
       if(e.pointerId) e.currentTarget.releasePointerCapture(e.pointerId);
   };
 
@@ -429,10 +433,10 @@ export default function CustomerUpload() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => { 
     e.preventDefault();
     if (!shopId) return alert("Please enter a Shop ID.");
-    if (shopStatus === 'invalid') return alert("❌ The Shop ID you entered does not exist.");
+    if (shopStatus === 'invalid') return alert("❌ The Shop ID you entered does not exist. Please check it again.");
     if (!customerName.trim()) return alert("Please enter your name.");
     if (fileItems.length === 0) return alert("Please add at least one file.");
 
@@ -706,6 +710,12 @@ export default function CustomerUpload() {
                                   
                                  {item.isPdf ? (
                                     <div style={{ position: 'relative', width: '100%', height: '400px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #cbd5e1' }}>
+                                        {/* 🟢 FIX: Mobile Fallback PDF Link added so customers can ALWAYS open PDFs */}
+                                        <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10 }}>
+                                            <a href={item.previewUrl} target="_blank" rel="noreferrer" style={{ background: '#2563eb', color: 'white', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                                                ↗️ Open PDF
+                                            </a>
+                                        </div>
                                         <iframe src={`${item.previewUrl}#view=FitH`} style={{ width: '100%', height: '100%', border: 'none' }} title="PDF Preview" />
                                         <div style={{ position: 'absolute', top: '10px', left: '10px', background: '#0f172a', color: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(0,0,0,0.3)', pointerEvents: 'none' }}>
                                             📄 PDF Document
@@ -714,7 +724,6 @@ export default function CustomerUpload() {
                                 ) : (
                                     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                         
-                                        {/* 🟢 MASK CONTROLS (ADDED BUTTONS HERE) */}
                                         {securityMode === 'private' && maskAadhaar && (
                                             <div style={{ background: '#fff', padding: '10px', borderRadius: '8px', border: '2px dashed #cbd5e1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                 <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', color: '#1e293b', textAlign: 'center' }}>
@@ -780,6 +789,7 @@ export default function CustomerUpload() {
                                                 justifyContent: getJustify(item.position), 
                                                 alignItems: getAlign(item.position)
                                             }}>
+                                                
                                                 <div 
                                                     onPointerDown={(e) => startDrawing(e, index)}
                                                     onPointerMove={keepDrawing}
@@ -789,7 +799,7 @@ export default function CustomerUpload() {
                                                         ...getImgSize(item.scale), 
                                                         position: 'relative', 
                                                         display: 'inline-block',
-                                                        touchAction: (securityMode === 'private' && maskAadhaar) ? 'none' : 'auto', 
+                                                        touchAction: 'none', // 🟢 FIX: Forces browser to ignore swipe/scroll on this box so drawing works perfectly
                                                         cursor: (securityMode === 'private' && maskAadhaar) ? 'crosshair' : 'default',
                                                         userSelect: 'none',
                                                         WebkitUserSelect: 'none'
@@ -832,6 +842,35 @@ export default function CustomerUpload() {
                                                             backgroundColor: 'black', opacity: 0.5, border: '1px dashed yellow',
                                                             pointerEvents: 'none'
                                                         }}></div>
+                                                    )}
+
+                                                    {/* 🟢 FIX: GOOGLE-STYLE TOUCH MAGNIFIER ZOOM FOR PERFECT MASK PLACEMENT */}
+                                                    {drawState.isDrawing && (
+                                                        <div style={{
+                                                            position: 'absolute',
+                                                            left: `calc(${drawState.currentX}% - 40px)`,
+                                                            top: `calc(${drawState.currentY}% - 100px)`, // Hover above finger
+                                                            width: '80px', height: '80px',
+                                                            borderRadius: '50%',
+                                                            border: '3px solid #2563eb',
+                                                            overflow: 'hidden',
+                                                            zIndex: 50,
+                                                            boxShadow: '0 4px 10px rgba(0,0,0,0.5)',
+                                                            background: '#fff',
+                                                            pointerEvents: 'none'
+                                                        }}>
+                                                            <img src={item.previewUrl} style={{
+                                                                position: 'absolute',
+                                                                width: '400%', height: '400%', 
+                                                                left: `calc(-${drawState.currentX * 4}% + 40px)`,
+                                                                top: `calc(-${drawState.currentY * 4}% + 40px)`,
+                                                                objectFit: 'fill',
+                                                                transform: `rotate(${item.rotate || 0}deg)`,
+                                                            }} />
+                                                            {/* Crosshairs */}
+                                                            <div style={{position: 'absolute', top: '39px', left: '35px', width: '10px', height: '2px', background: '#ef4444'}}></div>
+                                                            <div style={{position: 'absolute', top: '35px', left: '39px', width: '2px', height: '10px', background: '#ef4444'}}></div>
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
@@ -988,7 +1027,6 @@ const mergeBtnStyle = { width: '100%', padding: '15px', borderRadius: '10px', fo
 const actionBtn = { padding: '12px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' };
 const controlBtn = { padding: '10px 5px', background: '#e2e8f0', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' };
 const sizeBtn = { padding: '10px 5px', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', color: '#92400e' };
-
 const trackerContainerStyle = { marginTop: '30px', background: '#fff', border: '1px solid #cbd5e1', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', borderRadius: '12px', overflow: 'hidden' };
 const trackerHeader = { background: '#2563eb', color: 'white', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold', fontSize: '15px' };
 const orderCard = { background: '#f8fafc', padding: '15px', borderRadius: '12px', marginBottom: '15px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' };
