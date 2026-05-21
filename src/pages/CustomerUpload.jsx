@@ -708,18 +708,15 @@ export default function CustomerUpload() {
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                               <div style={{ width: '100%', maxWidth: '100%', margin: '0 auto', flexShrink: 0, overflow: 'hidden' }}>
                                   
-                                 {item.isPdf ? (
-                                    <div style={{ position: 'relative', width: '100%', height: '400px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #cbd5e1' }}>
-                                        {/* 🟢 FIX: Mobile Fallback PDF Link added so customers can ALWAYS open PDFs */}
-                                        <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10 }}>
-                                            <a href={item.previewUrl} target="_blank" rel="noreferrer" style={{ background: '#2563eb', color: 'white', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                                                ↗️ Open PDF
-                                            </a>
-                                        </div>
-                                        <iframe src={`${item.previewUrl}#view=FitH`} style={{ width: '100%', height: '100%', border: 'none' }} title="PDF Preview" />
-                                        <div style={{ position: 'absolute', top: '10px', left: '10px', background: '#0f172a', color: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(0,0,0,0.3)', pointerEvents: 'none' }}>
-                                            📄 PDF Document
-                                        </div>
+                                {item.isPdf ? (
+                                    <div style={{ width: '100%', padding: '30px 20px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#f8fafc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                                        <div style={{ fontSize: '48px', marginBottom: '10px' }}>📄</div>
+                                        <h3 style={{ margin: '0 0 10px 0', color: '#0f172a' }}>PDF Uploaded</h3>
+                                        <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 20px 0' }}>Mobile browsers block embedded PDFs for security. Tap below to view your file.</p>
+                                        {/* 🟢 Mobile Safe PDF Link */}
+                                        <a href={item.previewUrl} target="_blank" rel="noreferrer" style={{ background: '#2563eb', color: 'white', padding: '10px 20px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block' }}>
+                                            ↗️ Open PDF in Browser
+                                        </a>
                                     </div>
                                 ) : (
                                     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
