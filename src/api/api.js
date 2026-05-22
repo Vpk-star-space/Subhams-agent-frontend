@@ -32,7 +32,7 @@ api.interceptors.response.use(
         // ✅ Fixed: Now using the error variable to log the failure
         console.error("Session expired or refresh failed:", refreshError);
         localStorage.clear();
-        window.location.href = '/login';
+        window.location.href = '/login?role=business';
       }
     }
     return Promise.reject(error);
