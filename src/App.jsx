@@ -6,16 +6,16 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Manage from './pages/Manage';
 import CustomerUpload from './pages/CustomerUpload';
-// Add this line with your other imports
 import LandingPage from './pages/LandingPage';
-// 🤖 1. IMPORT THE NEW CHATBOT HERE
+
+// 🤖 IMPORT THE NEW CHATBOT HERE
 import XeroxChatbot from './components/XeroxChatbot'; 
 
 // 🛑 THE MASTER SWITCH: Change to 'true' to lock down the app for updates!
 const IS_MAINTENANCE_MODE = false; 
-const TARGET_LAUNCH_DATE = new Date("2026-05-06T18:00:00"); // Set your target launch time here
+const TARGET_LAUNCH_DATE = new Date("2026-05-06T18:00:00"); 
 
-// 🛡️ THE PROFESSIONAL BOUNCER
+// 🛡️ THE PROFESSIONAL BOUNCER (Only protects Shop Owners)
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('accessToken'); 
   if (!token) {
@@ -24,14 +24,12 @@ const ProtectedRoute = ({ children }) => {
   return children; 
 };
 
-
-
+// =====================================================================
 // 🚧 THE MAINTENANCE MODE SCREEN
 // =====================================================================
 const MaintenanceScreen = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Make the clock tick live every second
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -40,7 +38,7 @@ const MaintenanceScreen = () => {
   return (
     <div style={styles.bootContainer}>
       <div style={styles.shieldContainer}>
-        <div style={styles.spinnerOuter} style={{...styles.spinnerOuter, borderColor: 'rgba(245, 158, 11, 0.2)', borderTopColor: '#f59e0b', animationDuration: '3s'}}></div>
+        <div style={{...styles.spinnerOuter, borderColor: 'rgba(245, 158, 11, 0.2)', borderTopColor: '#f59e0b', animationDuration: '3s'}}></div>
         <div style={styles.shieldIcon}>🛠️</div>
       </div>
       
@@ -55,7 +53,6 @@ const MaintenanceScreen = () => {
       </p>
 
       <div style={{ display: 'flex', gap: '15px', width: '100%', maxWidth: '500px', marginBottom: '25px' }}>
-        {/* Live Current Time Box (RED THEME) */}
         <div style={{ flex: 1, background: '#450a0a', padding: '15px', borderRadius: '12px', border: '1px solid #991b1b', textAlign: 'center' }}>
           <p style={{ margin: '0 0 5px 0', fontSize: '11px', color: '#fca5a5', fontWeight: 'bold', letterSpacing: '1px' }}>
             MAINTENANCE / నిర్వహణ సమయం
@@ -65,7 +62,6 @@ const MaintenanceScreen = () => {
           </div>
         </div>
 
-        {/* Target Launch Box (GREEN THEME) */}
         <div style={{ flex: 1, background: '#022c22', padding: '15px', borderRadius: '12px', border: '1px solid #065f46', textAlign: 'center' }}>
           <p style={{ margin: '0 0 5px 0', fontSize: '11px', color: '#6ee7b7', fontWeight: 'bold', letterSpacing: '1px' }}>
             ESTIMATED LAUNCH / ప్రారంభ సమయం
@@ -79,7 +75,6 @@ const MaintenanceScreen = () => {
         </div>
       </div>
 
-      {/* 🌟 Personal Thank You Section */}
       <div style={{ textAlign: 'center', marginBottom: '30px', background: 'rgba(30, 41, 59, 0.5)', padding: '15px 30px', borderRadius: '12px', border: '1px dashed #475569' }}>
         <p style={{ color: '#e2e8f0', fontSize: '14px', margin: '0 0 5px 0', fontWeight: '500' }}>
           Thank you for your patience!
@@ -92,7 +87,6 @@ const MaintenanceScreen = () => {
         </p>
       </div>
 
-      {/* 🔗 App Network Links */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
         <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 5px 0', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>Explore Our Network</p>
         <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -109,7 +103,7 @@ const MaintenanceScreen = () => {
 };
 
 // =====================================================================
-// 🚀 THE WAKE-UP BOOTLOADER UI
+// 🚀 THE WAKE-UP BOOTLOADER UI (Now a CSS Overlay for SEO!)
 // =====================================================================
 const ServerBootloader = () => {
   const [loadingText, setLoadingText] = useState("Initializing Subhams Security Protocol...");
@@ -117,7 +111,7 @@ const ServerBootloader = () => {
   useEffect(() => {
     const texts = [
       "Initializing Subhams Security Protocol...",
-      "Waking up cloud infrastructure (This may take few sec)...",
+      "Waking up cloud infrastructure (This may take a few sec)...",
       "Establishing encrypted connection...",
       "Verifying secure hardware tokens...",
       "Booting up print queue engines...",
@@ -175,7 +169,6 @@ export default function App() {
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://subhams-vpk.onrender.com';
     
     const pingServer = async () => {
-      // If maintenance mode is ON, don't bother pinging the server!
       if (IS_MAINTENANCE_MODE) return; 
 
       try {
@@ -195,58 +188,34 @@ export default function App() {
     pingServer();
   }, []);
 
-  // 🛑 1. Check Maintenance Mode FIRST
   if (IS_MAINTENANCE_MODE) {
     return <MaintenanceScreen />;
   }
 
-  // 🚀 2. Check Server Bootloader SECOND
-  if (!isServerAwake) {
-    return <ServerBootloader />;
-  }
-
-  // 🌐 3. Render Application FINALLY
+  // 🟢 SEO FIX: Render actual components into the DOM immediately! 
+  // If the server isn't awake, we just float the Bootloader on top of it.
   return (
     <BrowserRouter>
       <Routes>
-        {/* Google lands here first (The LandingPage) */}
-  <Route path="/" element={<LandingPage />} />
-  
-  {/* Users go here to choose Individual or Business */}
-  <Route path="/portal" element={<Home />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/portal" element={<Home />} />
         
-        {/* 👤 OPEN UPLOAD ROUTE */}
-        <Route path="/u/:shopId" element={<CustomerUpload />} />
-        <Route path="/u" element={<CustomerUpload />} />
+        {/* 🟢 Customer Portal: Always rendered, Bootloader is just an overlay */}
+        <Route path="/u/:shopId" element={<>{!isServerAwake && <ServerBootloader />}<CustomerUpload /></>} />
+        <Route path="/u" element={<>{!isServerAwake && <ServerBootloader />}<CustomerUpload /></>} />
 
-        {/* 🔐 AUTH */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* 🟢 Auth Routes */}
+        <Route path="/login" element={<>{!isServerAwake && <ServerBootloader />}<Login /></>} />
+        <Route path="/register" element={<>{!isServerAwake && <ServerBootloader />}<Register /></>} />
         
-        {/* 🟢 SECURE BUSINESS PAGES */}
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/manage" 
-          element={
-            <ProtectedRoute>
-              <Manage />
-            </ProtectedRoute>
-          } 
-        />
+        {/* 🟢 Dashboard Routes */}
+        <Route path="/dashboard" element={<ProtectedRoute>{!isServerAwake && <ServerBootloader />}<Dashboard /></ProtectedRoute>} />
+        <Route path="/manage" element={<ProtectedRoute>{!isServerAwake && <ServerBootloader />}<Manage /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {/* 🤖 2. ADD THE CHATBOT HERE (Floats over all routes!) */}
       <XeroxChatbot />
-
     </BrowserRouter>
   );
 }
@@ -256,6 +225,11 @@ export default function App() {
 // =====================================================================
 const styles = {
   bootContainer: {
+    // 🟢 SEO FIX: Added 'position: fixed' and 'zIndex' to turn this into an overlay!
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    zIndex: 9999,
     height: '100vh',
     width: '100vw',
     backgroundColor: '#0f172a',

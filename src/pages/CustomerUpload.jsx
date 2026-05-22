@@ -26,7 +26,8 @@ export default function CustomerUpload() {
   const navigate = useNavigate(); 
   
   const [userCode] = useState(getOrCreateUserCode);
-  const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_shopId') || '');
+// Default to 'guest' if nothing is provided
+const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_shopId') || 'guest');
   const [customerName, setCustomerName] = useState(localStorage.getItem('subhams_customerName') || '');
   
   const [shopStatus, setShopStatus] = useState('idle'); 
@@ -71,18 +72,29 @@ export default function CustomerUpload() {
     localStorage.setItem('subhams_tracker', JSON.stringify(liveStatusTracker));
   }, [shopId, customerName, liveStatusTracker]);
 
-  useEffect(() => {
-      if (shopStatus === 'valid' && shopId) {
-          navigate(`/u/${shopId.trim().toUpperCase()}`, { replace: true });
+ useEffect(() => {
+      const normalizedShopId = shopId.trim().toUpperCase();
+      // 🟢 GUARD: Only navigate if we are NOT already on the correct URL
+      const isAlreadyOnCorrectPath = window.location.pathname === `/u/${normalizedShopId}`;
+      
+      if (shopStatus === 'valid' && shopId && !isAlreadyOnCorrectPath) {
+          navigate(`/u/${normalizedShopId}`, { replace: true });
       }
   }, [shopId, shopStatus, navigate]);
 
   useEffect(() => {
       const checkShopValidity = async () => {
+          // 🟢 BYPASS: Accept both 'guest' and 'SUBHAMS-GUEST'
+          if (shopId === 'guest' || shopId.toUpperCase() === 'SUBHAMS-GUEST') {
+              setShopStatus('valid');
+              return;
+          }
+          
           if (!shopId || shopId.length < 5) {
               setShopStatus('idle');
               return;
           }
+          
           setShopStatus('checking');
           try {
               const res = await axios.get(`https://subhams-vpk.onrender.com/api/shop/pricing/${shopId}`);
@@ -489,8 +501,10 @@ export default function CustomerUpload() {
 
   const activeOrders = Object.values(liveStatusTracker);
   const getStepNumber = (status) => status === 'SECURED' ? 1 : status === 'PREVIEWING' ? 2 : status === 'PRINTING' ? 3 : status === 'WIPED' ? 4 : 1;
+/// 🟢 UPDATED: This block now only shows if the user is NOT in guest mode and hasn't scanned yet.
+// If shopId is 'guest', this block is skipped entirely, opening the portal.
 
-  if (!shopId && !isScanning) {
+if (shopId !== 'guest' && !shopStatus === 'valid' && !isScanning) {
     return (
       <div style={{ ...containerStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ background: '#fff', padding: '40px 20px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
@@ -513,8 +527,7 @@ export default function CustomerUpload() {
         </div>
       </div>
     );
-  }
-
+}
  return (
     <div style={containerStyle}>
       {idMergeModal.open && (
@@ -598,19 +611,30 @@ export default function CustomerUpload() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <input 
-                type="text" 
-                placeholder="SUBHAMS-XXXXXX" 
-                value={shopId} 
-                onChange={(e) => setShopId(e.target.value.toUpperCase().trim())} 
-                style={{
-                    ...inputStyle, 
-                    flex: 1, 
-                    fontWeight: 'bold', 
-                    color: shopStatus === 'invalid' ? '#ef4444' : '#2563eb',
-                    borderColor: shopStatus === 'invalid' ? '#ef4444' : (shopStatus === 'valid' ? '#10b981' : '#cbd5e1')
-                }} 
-              />
+             <input 
+  type="text" 
+  placeholder="SUBHAMS-XXXXXX" 
+  // 🟢 FORCED PREFIX LOGIC
+  value={shopId.startsWith('SUBHAMS-') ? shopId : 'SUBHAMS-' + shopId.replace('SUBHAMS-', '')} 
+  onChange={(e) => {
+      let val = e.target.value.toUpperCase();
+      // If user clears the box, force it back to "SUBHAMS-"
+      if (val === "" || val === "S" || val === "SU" || val === "SUB" || val === "SUBH" || val === "SUBHA" || val === "SUBHAM" || val === "SUBHAMS" || val === "SUBHAMS-") {
+          setShopId("SUBHAMS-");
+      } else if (!val.startsWith('SUBHAMS-')) {
+          setShopId('SUBHAMS-' + val.replace('SUBHAMS-', ''));
+      } else {
+          setShopId(val);
+      }
+  }} 
+  style={{
+      ...inputStyle, 
+      flex: 1, 
+      fontWeight: 'bold', 
+      color: shopStatus === 'invalid' ? '#ef4444' : '#2563eb',
+      borderColor: shopStatus === 'invalid' ? '#ef4444' : (shopStatus === 'valid' ? '#10b981' : '#cbd5e1')
+  }} 
+/>
               <button type="button" style={qrBtnStyle} onClick={() => setIsScanning(true)}>📷 Scan QR</button>
             </div>
             
@@ -708,12 +732,11 @@ export default function CustomerUpload() {
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                               <div style={{ width: '100%', maxWidth: '100%', margin: '0 auto', flexShrink: 0, overflow: 'hidden' }}>
                                   
-                                {item.isPdf ? (
+                               {item.isPdf ? (
                                     <div style={{ width: '100%', padding: '30px 20px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#f8fafc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
                                         <div style={{ fontSize: '48px', marginBottom: '10px' }}>📄</div>
                                         <h3 style={{ margin: '0 0 10px 0', color: '#0f172a' }}>PDF Uploaded</h3>
                                         <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 20px 0' }}>Mobile browsers block embedded PDFs for security. Tap below to view your file.</p>
-                                        {/* 🟢 Mobile Safe PDF Link */}
                                         <a href={item.previewUrl} target="_blank" rel="noreferrer" style={{ background: '#2563eb', color: 'white', padding: '10px 20px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block' }}>
                                             ↗️ Open PDF in Browser
                                         </a>
@@ -721,11 +744,17 @@ export default function CustomerUpload() {
                                 ) : (
                                     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                         
+                                        {/* 🟢 1. ADD THE IMAGE TAG HERE (This is what you were missing!) */}
+                                        <img src={item.previewUrl} style={{ width: '100%', borderRadius: '8px' }} alt="Preview" />
+                                        
+                                        {/* 🟢 2. KEEP YOUR EXISTING MASK TOOLS BELOW IT */}
                                         {securityMode === 'private' && maskAadhaar && (
                                             <div style={{ background: '#fff', padding: '10px', borderRadius: '8px', border: '2px dashed #cbd5e1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                 <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', color: '#1e293b', textAlign: 'center' }}>
                                                     Mask Tools / మాస్క్ సాధనాలు
                                                 </p>
+                                                
+                                                {/* ... DO NOT DELETE THE REST OF YOUR MASK BUTTONS/CODE DOWN HERE ... */}
                                                 
                                                 <button
                                                     type="button"

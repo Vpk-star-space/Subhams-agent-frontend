@@ -103,30 +103,41 @@ export default function Login() {
         </p>
       </div>
 
-      <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required />
-        {error && <p style={errorStyle}>{error}</p>}
-        <button type="submit" disabled={loading} style={{ ...btnStyle, background: isBusiness ? '#0f172a' : '#10b981' }}>
-          {loading ? 'Logging in...' : 'Sign In'}
-        </button>
-      </form>
+      {/* 🟢 ONLY SHOW LOGIN FORM IF BUSINESS, ELSE SHOW "ENTER AS GUEST" */}
+      {isBusiness ? (
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
+          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required />
+          {error && <p style={errorStyle}>{error}</p>}
+          <button type="submit" disabled={loading} style={{ ...btnStyle, background: '#0f172a' }}>Sign In</button>
+        </form>
+      ) : (
+        <div style={{ textAlign: 'center', padding: '20px', background: '#f0fdf4', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
+            <p style={{ color: '#065f46', marginBottom: '20px' }}>Welcome! You can upload your documents instantly without an account.</p>
+            <button onClick={() => navigate('/u')} style={{ ...btnStyle, background: '#10b981', width: '100%' }}>
+                🚀 Enter Upload Portal
+            </button>
+        </div>
+      )}
 
-      <div style={dividerStyle}><span>OR</span></div>
-      
-      <div style={{ display: 'flex', justifyContent: 'center', minHeight: '40px' }}>
-        {clientId ? (
-            <GoogleOAuthProvider clientId={clientId}>
-                <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError("Google Login Failed")} theme="outline" shape="pill" />
-            </GoogleOAuthProvider>
-        ) : (
-            <span style={{ fontSize: '13px', color: '#94a3b8' }}>Loading Secure Login...</span>
-        )}
-      </div>
-
-      <p style={{ textAlign: 'center', marginTop: '30px', fontSize: '14px' }}>
-        New to Subhams? <Link to={`/register?role=${roleValue}`} style={{ color: '#2563eb', fontWeight: 'bold' }}>Register Here</Link>
-      </p>
+      {/* Only show OR and Google login for Business users to keep it clean */}
+      {isBusiness && (
+        <>
+            <div style={dividerStyle}><span>OR</span></div>
+            <div style={{ display: 'flex', justifyContent: 'center', minHeight: '40px' }}>
+                {clientId ? (
+                    <GoogleOAuthProvider clientId={clientId}>
+                        <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError("Google Login Failed")} theme="outline" shape="pill" />
+                    </GoogleOAuthProvider>
+                ) : (
+                    <span style={{ fontSize: '13px', color: '#94a3b8' }}>Loading...</span>
+                )}
+            </div>
+            <p style={{ textAlign: 'center', marginTop: '30px', fontSize: '14px' }}>
+                New to Subhams? <Link to={`/register?role=business`} style={{ color: '#2563eb', fontWeight: 'bold' }}>Register Here</Link>
+            </p>
+        </>
+      )}
     </div>
   );
 }
