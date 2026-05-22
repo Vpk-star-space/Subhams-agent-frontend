@@ -744,8 +744,7 @@ if (shopId !== 'guest' && !shopStatus === 'valid' && !isScanning) {
                                 ) : (
                                     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                         
-                                        {/* 🟢 1. ADD THE IMAGE TAG HERE (This is what you were missing!) */}
-                                        <img src={item.previewUrl} style={{ width: '100%', borderRadius: '8px' }} alt="Preview" />
+                                     
                                         
                                         {/* 🟢 2. KEEP YOUR EXISTING MASK TOOLS BELOW IT */}
                                         {securityMode === 'private' && maskAadhaar && (
