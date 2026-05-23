@@ -13,8 +13,8 @@ import LandingPage from './pages/LandingPage';
 import XeroxChatbot from './components/XeroxChatbot'; 
 
 // 🛑 THE MASTER SWITCH: Change to 'true' to lock down the app for updates!
-const IS_MAINTENANCE_MODE = false; 
-const TARGET_LAUNCH_DATE = new Date("2026-05-06T18:00:00"); 
+const IS_MAINTENANCE_MODE = true; 
+const TARGET_LAUNCH_DATE = new Date("2026-05-26T10:00:00"); 
 
 // 🛡️ THE PROFESSIONAL BOUNCER (Only protects Shop Owners)
 const ProtectedRoute = ({ children }) => {
