@@ -11,59 +11,21 @@ const socket = io(BACKEND_URL, {
     reconnectionAttempts: 5
 });
 
+
+
 export default function Dashboard() {
   const navigate = useNavigate();
+
+  const [isAgentConnected, setIsAgentConnected] = useState(false);
+  const [isPrinterConnected, setIsPrinterConnected] = useState(false);
+  const [isChecking, setIsChecking] = useState(true); // 🟢 Add this
   
   const auth = useMemo(() => ({
     shopId: localStorage.getItem('shopId') || '', 
     token: localStorage.getItem('accessToken') || '' 
   }), []);
 
-  const [jobs, setJobs] = useState([]);
-  const [activeJob, setActiveJob] = useState(null); 
-  const [previewImage, setPreviewImage] = useState(null);
- 
-  // 🚨 Hardware Security State
-  const [pendingHardware, setPendingHardware] = useState(null);
-   const iframeRef = useRef(null);
- const [isWindowActive, setIsWindowActive] = useState(true);
-
-  const [pricing, setPricing] = useState({ bw: 2, color: 10, aadhaar: 30, passport: 20 });
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [tempPricing, setTempPricing] = useState({ ...pricing });
-
-  // 🌟 The Update Overlay State (Waiting for the server signal!)
-  const [needsUpdate, setNeedsUpdate] = useState(false);
-
-  // ✏️ MULTI-DRAW & ZOOM STATES
-  const [isDrawingMode, setIsDrawingMode] = useState(false);
-  const [drawState, setDrawState] = useState({ isDrawing: false, startX: 0, startY: 0, currentRect: null });
-  const [zoomLevel, setZoomLevel] = useState(1);
-
-  const [printSettings, setPrintSettings] = useState({
-    colorMode: 'bw',
-    scale: 'fit',
-    position: 'top-left',
-    backJobId: null,
-    securityMode: 'none', 
-    securePurpose: '',
-    secureDate: '',
-    maskAadhaar: false,
-    maskRectArray: [], 
-    isBlindPreview: false,
-    rotate: 0 
-  });
-  
-  const initialFetchDone = useRef(false);
-  const isCheckingHardware = useRef(false);
-  const uploadLink = `${window.location.origin}/u/${auth.shopId}`;
-
-  const handleLogout = useCallback(() => {
-    localStorage.clear();
-    navigate('/');
-  }, [navigate]);
-
-  // 🟢 Dynamic secureAxios URL
+  // 🟢 1. CORE TOOLS (Defined first so they can be used everywhere without errors)
   const secureAxios = useMemo(() => {
     return axios.create({
       baseURL: `${BACKEND_URL}/api`,
@@ -71,32 +33,63 @@ export default function Dashboard() {
     });
   }, [auth.token]);
 
-  const fetchPricing = useCallback(async () => {
-    try {
-      const res = await secureAxios.get(`/shop/pricing/${auth.shopId}`);
-      if (res.data.success) {
-        setPricing(res.data.pricing);
-        setTempPricing(res.data.pricing);
-      }
-    } catch (err) {
-      console.error("Pricing fetch error:", err); 
-    }
-  }, [auth.shopId, secureAxios]);
+  const handleLogout = useCallback(() => {
+    localStorage.clear();
+    navigate('/');
+  }, [navigate]);
 
-  const savePricing = async () => {
-    try {
-      const res = await secureAxios.put(`/shop/pricing/${auth.shopId}`, { pricing: tempPricing });
-      if (res.data.success) {
-        setPricing(tempPricing);
-        setIsSettingsOpen(false);
-        alert("✅ Prices updated successfully!");
-      }
-    } catch (err) {
-      console.error("Save pricing error:", err); 
-      alert("❌ Failed to update prices.");
-    }
-  };
+  // 🟢 2. MASTER CONTROL PANEL 
+const config = useMemo(() => ({
+    showClock: true,              
+    showAnnouncement: true,       
+    enableScrolling: true,        
+    scrollSpeed: "26s",           
+    message: "🚀 Subhams Print Server v2.0 is Live! | For support, contact admin. | సిస్టమ్ ఆన్‌లైన్‌లో ఉంది.",
+    postTime: "NA"                
+  }), []);
 
+  // 📅 Bulletproof Date Math
+  const shouldShowMessage = useMemo(() => {
+    if (!config.showAnnouncement) return false;
+    const activeDates = ["22-05-2026", "23-05-2026", "24-05-2026", "25-05-2026"]; 
+    const today = new Date();
+    const formattedToday = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
+    return activeDates.includes(formattedToday);
+  }, [config.showAnnouncement]);
+
+  const hasTopBar = config.showClock || shouldShowMessage;
+
+  // 🟢 3. ALL STATES
+  const [istTime, setIstTime] = useState("");
+  const [greeting, setGreeting] = useState("Hello");
+
+  // ... (Keep your existing useState declarations for jobs, pricing, etc.)
+  const [jobs, setJobs] = useState([]);
+  const [activeJob, setActiveJob] = useState(null); 
+  const [previewImage, setPreviewImage] = useState(null);
+  const [pendingHardware, setPendingHardware] = useState(null);
+  const [isWindowActive, setIsWindowActive] = useState(true);
+  const [pricing, setPricing] = useState({ bw: 2, color: 10, aadhaar: 30, passport: 20 });
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [tempPricing, setTempPricing] = useState({ ...pricing });
+  const [needsUpdate, setNeedsUpdate] = useState(false);
+  const [downloadStarted, setDownloadStarted] = useState(false);
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [drawState, setDrawState] = useState({ isDrawing: false, startX: 0, startY: 0, currentRect: null });
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [printSettings, setPrintSettings] = useState({
+    colorMode: 'bw', scale: 'fit', position: 'top-left', backJobId: null,
+    securityMode: 'none', securePurpose: '', secureDate: '',
+    maskAadhaar: false, maskRectArray: [], isBlindPreview: false, rotate: 0 
+  });
+  
+  const initialFetchDone = useRef(false);
+  const isCheckingHardware = useRef(false);
+  const iframeRef = useRef(null);
+  const uploadLink = `${window.location.origin}/u/${auth.shopId}`;
+
+  // 🟢 4. FUNCTIONS & EFFECTS
+  // Define fetchQueue carefully without the trailing comma
   const fetchQueue = useCallback(async () => {
     if (!auth.shopId || !auth.token) return;
     try {
@@ -109,31 +102,77 @@ export default function Dashboard() {
       console.error("Queue fetch error:", err); 
     }
   }, [auth.shopId, auth.token, secureAxios, handleLogout]);
+// 🟢 1. Initialize state with the default value FIRST
+  const [ownerName, setOwnerName] = useState(localStorage.getItem('ownerName') || "Shop Owner");
 
- // 🛡️ Fetches hardware status SAFELY
-  const checkHardware = useCallback(async () => {
-    if (!auth.shopId || !auth.token || isCheckingHardware.current) return;
+  const fetchPricing = useCallback(async () => {
+    try {
+      const res = await secureAxios.get(`/shop/pricing/${auth.shopId}`);
+      if (res.data.success) {
+        setPricing(res.data.pricing); // <--- This fixes the warning
+        setTempPricing(res.data.pricing);
+      }
+    } catch (err) {
+      console.error("Pricing fetch error:", err); 
+    }
+  }, [auth.shopId, secureAxios]);
+
+  // 🟢 2. SAVE PRICING (Make sure setPricing is called inside here)
+  const savePricing = async () => {
+    try {
+      const res = await secureAxios.put(`/shop/pricing/${auth.shopId}`, { pricing: tempPricing });
+      if (res.data.success) {
+        setPricing(tempPricing); // <--- This fixes the warning
+        setIsSettingsOpen(false);
+        alert("✅ Prices updated successfully!");
+      }
+    } catch (err) {
+      console.error("Save pricing error:", err); 
+      alert("❌ Failed to update prices.");
+    }
+  };
+
+  // 🟢 2. Use a clean useEffect that only updates IF data is found
+  useEffect(() => {
+    if (!auth.shopId) return;
+
+    secureAxios.get(`/shop/details/${auth.shopId}`)
+      .then(res => {
+          const actualName = res.data.ownerName || res.data.name || res.data.shop?.ownerName || res.data.user?.name;
+          if (actualName) { 
+            setOwnerName(actualName); 
+            localStorage.setItem('ownerName', actualName); 
+          }
+      })
+      .catch(err => {
+          console.error("API failed, keeping default name:", err.message);
+          // Do NOT call setOwnerName here. Let it stay as "Shop Owner" (the default).
+      });
+      
+    // Timer logic stays here...
+    const timer = setInterval(() => {
+        const now = new Date();
+        setIstTime(now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
+        const hour = now.getHours();
+        setGreeting(hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening");
+    }, 1000);
     
+    return () => clearInterval(timer);
+  }, [auth.shopId, secureAxios]);
+const checkHardware = useCallback(async () => {
+    if (!auth.shopId || !auth.token || isCheckingHardware.current) return;
     isCheckingHardware.current = true; 
-
     try {
       const res = await secureAxios.get(`/shop/hardware/status/${auth.shopId}`);
-      if (res.data.success && res.data.pendingHardware) {
-        setPendingHardware(res.data.pendingHardware);
-      } else {
-        setPendingHardware(null);
-      }
+      setPendingHardware(res.data.success ? res.data.pendingHardware : null);
     } catch (err) {
       console.error("Hardware check error:", err); 
     } finally {
       isCheckingHardware.current = false; 
     }
-  }, [auth.shopId, auth.token, secureAxios]);
+  }, [auth.shopId, auth.token, secureAxios]); // 🟢 Added secureAxios
 
-  
-  
-  // 🟢 Fast HTTP Preview (with Explicit Binary Parsing)
-  useEffect(() => {
+useEffect(() => {
     if (activeJob && !isDrawingMode) {
       const delayTimer = setTimeout(async () => {
         try {
@@ -144,9 +183,7 @@ export default function Dashboard() {
             const contentType = response.headers['content-type'] || 'application/pdf';
             const fileBlob = new Blob([response.data], { type: contentType });
             const rawUrl = URL.createObjectURL(fileBlob);
-            
-          setPreviewImage(rawUrl); // 🟢 FIX: Removed #toolbar=0 so the native PDF pagination shows up!
-            
+            setPreviewImage(rawUrl); 
         } catch (error) {
             console.error("Fast preview error:", error);
         }
@@ -154,82 +191,97 @@ export default function Dashboard() {
 
       return () => clearTimeout(delayTimer); 
     }
-  }, [activeJob, printSettings, isDrawingMode, secureAxios]);
+  }, [activeJob, printSettings, isDrawingMode, secureAxios]); // 🟢 Added secureAxios
 
-useEffect(() => {
-    socket.on('JOB_EXPIRED', (data) => {
-        if (activeJob && activeJob.jobId === data.jobId) {
-            setActiveJob(null);
-            setPreviewImage(null);
-            alert("⚠️ The file was automatically removed due to timeout.");
-        }
-        fetchQueue();
-    });
-    return () => socket.off('JOB_EXPIRED');
-}, [activeJob, fetchQueue]);
-
-useEffect(() => {
-  const triggerLock = () => setIsWindowActive(false);
-  const releaseLock = () => setIsWindowActive(true);
-
-  const handleKeyDown = (e) => {
-    const key = e.key.toLowerCase();
-    const isMetaOrCtrl = e.ctrlKey || e.metaKey;
-
-    // 1. Block Print (Ctrl + P)
-    if (isMetaOrCtrl && key === 'p') {
-      e.preventDefault();
-      alert("🚫 Printing is strictly disabled!");
-      return;
-    }
-
-    // 2. Block Save (Ctrl + S)
-    if (isMetaOrCtrl && key === 's') {
-      e.preventDefault();
-      alert("🚫 Saving files is disabled!");
-      return;
-    }
-
-    // 3. Catch immediate hardware screenshot keypresses
-    if (e.key === 'PrintScreen' || key === 'printscreen' || (e.metaKey && e.shiftKey && (key === '3' || key === '4'))) {
-      triggerLock(); 
-      e.preventDefault();
-      alert("🚫 Screenshots are blocked!");
-      return;
-    }
-  };
-
-  // Wire directly into window indicators for instant response
-  window.addEventListener('blur', triggerLock);
-  window.addEventListener('focus', releaseLock);
-  window.addEventListener('keydown', handleKeyDown);
-
-  return () => {
-    window.removeEventListener('blur', triggerLock);
-    window.removeEventListener('focus', releaseLock);
-    window.removeEventListener('keydown', handleKeyDown);
-  };
-}, []);
-
-// 🟢 Optimized Socket Connection (No Lag)
+  
   useEffect(() => {
+      socket.on('JOB_EXPIRED', (data) => {
+          if (activeJob && activeJob.jobId === data.jobId) {
+              setActiveJob(null);
+              setPreviewImage(null);
+              alert("⚠️ The file was automatically removed due to timeout.");
+          }
+          fetchQueue();
+      });
+      return () => socket.off('JOB_EXPIRED');
+  }, [activeJob, fetchQueue]);
+
+  useEffect(() => {
+    const triggerLock = () => setIsWindowActive(false);
+    const releaseLock = () => setIsWindowActive(true);
+
+    const handleKeyDown = (e) => {
+      const key = e.key.toLowerCase();
+      const isMetaOrCtrl = e.ctrlKey || e.metaKey;
+
+      if (isMetaOrCtrl && key === 'p') { e.preventDefault(); alert("🚫 Printing is strictly disabled!"); return; }
+      if (isMetaOrCtrl && key === 's') { e.preventDefault(); alert("🚫 Saving files is disabled!"); return; }
+      if (e.key === 'PrintScreen' || key === 'printscreen' || (e.metaKey && e.shiftKey && (key === '3' || key === '4'))) {
+        triggerLock(); 
+        e.preventDefault();
+        alert("🚫 Screenshots are blocked!");
+        return;
+      }
+    };
+
+    window.addEventListener('blur', triggerLock);
+    window.addEventListener('focus', releaseLock);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('blur', triggerLock);
+      window.removeEventListener('focus', releaseLock);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+// 🟢 MASTER EFFECT: Socket, Status, and Initial Data
+useEffect(() => {
+    // 1. Auth check
     if (!auth.token || !auth.shopId) {
-      navigate('/login');
-      return;
+        navigate('/login');
+        return;
     }
 
-    if (!socket.connected) {
-      socket.connect();
-    }
-
+    // 2. Define Handlers
     const handleConnect = () => {
-        console.log("🌐 Dashboard Connected to Socket. Joining Room:", auth.shopId);
+        console.log("🌐 Connected to Socket");
+        setIsAgentConnected(true);
+        setIsChecking(false); // 🟢 Stop the "checking" phase
         socket.emit('JOIN_SHOP', { shopId: auth.shopId });
     };
 
-    socket.on('connect', handleConnect);
-    if (socket.connected) handleConnect();
+    const handleDisconnect = () => {
+        setIsAgentConnected(false);
+        setIsPrinterConnected(false);
+        setIsChecking(false); // 🟢 Stop the "checking" phase
+    };
+// 🟢 Listen for printer status
+    const handlePrinterStatus = (data) => {
+        console.log("🖨️ RAW PRINTER DATA RECEIVED:", data); 
+        if (data && typeof data.connected !== 'undefined') {
+            setIsPrinterConnected(data.connected);
+        }
+    };
 
+    const handleNewJob = () => fetchQueue();
+    const handleUpdate = () => setNeedsUpdate(true);
+    const handleKick = () => {
+        alert("SECURITY ALERT: Your account has been deleted or disabled by the Administrator.");
+        handleLogout();
+    };
+
+    // 3. Attach Listeners
+    if (!socket.connected) socket.connect();
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('PRINTER_STATUS', handlePrinterStatus);
+    socket.on('NEW_JOB_RECEIVED', handleNewJob);
+    socket.on('AGENT_NEEDS_UPDATE', handleUpdate);
+    socket.on('FORCE_KICK_ALL', handleKick);
+
+
+    // 4. Initial Fetch (Only runs once)
     if (!initialFetchDone.current) {
         fetchQueue();
         fetchPricing();
@@ -237,42 +289,32 @@ useEffect(() => {
         initialFetchDone.current = true;
     }
 
+ // 5. Security Interval
     const securityInterval = setInterval(checkHardware, 5000);
 
-    socket.on('NEW_JOB_RECEIVED', () => fetchQueue());
-    
-    socket.on('AGENT_NEEDS_UPDATE', () => {
-        console.log("🚨 POPUP TRIGGERED: Agent needs update!");
-        setNeedsUpdate(true);
-    });
-    socket.on('FORCE_KICK_ALL', () => {
-        console.log("🚨 KICKED BY ADMIN!");
-        alert("SECURITY ALERT: Your account has been deleted or disabled by the Administrator.");
-        handleLogout(); // This instantly clears memory and kicks them out!
-    });
-    
+    // 6. Timeout: If no connection in 2 seconds, stop checking and show warnings
+    const connectionTimeout = setTimeout(() => setIsChecking(false), 2000);
+    // 6. Cleanup
     return () => {
-      socket.off('connect', handleConnect);
-      socket.off('NEW_JOB_RECEIVED');
-      socket.off('AGENT_NEEDS_UPDATE');
-      socket.off('FORCE_KICK_ALL');
-      clearInterval(securityInterval);
+        socket.off('connect', handleConnect);
+        socket.off('disconnect', handleDisconnect);
+        socket.off('PRINTER_STATUS', handlePrinterStatus);
+        socket.off('NEW_JOB_RECEIVED', handleNewJob);
+        socket.off('AGENT_NEEDS_UPDATE', handleUpdate);
+        socket.off('FORCE_KICK_ALL', handleKick);
+       clearInterval(securityInterval);
+        clearTimeout(connectionTimeout);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.shopId, auth.token, navigate]); 
+
+}, [auth.shopId, auth.token, navigate, fetchQueue, fetchPricing, checkHardware, handleLogout]);
 
   const calculateJobPrice = (job, isForPreview = false) => {
     const settings = isForPreview ? printSettings : job.options;
     let rate = pricing.bw; 
-
     if (settings.scale === 'aadhaar' || settings.scale === 'pan') rate = pricing.aadhaar;
     else if (settings.scale === 'passport') rate = pricing.passport;
     else if (settings.colorMode === 'color') rate = pricing.color;
-
-    const copies = settings.copies || 1;
-    let total = rate * copies;
-    
-    return total;
+    return rate * (settings.copies || 1);
   };
 
   const handleView = (job) => {
@@ -281,101 +323,72 @@ useEffect(() => {
         try {
             const rawMasks = Array.isArray(job.options.maskRect) ? job.options.maskRect : [job.options.maskRect];
             parsedMaskArray = rawMasks.map(m => typeof m === 'string' ? JSON.parse(m) : m).filter(m => m && m.width > 0);
-        } catch(e) {
-            console.error("Could not parse coordinates:", e);
-        }
+        } catch(e) { console.error("Could not parse coordinates:", e); }
     }
     
     setPrintSettings({
-      colorMode: job.options?.colorMode || 'bw',
-      scale: job.options?.scale || 'fit',            
-      position: job.options?.position || 'top-left', 
-      backJobId: null,
-      securityMode: job.options?.securityMode || 'none', 
-      securePurpose: job.options?.securePurpose || '',
-      secureDate: job.options?.secureDate || new Date().toLocaleDateString('en-GB'),
+      colorMode: job.options?.colorMode || 'bw', scale: job.options?.scale || 'fit',            
+      position: job.options?.position || 'top-left', backJobId: null, securityMode: job.options?.securityMode || 'none', 
+      securePurpose: job.options?.securePurpose || '', secureDate: job.options?.secureDate || new Date().toLocaleDateString('en-GB'),
       maskAadhaar: job.options?.maskAadhaar === true || job.options?.maskAadhaar === 'true' || parsedMaskArray.length > 0,
       maskRectArray: parsedMaskArray,
       isBlindPreview: job.options?.isBlindPreview === true || job.options?.isBlindPreview === 'true',
       rotate: job.options?.rotate ? parseInt(job.options.rotate) : 0
     });
     
-    setActiveJob(job);
-    setPreviewImage(null); 
-    setIsDrawingMode(false);
-    setZoomLevel(1);
-
-    // 🟢 Tell the server that the shop owner just viewed the file!
+    setActiveJob(job); setPreviewImage(null); setIsDrawingMode(false); setZoomLevel(1);
     socket.emit('NOTIFY_VIEWED', { jobId: job.jobId });
   };
 
-  const handlePrint = (jobId) => {
+ const handlePrint = (jobId) => {
+    // 🛑 SMART CONNECTION CHECK
+    if (!isAgentConnected) {
+        alert("❌ Please connect the Agent desktop app! If you have doubts, click 'Ask Subhams'.");
+        return;
+    }
+    if (!isPrinterConnected) {
+        alert("🖨️ Printer not detected. Please connect your printer to the desktop.");
+        return;
+    }
+
     socket.emit('MANUAL_PRINT', { 
-        jobId, 
-        fileIndex: 0,
-        overrides: {
-            ...printSettings,
-            rotate: printSettings.rotate,
-            maskRect: printSettings.maskRectArray, 
-            copies: activeJob?.options?.copies || 1
-        } 
+        jobId, fileIndex: 0,
+        overrides: { ...printSettings, rotate: printSettings.rotate, maskRect: printSettings.maskRectArray, copies: activeJob?.options?.copies || 1 } 
     });
     alert('Command Sent! / ప్రింట్ ఆర్డర్ పంపబడింది!');
-    setPreviewImage(null);
-    setActiveJob(null);
-    setIsDrawingMode(false);
+    setPreviewImage(null); setActiveJob(null); setIsDrawingMode(false);
     setTimeout(fetchQueue, 2000); 
   };
 
   const handleDelete = async (jobId) => {
     if(!window.confirm("Delete this job? File will be securely wiped from the server.")) return;
-    
     socket.emit('NOTIFY_DELETE', { jobId });
-
     try {
         await secureAxios.delete(`/jobs/${jobId}`);
-        if(activeJob?.jobId === jobId) {
-            setActiveJob(null);
-            setPreviewImage(null);
-            setIsDrawingMode(false);
-        }
+        if(activeJob?.jobId === jobId) { setActiveJob(null); setPreviewImage(null); setIsDrawingMode(false); }
         fetchQueue();
-    } catch (err) {
-        console.error("Job delete error:", err); 
-        alert("Failed to delete job.");
-    }
+    } catch (err) { console.error("Job delete error:", err); alert("Failed to delete job."); }
   };
 
   const handleHardwareDecision = async (decision) => {
     try {
       const res = await secureAxios.post('/shop/hardware/decision', { shopId: auth.shopId, decision });
       if (res.data.success) {
-        setPendingHardware(null);
-        alert(decision === 'APPROVE' ? "✅ Hardware Approved!" : "❌ Hardware Rejected!");
+        setPendingHardware(null); alert(decision === 'APPROVE' ? "✅ Hardware Approved!" : "❌ Hardware Rejected!");
       }
-    } catch (err) {
-      console.error("Hardware decision error:", err); 
-      alert("Action failed.");
-    }
+    } catch (err) { console.error("Hardware decision error:", err); alert("Action failed."); }
   };
 
-  const copyShopId = () => {
-    navigator.clipboard.writeText(auth.shopId);
-    alert(`Shop ID Copied: ${auth.shopId}`);
-  };
+  const copyShopId = () => { navigator.clipboard.writeText(auth.shopId); alert(`Shop ID Copied: ${auth.shopId}`); };
 
   const downloadQR = () => {
     const svg = document.getElementById("shop-qr-code");
     if(!svg) return alert("QR Code not ready yet.");
     const svgData = new XMLSerializer().serializeToString(svg);
     const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.href = url;
-    link.download = `Subhams-QR-${auth.shopId}.svg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    link.href = URL.createObjectURL(blob); link.download = `Subhams-QR-${auth.shopId}.svg`;
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
   };
 
   const startDrawing = (e) => {
@@ -407,10 +420,7 @@ useEffect(() => {
 
   const stopDrawing = (e) => {
       if (drawState.isDrawing && drawState.currentRect && drawState.currentRect.width > 2) {
-          setPrintSettings(prev => ({
-              ...prev,
-              maskRectArray: [...prev.maskRectArray, drawState.currentRect]
-          }));
+          setPrintSettings(prev => ({ ...prev, maskRectArray: [...prev.maskRectArray, drawState.currentRect] }));
       }
       setDrawState({ isDrawing: false, startX: 0, startY: 0, currentRect: null });
       if(e.pointerId) e.currentTarget.releasePointerCapture(e.pointerId);
@@ -418,8 +428,7 @@ useEffect(() => {
 
   const undoLastMask = () => {
       setPrintSettings(prev => {
-          const newArray = [...prev.maskRectArray];
-          newArray.pop();
+          const newArray = [...prev.maskRectArray]; newArray.pop();
           return { ...prev, maskRectArray: newArray };
       });
   };
@@ -437,11 +446,7 @@ useEffect(() => {
 
   const getWatermarkStyle = (text) => {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><text x="10" y="50" transform="rotate(-20 50 50)" font-family="Arial" font-size="12" font-weight="bold" fill="rgba(0,0,0,0.15)">${text}</text></svg>`;
-    return {
-        backgroundImage: `url('data:image/svg+xml;utf8,${encodeURIComponent(svg)}')`,
-        backgroundRepeat: 'repeat',
-        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10
-    };
+    return { backgroundImage: `url('data:image/svg+xml;utf8,${encodeURIComponent(svg)}')`, backgroundRepeat: 'repeat', position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10 };
   };
 
   const groupedJobs = useMemo(() => {
@@ -458,38 +463,76 @@ useEffect(() => {
   const isCardSize = ['aadhaar', 'pan', 'passport'].includes(printSettings.scale);
   const otherCustomerJobs = activeJob ? jobs.filter(j => j.customerName === activeJob.customerName && j.jobId !== activeJob.jobId) : [];
   const hasCustomerMask = activeJob && activeJob.options?.maskRect && printSettings.maskRectArray.length > 0;
-  
   const isActivePdf = activeJob && activeJob.files[0]?.mimeType === 'application/pdf';
 
+  // --- Render ---
   return (
-    <div style={{ position: 'relative', minHeight: '100vh', background: '#f8fafc', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ position: 'relative', minHeight: '100vh', background: '#f8fafc', fontFamily: "'Inter', sans-serif", paddingTop: hasTopBar ? '46px' : '0' }}>
       
-      {/* 🌟 1. THE UPDATE OVERLAY 🌟 */}
-      {needsUpdate && (
-        <div style={overlayStyle}>
-          <div style={modalStyle}>
-            <div style={{ fontSize: '40px', marginBottom: '10px' }}>🚀</div>
-            <h2 style={{ color: '#0f172a', margin: '0 0 10px 0' }}>Update Required</h2>
-            <p style={{ color: '#64748b', fontSize: '15px', marginBottom: '25px', lineHeight: '1.5' }}>
-              A newer, faster, and more secure version of the Windows Desktop Agent is available. You must install this update to continue printing.
-            </p>
+{/* Only show warnings if the app has finished 'checking' the connection */}
+{!isChecking && (
+  <>
+    {/* 1. Agent Disconnected */}
+    {!isAgentConnected && (
+        <div style={{ 
+            background: '#ef4444', color: 'white', padding: '15px', 
+            textAlign: 'center', fontWeight: 'bold', fontSize: '16px',
+            zIndex: 5000, position: 'relative' 
+        }}>
+            ⚠️ Desktop Agent is Not Connected! Please check if your shop is connected in the tray icon.
             
-            <a 
-              href="/Install-SubhamsAgent.exe" 
-              download="Install-SubhamsAgent.exe"
-              style={downloadBtnStyle}
-              onClick={() => setNeedsUpdate(false)}
-            >
-              ⬇️ Download New Update
-            </a>
-            
-            <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '15px' }}>
-              Note: Just run the downloaded file! You do not need to uninstall the old one.
-            </p>
-          </div>
+        </div>
+    )}
+
+    {/* 2. Printer Disconnected (Only shows if Agent IS connected) */}
+    {isAgentConnected && !isPrinterConnected && (
+        <div style={{ 
+            background: '#f59e0b', color: 'white', padding: '15px', 
+            textAlign: 'center', fontWeight: 'bold', fontSize: '16px',
+            zIndex: 5000, position: 'relative' 
+        }}>
+            🖨️ Printer not connected! Please connect printer to the device.
+        </div>
+    )}
+  </>
+)}
+
+      {/* 🌟 1. PREMIUM TOP BAR */}
+      {hasTopBar && (
+        <div style={topBarStyle}>
+          {config.showClock && (
+            <div style={clockStyle}>
+              <span style={clockIndicatorStyle}></span>
+              <span style={{opacity: 0.4, fontSize: '9px', letterSpacing: '2px', marginRight: '6px', fontWeight: 'bold'}}>IST</span>
+              <span style={{ color: '#60a5fa' }}>{istTime || "--:--:-- --"}</span>
+            </div>
+          )}
+          
+          {shouldShowMessage && (
+            <div style={marqueeContainer}>
+              <div style={{
+                ...marqueeContent,
+                animation: `${config.enableScrolling ? `superScroll ${config.scrollSpeed} linear infinite` : 'none'}`,
+                position: config.enableScrolling ? 'absolute' : 'static',
+                width: config.enableScrolling ? 'auto' : '100%',
+                justifyContent: config.enableScrolling ? 'flex-start' : 'center',
+                display: 'flex', alignItems: 'center', paddingLeft: config.enableScrolling ? '24px' : '0'
+              }}>
+                {config.postTime && config.postTime !== "NA" && (
+                  <span style={badgeStyle}><span style={badgePulseStyle}></span>{config.postTime}</span>
+                )}
+                {/* 🟢 DYNAMIC GREETING MESSAGE */}
+                <span style={{ ...textGlowStyle, textTransform: 'none' }}>
+                   {greeting}, {ownerName}! | {config.message}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       )}
+ 
 
+      {/* 🌟 2. NAVBAR */}
       <nav style={{ background: '#0f172a', color: 'white', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
         <h2 style={{ margin: 0, color: '#facc15' }}>Subhams Dashboard</h2>
         <div style={{ display: 'flex', gap: '10px' }}>
@@ -499,36 +542,7 @@ useEffect(() => {
         </div>
       </nav>
 
-      {isSettingsOpen && (
-        <div style={modalOverlay}>
-          <div style={modalContent}>
-            <h3 style={{marginTop: 0, borderBottom: '1px solid #e2e8f0', paddingBottom: '10px'}}>Shop Price Settings</h3>
-            <div style={{display: 'flex', flexDirection: 'column', gap: '15px', margin: '20px 0'}}>
-              <div>
-                <label style={controlLabel}>B&W Print Rate (₹)</label>
-                <input type="number" value={tempPricing.bw} onChange={(e) => setTempPricing({...tempPricing, bw: e.target.value})} style={controlInput} />
-              </div>
-              <div>
-                <label style={controlLabel}>Color Print Rate (₹)</label>
-                <input type="number" value={tempPricing.color} onChange={(e) => setTempPricing({...tempPricing, color: e.target.value})} style={controlInput} />
-              </div>
-              <div>
-                <label style={controlLabel}>Aadhaar/PAN Card Rate (₹)</label>
-                <input type="number" value={tempPricing.aadhaar} onChange={(e) => setTempPricing({...tempPricing, aadhaar: e.target.value})} style={controlInput} />
-              </div>
-              <div>
-                <label style={controlLabel}>Passport Photo Rate (₹)</label>
-                <input type="number" value={tempPricing.passport} onChange={(e) => setTempPricing({...tempPricing, passport: e.target.value})} style={controlInput} />
-              </div>
-            </div>
-            <div style={{display: 'flex', gap: '10px', justifyContent: 'flex-end'}}>
-              <button onClick={() => setIsSettingsOpen(false)} style={{...actionBtn, background: '#f1f5f9'}}>Cancel</button>
-              <button onClick={savePricing} style={{...actionBtn, background: '#16a34a', color: 'white'}}>Save Prices</button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* 🌟 3. MAIN CONTENT */}
       <div style={{ padding: '30px', maxWidth: '1400px', margin: '0 auto' }}>
         
         {/* 🚨 THE NEW BIG HARDWARE SECURITY POPUP 🚨 */}
@@ -544,20 +558,14 @@ useEffect(() => {
                       </p>
                   </div>
               </div>
-              
               <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'flex-end' }}>
-                  <button onClick={() => handleHardwareDecision('REJECT')} style={rejectBtn}>
-                      ❌ Reject & Block
-                  </button>
-                  <button onClick={() => handleHardwareDecision('APPROVE')} style={approveBtn}>
-                      ✅ Approve New Device
-                  </button>
+                  <button onClick={() => handleHardwareDecision('REJECT')} style={rejectBtn}>❌ Reject & Block</button>
+                  <button onClick={() => handleHardwareDecision('APPROVE')} style={approveBtn}>✅ Approve New Device</button>
               </div>
           </div>
         )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '30px', marginTop: '10px' }}>
-          
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={card}>
               <h3 style={{ margin: '0 0 15px 0', color: '#1e293b', fontSize: '16px', textAlign: 'center' }}>Shop QR Code</h3>
@@ -596,18 +604,12 @@ useEffect(() => {
                         <span style={{ background: '#16a34a', color: 'white', padding: '4px 10px', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px' }}>Bill: ₹{folderTotal}</span>
                       </div>
                       
-                      {/* 🟢 THE BULLETPROOF FLEXBOX FIX FOR THE LIST */}
                       <div style={{ display: 'flex', flexDirection: 'column', background: 'white' }}>
                           {customerJobs.map((job) => (
                             <div key={job.jobId} style={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                padding: '15px', 
-                                borderBottom: '1px solid #f1f5f9', 
-                                background: activeJob?.jobId === job.jobId ? '#f0fdf4' : 'transparent' 
+                                display: 'flex', alignItems: 'center', padding: '15px', 
+                                borderBottom: '1px solid #f1f5f9', background: activeJob?.jobId === job.jobId ? '#f0fdf4' : 'transparent' 
                             }}>
-                              
-                              {/* Left Side: Flexible Text Area */}
                               <div style={{ flex: 1, minWidth: 0, paddingRight: '15px' }}>
                                 <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '14px', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={job.options?.fileName}>
                                   📄 {job.options?.fileName || `Job ${job.jobId.substring(0,6)}`}
@@ -622,14 +624,12 @@ useEffect(() => {
                                 </div>
                               </div>
                               
-                              {/* Right Side: Titanium Un-squishable Buttons */}
                               <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
                                 <button onClick={() => handleDelete(job.jobId)} style={{ ...actionBtn, background: '#fee2e2', color: '#b91c1c', margin: 0 }}>🗑️</button>
                                 <button onClick={() => handleView(job)} style={{ ...actionBtn, background: activeJob?.jobId === job.jobId ? '#10b981' : '#f8fafc', color: activeJob?.jobId === job.jobId ? 'white' : '#0f172a', border: '1px solid #cbd5e1', margin: 0 }}>
                                    {activeJob?.jobId === job.jobId ? 'Viewing' : 'View'}
                                 </button>
                               </div>
-
                             </div>
                           ))}
                       </div>
@@ -652,37 +652,32 @@ useEffect(() => {
                    <div style={{ background: '#fff', padding: '15px', borderRadius: '12px', marginBottom: '15px', border: '1px solid #cbd5e1', display: 'flex', gap: '15px', alignItems: 'center' }}>
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         
-                       {/* 🟢 TOP ROW: 3-Column Grid for Copies, Color, and Rotate (ALWAYS VISIBLE) */}
-<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-    <div>
-        <label style={controlLabel}>Copies</label>
-        <div style={{ ...controlInput, background: '#e2e8f0', color: '#475569', fontWeight: 'bold', textAlign: 'center', height: '33px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {activeJob.options?.copies || 1}
-        </div>
-    </div>
-    
-    <div>
-        <label style={controlLabel}>Color</label>
-        <select value={printSettings.colorMode} onChange={(e) => { setPreviewImage(null); setPrintSettings({...printSettings, colorMode: e.target.value}); }} style={{...controlInput, height: '33px'}}>
-            <option value="bw">B&W</option>
-            <option value="color">Color</option>
-        </select>
-    </div>
-
-    {/* 🟢 FIX: No conditional check here! The Rotate button will now ALWAYS show up, even for PDFs. */}
-    <div>
-        <label style={controlLabel}>Rotate</label>
-        <button 
-            type="button" 
-            onClick={() => { setPreviewImage(null); setPrintSettings({...printSettings, rotate: ((printSettings.rotate || 0) + 90) % 360}); }} 
-            style={{...controlInput, background: '#e0e7ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontWeight: 'bold', cursor: 'pointer', height: '33px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}
-        >
-            ↻ {printSettings.rotate || 0}°
-        </button>
-    </div>
-</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                            <div>
+                                <label style={controlLabel}>Copies</label>
+                                <div style={{ ...controlInput, background: '#e2e8f0', color: '#475569', fontWeight: 'bold', textAlign: 'center', height: '33px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {activeJob.options?.copies || 1}
+                                </div>
+                            </div>
+                            <div>
+                                <label style={controlLabel}>Color</label>
+                                <select value={printSettings.colorMode} onChange={(e) => { setPreviewImage(null); setPrintSettings({...printSettings, colorMode: e.target.value}); }} style={{...controlInput, height: '33px'}}>
+                                    <option value="bw">B&W</option>
+                                    <option value="color">Color</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style={controlLabel}>Rotate</label>
+                                <button 
+                                    type="button" 
+                                    onClick={() => { setPreviewImage(null); setPrintSettings({...printSettings, rotate: ((printSettings.rotate || 0) + 90) % 360}); }} 
+                                    style={{...controlInput, background: '#e0e7ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontWeight: 'bold', cursor: 'pointer', height: '33px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}
+                                >
+                                    ↻ {printSettings.rotate || 0}°
+                                </button>
+                            </div>
+                        </div>
                         
-                        {/* 🟢 BOTTOM ROW: Print Size Dropdown */}
                         {!isActivePdf && (
                           <div>
                              <label style={controlLabel}>Physical Print Size</label>
@@ -820,11 +815,9 @@ useEffect(() => {
                                         alt="Original File" 
                                         style={{ 
                                             width: '100%', height: '100%', 
-                                            objectFit: 'fill', /* 🟢 FIX: Must be 'fill' to ensure mask coordinates align perfectly with backend canvas! */
-                                            display: 'block', background: 'white',
+                                            objectFit: 'fill', display: 'block', background: 'white',
                                             filter: `${printSettings.colorMode === 'bw' ? 'grayscale(100%) contrast(120%) ' : ''}${printSettings.isBlindPreview ? 'blur(4px)' : ''}`.trim() || 'none',
-                                            transform: `rotate(${printSettings.rotate || 0}deg)`, /* 🟢 Visually rotates the image */
-                                            transition: 'transform 0.3s ease, filter 0.3s ease'
+                                            transform: `rotate(${printSettings.rotate || 0}deg)`, transition: 'transform 0.3s ease, filter 0.3s ease'
                                         }} 
                                         draggable={false}
                                         onError={(e) => { e.target.style.display = 'none'; alert("Cannot draw mask on PDF files. Please use an image file."); setIsDrawingMode(false); }}
@@ -832,8 +825,7 @@ useEffect(() => {
                                       
                                       {printSettings.maskRectArray.map((rect, rectIndex) => (
                                           <div key={rectIndex} style={{
-                                              position: 'absolute',
-                                              left: `${rect.x}%`, top: `${rect.y}%`,
+                                              position: 'absolute', left: `${rect.x}%`, top: `${rect.y}%`,
                                               width: `${rect.width}%`, height: `${rect.height}%`,
                                               backgroundColor: 'black', opacity: 0.95,
                                               display: 'flex', alignItems: 'center', justifyContent: 'center'
@@ -844,8 +836,7 @@ useEffect(() => {
 
                                       {drawState.isDrawing && drawState.currentRect && (
                                            <div style={{
-                                              position: 'absolute',
-                                              left: `${drawState.currentRect.x}%`, top: `${drawState.currentRect.y}%`,
+                                              position: 'absolute', left: `${drawState.currentRect.x}%`, top: `${drawState.currentRect.y}%`,
                                               width: `${drawState.currentRect.width}%`, height: `${drawState.currentRect.height}%`,
                                               backgroundColor: 'black', opacity: 0.5, border: '1px dashed yellow'
                                           }}></div>
@@ -876,99 +867,37 @@ useEffect(() => {
                       </div>
             ) : previewImage ? (
   <div 
-    style={{ 
-      position: 'relative', 
-      width: '100%', 
-      flex: 1, 
-      display: 'flex', 
-      flexDirection: 'column', 
-      minHeight: '400px' 
-    }} 
+    style={{ position: 'relative', width: '100%', flex: 1, display: 'flex', flexDirection: 'column', minHeight: '400px' }} 
     onContextMenu={(e) => e.preventDefault()}
   >
-    {/* 🛡️ PURE CSS PROTECTION */}
     <style>{`
-      @media print {
-        body { display: none !important; }
-      }
-      /* Watermark Styling */
+      @media print { body { display: none !important; } }
       .watermark-tile {
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://w3.org' version='1.1' height='100px' width='100px'><text transform='translate(20, 100) rotate(-45)' fill='rgba(255,0,0,0.15)' font-size='20'>🚫 NO PRINT</text></svg>");
-        pointer-events: none;
-        z-index: 50;
+        pointer-events: none; z-index: 50;
       }
     `}</style>
 
-    {/* 🟢 SCROLL BUTTONS */}
     <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', marginTop: '10px' }}>
-        <button 
-            type="button" 
-            onClick={() => {
-              const container = document.getElementById('secure-scroll-box');
-              if (container) container.scrollBy({ top: -300, behavior: 'smooth' });
-            }} 
-            style={zoomBtn}
-        >⬆️ Scroll Up</button>
-        <button 
-            type="button" 
-            onClick={() => {
-              const container = document.getElementById('secure-scroll-box');
-              if (container) container.scrollBy({ top: 300, behavior: 'smooth' });
-            }} 
-            style={zoomBtn}
-        >⬇️ Scroll Down</button>
+        <button type="button" onClick={() => { const c = document.getElementById('secure-scroll-box'); if(c) c.scrollBy({ top: -300, behavior: 'smooth' }); }} style={zoomBtn}>⬆️ Scroll Up</button>
+        <button type="button" onClick={() => { const c = document.getElementById('secure-scroll-box'); if(c) c.scrollBy({ top: 300, behavior: 'smooth' }); }} style={zoomBtn}>⬇️ Scroll Down</button>
     </div>
 
-    {/* 🟢 PREVIEW CONTAINER */}
-    <div 
-        id="secure-scroll-box"
-        style={{ 
-            position: 'relative', 
-            width: '100%', 
-            height: '500px', 
-            overflowY: 'auto', 
-            border: '1px solid #e2e8f0', 
-            borderRadius: '8px',
-            background: '#222' 
-        }}
-    >
-        {/* 🛡️ PERMANENT WATERMARK LAYER (The screenshot killer) */}
+    <div id="secure-scroll-box" style={{ position: 'relative', width: '100%', height: '500px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#222' }}>
         <div className="watermark-tile" />
-        
-        {/* 🛡️ INVISIBLE CLICK SHIELD */}
-        <div style={{
-            position: 'absolute', top: 0, left: 0, width: '100%', height: '3000px', 
-            zIndex: 40, background: 'transparent'
-        }} />
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '3000px', zIndex: 40, background: 'transparent' }} />
 
-        {/* 🟢 IFRAME CONTAINER WITH CONDITIONAL BLUR */}
-        <div style={{ 
-          width: '100%', 
-          height: '100%',
-          // 🛡️ FOCUS BLUR: Still useful for basic users, even if not instant
-          filter: !isWindowActive ? 'blur(20px) grayscale(100%)' : 'none',
-          transition: 'filter 0.1s' 
-        }}>
+        <div style={{ width: '100%', height: '100%', filter: !isWindowActive ? 'blur(20px) grayscale(100%)' : 'none', transition: 'filter 0.1s' }}>
             <iframe 
-                ref={iframeRef}
-                src={previewImage} 
-                style={{ 
-                    width: '100%', 
-                    height: '3000px', 
-                    border: 'none',
-                    pointerEvents: 'none',
-                    filter: `${printSettings?.colorMode === 'bw' ? 'grayscale(100%) ' : ''}${printSettings?.isBlindPreview ? 'blur(4px)' : ''}`.trim() || 'none'
-                }} 
+                ref={iframeRef} src={previewImage} 
+                style={{ width: '100%', height: '3000px', border: 'none', pointerEvents: 'none', filter: `${printSettings?.colorMode === 'bw' ? 'grayscale(100%) ' : ''}${printSettings?.isBlindPreview ? 'blur(4px)' : ''}`.trim() || 'none' }} 
                 title="Preview" 
             />
         </div>
     </div>
   </div>
 ) : (
-
-
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#64748b', fontWeight: 'bold', textAlign: 'center' }}>
                        <span style={{ marginBottom: '8px' }}>⚙️ Generating Accurate A4 Preview...</span>
                        <span style={{ fontSize: '12px', fontWeight: 'normal', color: '#94a3b8' }}>
@@ -986,22 +915,93 @@ useEffect(() => {
                   </p>
                 </div>
               )}
-
             </div>
-
           </div>
         </div>
       </div>
+
+      {/* 🌟 4. OVERLAYS & MODALS */}
+      {needsUpdate && (
+        <div style={overlayStyle}>
+          <div style={modalStyle}>
+            <div style={{ fontSize: '48px', marginBottom: '10px' }}>🚀</div>
+            <h2 style={{ color: '#0f172a', margin: '0 0 5px 0', fontSize: '24px' }}>Update Required</h2>
+            <h3 style={{ color: '#2563eb', margin: '0 0 15px 0', fontSize: '16px', fontWeight: '600' }}>కొత్త సాఫ్ట్‌వేర్ అప్‌డేట్ అవసరం</h3>
+            {!downloadStarted ? (
+              <>
+                <p style={{ color: '#475569', fontSize: '14px', marginBottom: '20px', lineHeight: '1.6' }}>
+                  A faster, more secure version of the Agent is available. <br/>
+                  <span style={{ fontSize: '13px', color: '#64748b' }}>ప్రింటింగ్ కొనసాగించడానికి దయచేసి ఈ కొత్త వెర్షన్ డౌన్‌లోడ్ చేసుకోండి.</span>
+                </p>
+                <a href="/Install-SubhamsAgent.exe" download="Install-SubhamsAgent.exe" style={downloadBtnStyle} onClick={() => setDownloadStarted(true)}>
+                  ⬇️ Download Update / డౌన్‌లోడ్
+                </a>
+              </>
+            ) : (
+              <div style={stepsBoxStyle}>
+                <h4 style={{ margin: '0 0 15px 0', color: '#0f172a', textAlign: 'center' }}>Installation Steps / ఇన్‌స్టాల్ చేసే విధానం:</h4>
+                <div style={stepRow}>
+                  <div style={stepBadge}>1</div>
+                  <div><b style={{color: '#1e293b'}}>Open the downloaded file.</b><br/><span style={{ fontSize: '12px', color: '#64748b' }}>డౌన్‌లోడ్ అయిన .exe ఫైల్‌ను ఓపెన్ చేయండి.</span></div>
+                </div>
+                <div style={stepRow}>
+                  <div style={stepBadge}>2</div>
+                  <div><b style={{color: '#1e293b'}}>If blocked, click "More Info" &rarr; "Run Anyway".</b><br/><span style={{ fontSize: '12px', color: '#64748b' }}>వార్నింగ్ వస్తే 'More info' నొక్కి, 'Run anyway' పైన క్లిక్ చేయండి.</span></div>
+                </div>
+                <div style={stepRow}>
+                  <div style={stepBadge}>3</div>
+                  <div><b style={{color: '#1e293b'}}>The app will restart automatically!</b><br/><span style={{ fontSize: '12px', color: '#64748b' }}>పాత దాన్ని డిలీట్ చేయాల్సిన అవసరం లేదు.</span></div>
+                </div>
+                <button onClick={() => setNeedsUpdate(false)} style={closeBtnStyle}>I have Installed It / ఇన్‌స్టాల్ చేసాను</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {isSettingsOpen && (
+        <div style={modalOverlay}>
+          <div style={modalContent}>
+            <h3 style={{marginTop: 0, borderBottom: '1px solid #e2e8f0', paddingBottom: '10px'}}>Shop Price Settings</h3>
+            <div style={{display: 'flex', flexDirection: 'column', gap: '15px', margin: '20px 0'}}>
+              <div><label style={controlLabel}>B&W Print Rate (₹)</label><input type="number" value={tempPricing.bw} onChange={(e) => setTempPricing({...tempPricing, bw: e.target.value})} style={controlInput} /></div>
+              <div><label style={controlLabel}>Color Print Rate (₹)</label><input type="number" value={tempPricing.color} onChange={(e) => setTempPricing({...tempPricing, color: e.target.value})} style={controlInput} /></div>
+              <div><label style={controlLabel}>Aadhaar/PAN Card Rate (₹)</label><input type="number" value={tempPricing.aadhaar} onChange={(e) => setTempPricing({...tempPricing, aadhaar: e.target.value})} style={controlInput} /></div>
+              <div><label style={controlLabel}>Passport Photo Rate (₹)</label><input type="number" value={tempPricing.passport} onChange={(e) => setTempPricing({...tempPricing, passport: e.target.value})} style={controlInput} /></div>
+            </div>
+            <div style={{display: 'flex', gap: '10px', justifyContent: 'flex-end'}}>
+              <button onClick={() => setIsSettingsOpen(false)} style={{...actionBtn, background: '#f1f5f9'}}>Cancel</button>
+              <button onClick={savePricing} style={{...actionBtn, background: '#16a34a', color: 'white'}}>Save Prices</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🌟 5. ANIMATIONS */}
+      <style>{`
+        @keyframes superScroll { 0% { transform: translate3d(100vw, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+        @keyframes pulseGlow { 0%, 100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.1); } }
+      `}</style>
     </div>
   );
 }
 
-// --- Styles ---
+// ==========================================
+// 🌟 CONSTANT STYLE OBJECTS
+// ==========================================
+
+const overlayStyle = { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 };
+const modalStyle = { background: 'white', padding: '40px 30px', borderRadius: '20px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', width: '90%', maxWidth: '420px', textAlign: 'center', border: '1px solid #e2e8f0' };
+const downloadBtnStyle = { display: 'inline-block', width: '100%', padding: '15px', background: '#2563eb', color: 'white', textDecoration: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '16px', transition: '0.2s', boxSizing: 'border-box', cursor: 'pointer' };
+const closeBtnStyle = { width: '100%', padding: '12px', marginTop: '20px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' };
+const stepsBoxStyle = { background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', textAlign: 'left' };
+const stepRow = { display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '15px' };
+const stepBadge = { background: '#2563eb', color: 'white', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '12px', fontWeight: 'bold', flexShrink: 0, marginTop: '2px' };
 const navBtn = { padding: '8px 16px', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', background: '#334155' };
 const card = { background: '#fff', padding: '25px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' };
 const approveBtn = { padding: '10px 20px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' };
 const rejectBtn = { padding: '10px 20px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' };
-const actionBtn = { padding: '8px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }; // Removed marginLeft
+const actionBtn = { padding: '8px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }; 
 const downloadBtn = { width: '100%', padding: '10px', marginTop: '15px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' };
 const copyIdBtn = { width: '100%', padding: '8px', background: '#e0e7ff', color: '#4f46e5', border: '1px solid #c7d2fe', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' };
 const vaultBtn = { width: '100%', padding: '25px', background: '#0f172a', color: '#facc15', border: '2px solid #334155', borderRadius: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(15, 23, 42, 0.4)' };
@@ -1018,24 +1018,48 @@ const securityBannerStyle = {
     padding: '20px', marginBottom: '25px', boxShadow: '0 10px 15px -3px rgba(239, 68, 68, 0.3)'
 };
 
-// 🌟 Update Overlay Styles
-const overlayStyle = {
-  position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-  backgroundColor: 'rgba(15, 23, 42, 0.85)', 
-  backdropFilter: 'blur(5px)',
-  display: 'flex', justifyContent: 'center', alignItems: 'center',
-  zIndex: 9999 
+// 🌟 Premium High-Definition Top Bar Styles
+const topBarStyle = { 
+  position: 'fixed', top: 0, left: 0, width: '100%', height: '46px', 
+  background: '#020617', 
+  color: '#f8fafc', display: 'flex', alignItems: 'center', zIndex: 1000, 
+  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1)',
+  borderBottom: '1px solid #1e293b'
 };
 
-const modalStyle = {
-  backgroundColor: 'white', padding: '40px 30px', borderRadius: '16px',
-  maxWidth: '400px', width: '90%', textAlign: 'center',
-  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+const clockStyle = { 
+  background: '#0f172a', padding: '0 20px', height: '100%', 
+  display: 'flex', alignItems: 'center', fontWeight: '800', fontSize: '13px', 
+  borderRight: '1px solid #1e293b', fontFamily: "'JetBrains Mono', monospace", 
+  letterSpacing: '1px', color: '#38bdf8', textShadow: '0 0 8px rgba(56, 189, 248, 0.5)'
 };
 
-const downloadBtnStyle = {
-  backgroundColor: '#2563eb', color: 'white', padding: '14px 24px', 
-  borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold',
-  display: 'inline-block', width: '100%', boxSizing: 'border-box',
-  fontSize: '16px', transition: 'background 0.2s'
+const clockIndicatorStyle = { 
+  width: '6px', height: '6px', backgroundColor: '#10b981', borderRadius: '50%', 
+  marginRight: '10px', boxShadow: '0 0 8px #10b981', animation: 'pulseGlow 2s infinite ease-in-out' 
+};
+
+const marqueeContainer = { 
+  flex: 1, overflow: 'hidden', position: 'relative', height: '100%', display: 'flex', alignItems: 'center',
+  background: 'linear-gradient(90deg, transparent, #020617 5%, #020617 95%, transparent)'
+};
+
+const marqueeContent = { 
+  whiteSpace: 'nowrap', fontSize: '13px', fontWeight: '500', color: '#f1f5f9',
+  letterSpacing: '0.5px', textTransform: 'none', display: 'flex', alignItems: 'center', willChange: 'transform' 
+};
+
+const badgeStyle = { 
+  position: 'relative', background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)', 
+  color: '#fff', padding: '3px 10px', borderRadius: '20px', fontSize: '9px', fontWeight: '800', 
+  marginRight: '14px', boxShadow: '0 0 12px rgba(239, 68, 68, 0.4)', textTransform: 'none', 
+  display: 'inline-flex', alignItems: 'center', gap: '5px' 
+};
+
+const badgePulseStyle = { 
+  width: '5px', height: '5px', backgroundColor: '#fff', borderRadius: '50%', animation: 'pulseGlow 1.5s infinite' 
+};
+
+const textGlowStyle = { 
+  color: '#fbbf24', fontWeight: '700', textShadow: '0 0 10px rgba(251, 191, 36, 0.3)', textTransform: 'none'
 };
