@@ -16,9 +16,8 @@ const socket = io(BACKEND_URL, {
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  const [isAgentConnected, setIsAgentConnected] = useState(false);
-  const [isPrinterConnected, setIsPrinterConnected] = useState(false);
-  const [isChecking, setIsChecking] = useState(true); // 🟢 Add this
+
+ 
   
   const auth = useMemo(() => ({
     shopId: localStorage.getItem('shopId') || '', 
@@ -44,7 +43,7 @@ const config = useMemo(() => ({
     showAnnouncement: true,       
     enableScrolling: true,        
     scrollSpeed: "26s",           
-    message: "🚀 Subhams Print Server v2.0 is Live! | For support, contact admin. | సిస్టమ్ ఆన్‌లైన్‌లో ఉంది.",
+message: "✨ Welcome to Subhams Secure Networks | 🚀 We are happy to work with you today | ఈ రోజు మీతో కలిసి పని చేయడం మాకు ఆనందంగా ఉంది |  For more & information click ' ✨Ask Subhams' | 🙏 Thank You !" ,
     postTime: "NA"                
   }), []);
 
@@ -235,7 +234,7 @@ useEffect(() => {
     };
   }, []);
 
-// 🟢 MASTER EFFECT: Socket, Status, and Initial Data
+// 🟢 MASTER EFFECT: Socket and Initial Data (Connection Checks Removed)
 useEffect(() => {
     // 1. Auth check
     if (!auth.token || !auth.shopId) {
@@ -246,22 +245,11 @@ useEffect(() => {
     // 2. Define Handlers
     const handleConnect = () => {
         console.log("🌐 Connected to Socket");
-        setIsAgentConnected(true);
-        setIsChecking(false); // 🟢 Stop the "checking" phase
         socket.emit('JOIN_SHOP', { shopId: auth.shopId });
     };
 
     const handleDisconnect = () => {
-        setIsAgentConnected(false);
-        setIsPrinterConnected(false);
-        setIsChecking(false); // 🟢 Stop the "checking" phase
-    };
-// 🟢 Listen for printer status
-    const handlePrinterStatus = (data) => {
-        console.log("🖨️ RAW PRINTER DATA RECEIVED:", data); 
-        if (data && typeof data.connected !== 'undefined') {
-            setIsPrinterConnected(data.connected);
-        }
+        console.log("⚠️ Socket Disconnected");
     };
 
     const handleNewJob = () => fetchQueue();
@@ -275,11 +263,9 @@ useEffect(() => {
     if (!socket.connected) socket.connect();
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
-    socket.on('PRINTER_STATUS', handlePrinterStatus);
     socket.on('NEW_JOB_RECEIVED', handleNewJob);
     socket.on('AGENT_NEEDS_UPDATE', handleUpdate);
     socket.on('FORCE_KICK_ALL', handleKick);
-
 
     // 4. Initial Fetch (Only runs once)
     if (!initialFetchDone.current) {
@@ -289,21 +275,17 @@ useEffect(() => {
         initialFetchDone.current = true;
     }
 
- // 5. Security Interval
+    // 5. Security Interval
     const securityInterval = setInterval(checkHardware, 5000);
 
-    // 6. Timeout: If no connection in 2 seconds, stop checking and show warnings
-    const connectionTimeout = setTimeout(() => setIsChecking(false), 2000);
     // 6. Cleanup
     return () => {
         socket.off('connect', handleConnect);
         socket.off('disconnect', handleDisconnect);
-        socket.off('PRINTER_STATUS', handlePrinterStatus);
         socket.off('NEW_JOB_RECEIVED', handleNewJob);
         socket.off('AGENT_NEEDS_UPDATE', handleUpdate);
         socket.off('FORCE_KICK_ALL', handleKick);
-       clearInterval(securityInterval);
-        clearTimeout(connectionTimeout);
+        clearInterval(securityInterval);
     };
 
 }, [auth.shopId, auth.token, navigate, fetchQueue, fetchPricing, checkHardware, handleLogout]);
@@ -339,26 +321,20 @@ useEffect(() => {
     setActiveJob(job); setPreviewImage(null); setIsDrawingMode(false); setZoomLevel(1);
     socket.emit('NOTIFY_VIEWED', { jobId: job.jobId });
   };
-
- const handlePrint = (jobId) => {
-    // 🛑 SMART CONNECTION CHECK
-    if (!isAgentConnected) {
-        alert("❌ Please connect the Agent desktop app! If you have doubts, click 'Ask Subhams'.");
-        return;
-    }
-    if (!isPrinterConnected) {
-        alert("🖨️ Printer not detected. Please connect your printer to the desktop.");
-        return;
-    }
-
+const handlePrint = (jobId) => {
+    // 🛑 Connection checks removed. Directly sending the command.
+    
     socket.emit('MANUAL_PRINT', { 
         jobId, fileIndex: 0,
         overrides: { ...printSettings, rotate: printSettings.rotate, maskRect: printSettings.maskRectArray, copies: activeJob?.options?.copies || 1 } 
     });
+    
     alert('Command Sent! / ప్రింట్ ఆర్డర్ పంపబడింది!');
-    setPreviewImage(null); setActiveJob(null); setIsDrawingMode(false);
+    setPreviewImage(null); 
+    setActiveJob(null); 
+    setIsDrawingMode(false);
     setTimeout(fetchQueue, 2000); 
-  };
+};
 
   const handleDelete = async (jobId) => {
     if(!window.confirm("Delete this job? File will be securely wiped from the server.")) return;
@@ -469,33 +445,6 @@ useEffect(() => {
   return (
     <div style={{ position: 'relative', minHeight: '100vh', background: '#f8fafc', fontFamily: "'Inter', sans-serif", paddingTop: hasTopBar ? '46px' : '0' }}>
       
-{/* Only show warnings if the app has finished 'checking' the connection */}
-{!isChecking && (
-  <>
-    {/* 1. Agent Disconnected */}
-    {!isAgentConnected && (
-        <div style={{ 
-            background: '#ef4444', color: 'white', padding: '15px', 
-            textAlign: 'center', fontWeight: 'bold', fontSize: '16px',
-            zIndex: 5000, position: 'relative' 
-        }}>
-            ⚠️ Desktop Agent is Not Connected! Please check if your shop is connected in the tray icon.
-            
-        </div>
-    )}
-
-    {/* 2. Printer Disconnected (Only shows if Agent IS connected) */}
-    {isAgentConnected && !isPrinterConnected && (
-        <div style={{ 
-            background: '#f59e0b', color: 'white', padding: '15px', 
-            textAlign: 'center', fontWeight: 'bold', fontSize: '16px',
-            zIndex: 5000, position: 'relative' 
-        }}>
-            🖨️ Printer not connected! Please connect printer to the device.
-        </div>
-    )}
-  </>
-)}
 
       {/* 🌟 1. PREMIUM TOP BAR */}
       {hasTopBar && (
