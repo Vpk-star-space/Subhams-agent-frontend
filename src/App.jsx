@@ -1,3 +1,4 @@
+import { io } from 'socket.io-client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Home from './pages/Home';
@@ -167,6 +168,18 @@ export default function App() {
 
   useEffect(() => {
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://subhams-vpk.onrender.com';
+
+    // 🟢 1. Connect Socket to Render
+    const socket = io(BACKEND_URL);
+
+    // 🟢 2. Listen for Vercel Update Command
+    socket.on('CRITICAL_UPDATE_REFRESH', () => {
+        console.log("🚨 New Vercel Update Detected! Force Refreshing...");
+        // 3 second delay gives Vercel time to finish deploying before browsers reload
+        setTimeout(() => {
+            window.location.reload(true);
+        }, 3000);
+    });
     
     const pingServer = async () => {
       if (IS_MAINTENANCE_MODE) return; 
@@ -185,7 +198,10 @@ export default function App() {
       }
     };
 
-    pingServer();
+  pingServer();
+
+    // Cleanup socket on unmount
+    return () => socket.disconnect();
   }, []);
 
   if (IS_MAINTENANCE_MODE) {
