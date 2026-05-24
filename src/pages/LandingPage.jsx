@@ -1,23 +1,34 @@
 import { Link } from 'react-router-dom';
 
 export default function LandingPage() {
+
+  // 🟢 Custom Smooth Scroll Function to jump to the Footer
+  const scrollToAbout = (e) => {
+    e.preventDefault();
+    const footerSection = document.getElementById('about-footer');
+    if (footerSection) {
+      footerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div style={styles.pageWrapper}>
       {/* 🛑 ADVANCED CSS: Global Scroll Fix, Animations & Responsive */}
       <style>
         {`
-          /* 🟢 SCROLL FIX: Apply overflow to body, not the wrapper, to prevent scroll locking */
+          /* 🟢 BULLETPROOF SCROLL FIX */
           html, body {
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
             scroll-behavior: smooth;
             background-color: #020617; /* Deep Slate */
+            overflow-x: hidden;
+            width: 100%;
           }
 
-          /* 🟢 PREMIUM GRID BACKGROUND */
+          /* 🟢 PREMIUM GRID BACKGROUND (Changed to fixed so it doesn't break scroll height) */
           .saas-grid {
-            position: absolute;
+            position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background-size: 50px 50px;
             background-image: 
@@ -87,6 +98,30 @@ export default function LandingPage() {
           
           .btn-secondary:hover { background: rgba(255,255,255,0.1) !important; transform: translateY(-2px); border-color: rgba(255,255,255,0.3) !important; }
 
+          /* 🌟 PREMIUM FOOTER CSS (Desktop layout) */
+          .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+            text-align: left;
+          }
+          .footer-link {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: block;
+            margin-bottom: 12px;
+            font-size: 14px;
+            position: relative;
+            width: fit-content;
+            cursor: pointer;
+          }
+          .footer-link:hover {
+            color: #10b981;
+            transform: translateX(5px);
+          }
+
           /* 📱 MOBILE RESPONSIVENESS */
           @media (max-width: 768px) {
             .nav-links { display: none !important; } 
@@ -98,6 +133,11 @@ export default function LandingPage() {
             .stat-container { grid-template-columns: 1fr !important; gap: 15px !important; }
             .features-grid { grid-template-columns: 1fr !important; }
             .app-mockup { height: 250px !important; }
+            
+            /* Mobile Footer Fixes */
+            .footer-grid { grid-template-columns: 1fr !important; text-align: center !important; gap: 30px !important; }
+            .footer-link { margin: 0 auto 12px auto !important; }
+            .footer-link:hover { transform: translateY(-2px); }
           }
         `}
       </style>
@@ -114,6 +154,8 @@ export default function LandingPage() {
           Subhams Secure Agent
         </div>
         <div className="nav-links" style={styles.navLinks}>
+          {/* 🟢 Click triggers scroll directly to the footer */}
+          <a href="#about-footer" onClick={scrollToAbout} style={styles.navLink}>About</a>
           <a href="#features" style={styles.navLink}>Features</a>
           <a href="#security" style={styles.navLink}>Security</a>
           <a href="#enterprise" style={styles.navLink}>Enterprise</a>
@@ -155,7 +197,7 @@ export default function LandingPage() {
             </a>
           </div>
 
-          {/* 💻 UI MOCKUP (Gives that Premium Tech Vibe) */}
+          {/* 💻 UI MOCKUP */}
           <div className="animate-fade-4" style={styles.mockupWrapper}>
              <div className="app-mockup" style={styles.mockupContainer}>
                 <div style={styles.mockupHeader}>
@@ -233,16 +275,53 @@ export default function LandingPage() {
         </section>
       </main>
 
-      {/* FOOTER */}
-      <footer style={styles.footer}>
-        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '15px'}}>
-          <div style={styles.logoIconSm}>⚡</div> 
-          <span style={{fontWeight: 'bold', color: '#f8fafc'}}>Subhams</span>
+      {/* 🌟 PREMIUM FOOTER (Assigned id="about-footer" for the Nav Link to jump here) */}
+      <footer id="about-footer" style={styles.footerWrapper}>
+        <div style={styles.footerContainer}>
+          <div className="footer-grid">
+            
+            {/* Column 1: Brand & About Details */}
+            <div>
+              <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px'}}>
+                <div style={styles.logoIconSm}>⚡</div> 
+                <span style={{fontWeight: '800', color: '#f8fafc', fontSize: '18px', letterSpacing: '-0.5px'}}>Subhams Agent</span>
+              </div>
+              <p style={{color: '#64748b', fontSize: '14px', lineHeight: '1.6', maxWidth: '300px', margin: '0 0 15px 0'}}>
+                Enterprise-grade cloud printing architecture. Engineered for zero-latency queue management and strict hardware security.
+              </p>
+              <span className="footer-link" style={{color: '#10b981', fontWeight: '600', cursor: 'default'}}>
+                → Read Architecture Details
+              </span>
+            </div>
+
+            {/* Column 2: Developer Network */}
+            <div>
+              <h4 style={{color: '#f8fafc', fontSize: '15px', fontWeight: '600', margin: '0 0 20px 0'}}>Developer Network</h4>
+              <a href="https://github.com/Vpk-star-space" target="_blank" rel="noopener noreferrer" className="footer-link">🐙 GitHub Profile</a>
+              <a href="https://www.linkedin.com/in/venkata-pavan-kumar-server" target="_blank" rel="noopener noreferrer" className="footer-link">💼 LinkedIn Connect</a>
+              <a href="https://bhavyams-vendor-hub-vpk.vercel.app/" target="_blank" rel="noopener noreferrer" className="footer-link">🏪 Bhavyams VendorHub</a>
+              <a href="https://subhams-vpk.vercel.app/" target="_blank" rel="noopener noreferrer" className="footer-link">📈 Subhams PMMS</a>
+            </div>
+
+            {/* Column 3: System Architecture */}
+            <div>
+              <h4 style={{color: '#f8fafc', fontSize: '15px', fontWeight: '600', margin: '0 0 20px 0'}}>System Architecture</h4>
+              <span className="footer-link" style={{cursor: 'default'}}>🟢 Node.js & Express API</span>
+              <span className="footer-link" style={{cursor: 'default'}}>⚛️ React.js Frontend</span>
+              <span className="footer-link" style={{cursor: 'default'}}>🍃 MongoDB Database</span>
+              <span className="footer-link" style={{cursor: 'default'}}>⚡ WebSockets (Socket.io)</span>
+            </div>
+
+          </div>
+
+          {/* Bottom Copyright Bar */}
+          <div style={styles.footerBottom}>
+            <p style={{margin: '0 0 8px 0'}}>© 2026 Subhams Secure Agent. All rights reserved.</p>
+            <p style={{margin: 0}}>
+              Engineered & Designed by <strong style={{color: '#10b981', fontWeight: '600'}}>Venkata Pavan Kumar Amarthaluri</strong>
+            </p>
+          </div>
         </div>
-        <p style={{margin: '0 0 10px 0', fontSize: '14px'}}>© 2026 Subhams Secure Agent. All rights reserved.</p>
-        <p style={{margin: 0, fontSize: '13px', color: '#475569', fontWeight: '500'}}>
-          Engineered & Designed by <span style={{color: '#10b981'}}>Venkata Pavan Kumar Amarthaluri</span>
-        </p>
       </footer>
     </div>
   );
@@ -251,24 +330,23 @@ export default function LandingPage() {
 const styles = {
   pageWrapper: { 
     position: 'relative', 
-    minHeight: '100vh', 
-    display: 'flex', 
-    flexDirection: 'column',
     fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
-    color: '#f8fafc'
+    color: '#f8fafc',
+    width: '100%',
+    overflowX: 'hidden'
   },
   
   bgGlow1: { position: 'absolute', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, rgba(0,0,0,0) 60%)', top: '-10%', left: '-10%', borderRadius: '50%', zIndex: 0, pointerEvents: 'none' },
   bgGlow2: { position: 'absolute', width: '800px', height: '800px', background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, rgba(0,0,0,0) 60%)', bottom: '-20%', right: '-10%', borderRadius: '50%', zIndex: 0, pointerEvents: 'none' },
   
-  container: { flex: 1, maxWidth: '1200px', margin: '0 auto', padding: '0 20px', position: 'relative', zIndex: 10, width: '100%', boxSizing: 'border-box' },
+  container: { maxWidth: '1200px', margin: '0 auto', padding: '0 20px', position: 'relative', zIndex: 10, width: '100%', boxSizing: 'border-box' },
   
   navbar: { position: 'sticky', top: 0, zIndex: 100, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 5%', background: 'rgba(2, 6, 23, 0.7)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.05)' },
   logo: { fontSize: '18px', fontWeight: '800', color: '#f8fafc', display: 'flex', alignItems: 'center', letterSpacing: '-0.5px' },
   logoIcon: { background: 'linear-gradient(135deg, #10b981, #059669)', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px', marginRight: '10px', fontSize: '14px' },
   logoIconSm: { background: 'linear-gradient(135deg, #10b981, #059669)', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', fontSize: '10px' },
   navLinks: { display: 'flex', gap: '30px', alignItems: 'center' },
-  navLink: { color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'color 0.2s' },
+  navLink: { color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: '500', transition: 'color 0.2s', cursor: 'pointer' },
   navBtn: { background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', border: '1px solid rgba(255,255,255,0.05)', transition: 'all 0.2s' },
   
   hero: { textAlign: 'center', paddingTop: '80px', paddingBottom: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center' },
@@ -309,5 +387,7 @@ const styles = {
   enterpriseContent: { position: 'relative', zIndex: 2 },
   sectionText: { maxWidth: '800px', margin: '0 auto', color: '#cbd5e1', fontSize: '18px', lineHeight: '1.7' },
   
-  footer: { padding: '40px 20px', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', color: '#64748b', background: '#020617', zIndex: 10, position: 'relative' }
+  footerWrapper: { background: '#020617', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '60px', paddingBottom: '30px', zIndex: 10, position: 'relative' },
+  footerContainer: { maxWidth: '1200px', margin: '0 auto', padding: '0 20px', width: '100%', boxSizing: 'border-box' },
+  footerBottom: { borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '24px', textAlign: 'center', color: '#475569', fontSize: '13px' }
 };
