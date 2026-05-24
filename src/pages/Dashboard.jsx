@@ -39,7 +39,7 @@ export default function Dashboard() {
 
   // 🟢 2. MASTER CONTROL PANEL 
 const config = useMemo(() => ({
-    showClock: true,              
+    showClock: false,              
     showAnnouncement: true,       
     enableScrolling: true,        
     scrollSpeed: "26s",           
