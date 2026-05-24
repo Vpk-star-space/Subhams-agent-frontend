@@ -86,7 +86,7 @@ const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_
       const checkShopValidity = async () => {
           // 🟢 BYPASS: Accept both 'guest' and 'SUBHAMS-GUEST'
           if (shopId === 'guest' || shopId.toUpperCase() === 'SUBHAMS-GUEST') {
-              setShopStatus('valid');
+              setShopStatus('required Shop id 🆔');
               return;
           }
           
