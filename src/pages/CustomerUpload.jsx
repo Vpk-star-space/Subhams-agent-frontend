@@ -83,34 +83,33 @@ const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_
   }, [shopId, shopStatus, navigate]);
 
   useEffect(() => {
-      const checkShopValidity = async () => {
-          // 🟢 BYPASS: Accept both 'guest' and 'SUBHAMS-GUEST'
-          if (shopId === 'guest' || shopId.toUpperCase() === 'SUBHAMS-GUEST') {
-              setShopStatus('guest');
-              return;
-          }
-          
-          if (!shopId || shopId.length < 5) {
-              setShopStatus('idle');
-              return;
-          }
-          
-          setShopStatus('checking');
-          try {
-              const res = await axios.get(`https://subhams-vpk.onrender.com/api/shop/pricing/${shopId}`);
-              if (res.data.success) {
-                  setShopStatus('valid');
-              } else {
-                  setShopStatus('invalid');
-              }
-          } catch {
-              setShopStatus('invalid');
-          }
-      };
+    const checkShopValidity = async () => {
+        // 1. Guest Check
+        if (shopId === 'guest' || shopId.toUpperCase() === 'SUBHAMS-GUEST') {
+            setShopStatus('guest');
+            return;
+        }
+        
+        // 2. Idle Check
+        if (!shopId || shopId.length < 5) {
+            setShopStatus('idle');
+            return;
+        }
+        
+        // 3. API Check
+        setShopStatus('checking');
+        try {
+            const res = await axios.get(`https://subhams-vpk.onrender.com/api/shop/pricing/${shopId}`);
+            setShopStatus(res.data.success ? 'valid' : 'invalid');
+        } catch {
+            setShopStatus('invalid');
+        }
+    };
 
-      const timeoutId = setTimeout(checkShopValidity, 800);
-      return () => clearTimeout(timeoutId);
-  }, [shopId]);
+    const timeoutId = setTimeout(checkShopValidity, 800);
+    return () => clearTimeout(timeoutId);
+}, [shopId]);
+
   
   const trackerRef = useRef(liveStatusTracker);
 
@@ -638,16 +637,27 @@ if (shopId !== 'guest' && !shopStatus === 'valid' && !isScanning) {
               <button type="button" style={qrBtnStyle} onClick={() => setIsScanning(true)}>📷 Scan QR</button>
             </div>
             
-            {shopStatus === 'checking' && <span style={{ fontSize: '12px', color: '#64748b' }}>⏳ Verifying Shop ID...</span>}
-            {shopStatus === 'valid' && <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 'bold' }}>✅ Shop Found & Ready!</span>}
-            {shopStatus === 'invalid' && shopId.length > 0 && <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 'bold' }}>❌ Invalid Shop ID. Please check again.</span>}
-          </div>
+            {shopStatus === 'checking' && (
+        <span style={{ fontSize: '12px', color: '#64748b' }}>⏳ Verifying Shop ID...</span>
+    )}
 
-{shopStatus === 'guest'  && <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 'bold' }}> 🎉 Welcome Subhams Networks, Please type Shop ID or Qr scanner in Subhams valid shop.</span>}
-          </div>
+    {shopStatus === 'valid' && (
+        <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 'bold' }}>✅ Shop Found & Ready!</span>
+    )}
 
-        )}
-      </div>
+    {/* Only show invalid if it's NOT checking, NOT valid, NOT guest, and has input */}
+    {shopStatus === 'invalid' && shopId.length >= 5 && (
+        <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 'bold' }}>❌ Invalid Shop ID. Please check again.</span>
+    )}
+
+    {/* Guest Message */}
+    {shopStatus === 'guest' && (
+        <span style={{ fontSize: '12px', color: '#8b5cf6', fontWeight: 'bold' }}> 
+            🎉 Welcome to Subhams Networks! Please enter a valid Shop ID or use the QR scanner.
+        </span>
+    )}
+</div>
+      
 
       <div style={{...sectionCard, background: securityMode !== 'none' ? '#f0fdf4' : '#fff', border: securityMode !== 'none' ? '2px solid #22c55e' : '1px solid #e2e8f0'}}>
         <h4 style={{ margin: '0 0 10px 0', color: '#166534', fontSize: '14px' }}>🛡️ Document Privacy Guard</h4>
