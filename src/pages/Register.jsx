@@ -13,6 +13,7 @@ export default function Register() {
   const roleValue = isBusiness ? 'business' : 'individual';
 
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   
@@ -22,6 +23,7 @@ export default function Register() {
   
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isAgentConnected, setIsAgentConnected] = useState(false); // 🟢 NEW: Tracks the checkbox
   
   // 🟢 State to hold the Google Client ID
   const [clientId, setClientId] = useState('');
@@ -61,7 +63,8 @@ export default function Register() {
         email, 
         otp, 
         password,
-        role: roleValue
+        role: roleValue,
+         name
       });
       
       if (response.data.success) {
@@ -88,6 +91,7 @@ export default function Register() {
       const decoded = jwtDecode(credentialResponse.credential);
       const response = await axios.post('https://subhams-vpk.onrender.com/api/auth/google-login', {
         email: decoded.email,
+        name: decoded.name,
         googleId: decoded.sub,
         role: roleValue
       });
@@ -117,6 +121,7 @@ export default function Register() {
         <p style={subTitleStyle}>Step 1: Email Verification</p>
         
         <form onSubmit={handleRequestOTP} style={formStyle}>
+          <input type="text" placeholder="Your Name " value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} required />
           <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
           {error && <p style={errorStyle}>{error}</p>}
           <button type="submit" disabled={loading} style={{ ...btnStyle, background: isBusiness ? '#2563eb' : '#10b981' }}>
@@ -165,8 +170,7 @@ export default function Register() {
       </div>
     );
   }
-
-  // --- UI RENDER: STEP 3 (SETUP & DOWNLOAD) ---
+// --- UI RENDER: STEP 3 (SETUP & DOWNLOAD) ---
   return (
     <div style={revealContainerStyle}>
       <h1 style={{ color: '#10b981', textAlign: 'center' }}>Registration Complete! 🎉</h1>
@@ -201,40 +205,101 @@ export default function Register() {
         <p style={{ color: '#64748b', marginBottom: '20px', fontSize: '0.95rem' }}>
           Download the Windows Agent, install it on your shop's computer, and paste your Agent Key to connect your printer to the cloud.
         </p>
+
+        {/* 🟢 NEW: FILE SIZE & TIME WARNING */}
+        <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '12px', maxWidth: '500px', margin: '0 auto 15px auto', textAlign: 'left' }}>
+            <p style={{ fontSize: '13px', color: '#b45309', margin: '0 0 5px 0', fontWeight: 'bold' }}>
+                ⏳ Note: Download may take a few minutes (High secure File)
+            </p>
+            <p style={{ fontSize: '12px', color: '#92400e', margin: 0, lineHeight: '1.4' }}>
+                Depending on your internet connection speed, this secure file will take some time to download. Please be patient and do not close the window.<br/>
+                <span style={{ fontSize: '11px', fontWeight: 'normal' }}>మీ ఇంటర్నెట్ వేగాన్ని బట్టి ఈ ఫైల్ డౌన్‌లోడ్ అవ్వడానికి కొద్ది సమయం పట్టవచ్చు. దయచేసి వేచి ఉండండి, విండోను క్లోజ్ చేయవద్దు.</span>
+            </p>
+        </div>
         
-        {/* 🟢 THE NEW GITHUB RELEASES DOWNLOAD LINK! */}
+        {/* 🟢 GITHUB RELEASES DOWNLOAD LINK */}
         <a 
-          href="https://github.com/Vpk-star-space/Subhams-agent-frontend/releases/download/v1.0.0/Install-SubhamsAgent.exe" 
-       
+          href="https://github.com/Vpk-star-space/Subhams-agent-frontend/releases/download/v2.0.0/Install-SubhamsAgent.exe" 
           style={{
             backgroundColor: '#2563eb', color: 'white', padding: '14px 28px', 
             borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold',
             display: 'inline-block', fontSize: '1.1rem',
             boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)', transition: 'transform 0.2s',
-            marginBottom: '20px'
+            marginBottom: '25px'
           }}
         >
-          ⬇️ Download Windows Agent (.exe)
+          ⬇️ Install Subhams Agent (.exe)
         </a>
 
-        {/* 🟢 THE TRUST MANUAL: Explains Windows SmartScreen */}
-        <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '15px', textAlign: 'left', maxWidth: '500px', margin: '0 auto' }}>
-            <h4 style={{ margin: '0 0 10px 0', color: '#b45309', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '18px' }}>🛡️</span> Windows Installation Guide
+        {/* 🟢 NEW: ENHANCED 100% SECURITY TRUST MANUAL */}
+        <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', padding: '20px', textAlign: 'left', maxWidth: '500px', margin: '0 auto', marginBottom: '25px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+            <h4 style={{ margin: '0 0 10px 0', color: '#166534', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px' }}>
+                <span style={{ fontSize: '20px' }}>🛡️</span> 100% Secure & Verified Software
             </h4>
-            <p style={{ fontSize: '13px', color: '#92400e', margin: '0 0 10px 0', lineHeight: '1.5' }}>
-                Because Subhams Agent is a private, highly secure business tool and not a public consumer app, Windows Defender will ask you to confirm the installation. 
+            <p style={{ fontSize: '13px', color: '#15803d', margin: '0 0 12px 0', lineHeight: '1.5', fontWeight: '500' }}>
+                Subhams Agent is an enterprise-grade, highly secure business tool. Because it is private business software, your browser or Windows Defender may flag it as "unrecognized". <strong>Please completely ignore these warnings.</strong><br/><br/>
+                <span style={{ fontSize: '12px', fontWeight: 'normal' }}>ఇది 100% సురక్షితమైన బిజినెస్ సాఫ్ట్‌వేర్. బ్రౌజర్ లేదా Windows Defender ఏవైనా వార్నింగ్స్ చూపిస్తే, దయచేసి వాటిని విస్మరించండి (పట్టించుకోకండి).</span>
             </p>
-            <ol style={{ fontSize: '13px', color: '#92400e', margin: 0, paddingLeft: '20px', fontWeight: 'bold' }}>
-                <li style={{ marginBottom: '5px' }}>Open the downloaded `.exe` file.</li>
-                <li style={{ marginBottom: '5px' }}>When the blue Windows screen appears, click <u><strong>"More info"</strong></u>.</li>
-                <li>Click the <u><strong>"Run anyway"</strong></u> button to complete installation.</li>
-            </ol>
+            
+            <div style={{ background: '#dcfce3', padding: '15px', borderRadius: '8px', border: '1px dashed #4ade80' }}>
+                <h5 style={{ margin: '0 0 10px 0', color: '#14532d', fontSize: '14px' }}>Installation Guide / ఇన్‌స్టాల్ చేసే విధానం:</h5>
+                <ol style={{ fontSize: '13px', color: '#166534', margin: 0, paddingLeft: '20px', fontWeight: 'bold', lineHeight: '1.6' }}>
+                    <li>If Chrome blocks the download: Click <u><strong>"Keep"</strong></u> (ఉంచండి).</li>
+                    <li>Open the downloaded `.exe` file.</li>
+                    <li>When the blue Windows warning appears, click <u><strong>"More info"</strong></u> (మరింత సమాచారం).</li>
+                    <li>Click the <u><strong>"Run anyway"</strong></u> (అలాగే రన్ చేయండి) button.</li>
+                </ol>
+            </div>
+        </div>
+
+        {/* 🟢 BILINGUAL VERIFICATION CHECKBOX AREA */}
+        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '20px', textAlign: 'left', maxWidth: '500px', margin: '0 auto' }}>
+            <h4 style={{ margin: '0 0 10px 0', color: '#1e3a8a', fontSize: '16px' }}>Final Verification / చివరి నిర్ధారణ</h4>
+            
+            <p style={{ fontSize: '13.5px', color: '#1e40af', margin: '0 0 8px 0', lineHeight: '1.4', fontWeight: '500' }}>
+                Did you install the Agent and paste your Key? It should display <strong style={{color: '#16a34a'}}>Online</strong> on your shop's computer.
+            </p>
+            <p style={{ fontSize: '12.5px', color: '#3b82f6', margin: '0 0 15px 0', lineHeight: '1.5' }}>
+                మీరు ఏజెంట్‌ను ఇన్‌స్టాల్ చేసి, మీ కీని పేస్ట్ చేశారా? మీ షాప్ కంప్యూటర్‌లో అది <strong style={{color: '#16a34a'}}>'Online'</strong> అని చూపించాలి.
+            </p>
+
+            <div style={{ background: '#dbeafe', padding: '10px', borderRadius: '6px', marginBottom: '15px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                <span style={{ fontSize: '20px' }}>💡</span>
+                <div>
+                    <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#1e3a8a', fontWeight: 'bold' }}>Not connecting? (కనెక్ట్ అవ్వడం లేదా?)</p>
+                    <p style={{ margin: 0, fontSize: '12px', color: '#3b82f6' }}>If it does not show online, please click the <strong>"Ask Subhams"</strong> icon on your screen for support. <br/> ఆన్‌లైన్ చూపించకపోతే, సహాయం కోసం మీ స్క్రీన్‌పై ఉన్న <strong>"Ask Subhams"</strong> ఐకాన్‌ని క్లిక్ చేయండి.</p>
+                </div>
+            </div>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', background: isAgentConnected ? '#dcfce3' : '#fff', padding: '12px', borderRadius: '8px', border: isAgentConnected ? '1px solid #86efac' : '1px solid #94a3b8', transition: 'all 0.2s' }}>
+                <input 
+                    type="checkbox" 
+                    checked={isAgentConnected} 
+                    onChange={(e) => setIsAgentConnected(e.target.checked)}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: '14px', color: isAgentConnected ? '#166534' : '#334155', fontWeight: 'bold' }}>
+                    I confirm the Desktop Agent is showing Online.<br/>
+                    <span style={{ fontSize: '12px', fontWeight: 'normal' }}>డెస్క్‌టాప్ ఏజెంట్ ఆన్‌లైన్‌లో ఉందని నేను నిర్ధారిస్తున్నాను.</span>
+                </span>
+            </label>
         </div>
       </div>
 
-      <button onClick={() => navigate('/login?role=business')} style={{...finishBtnStyle, marginTop: '30px'}}>
-        Go to Login Dashboard
+      {/* 🟢 BUTTON IS DISABLED UNTIL CHECKBOX IS TICKED */}
+      <button 
+        onClick={() => navigate('/login?role=business')} 
+        disabled={!isAgentConnected}
+        style={{
+            ...finishBtnStyle, 
+            marginTop: '30px',
+            background: isAgentConnected ? '#10b981' : '#cbd5e1', 
+            color: isAgentConnected ? 'white' : '#64748b',
+            cursor: isAgentConnected ? 'pointer' : 'not-allowed',
+            boxShadow: isAgentConnected ? '0 4px 10px rgba(16, 185, 129, 0.3)' : 'none'
+        }}
+      >
+        {isAgentConnected ? 'Go to Login Dashboard 🚀' : 'Please confirm connection to continue 🔒'}
       </button>
     </div>
   );

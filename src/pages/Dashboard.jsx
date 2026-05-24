@@ -260,7 +260,12 @@ useEffect(() => {
     };
 
     // 3. Attach Listeners
-    if (!socket.connected) socket.connect();
+ 
+    if (socket.connected) {
+        handleConnect(); // 🟢 FIX: Trigger immediately if already connected!
+    } else {
+        socket.connect();
+    }
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
     socket.on('NEW_JOB_RECEIVED', handleNewJob);
