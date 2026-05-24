@@ -503,10 +503,14 @@ const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_
 /// 🟢 UPDATED: This block now only shows if the user is NOT in guest mode and hasn't scanned yet.
 // If shopId is 'guest', this block is skipped entirely, opening the portal.
 
-if (shopId !== 'guest' && !shopStatus === 'valid' && !isScanning) {
+if (shopId !== 'guest' && shopStatus ! === 'valid' && !isScanning) {
     return (
       <div style={{ ...containerStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ background: '#fff', padding: '40px 20px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
+<h2 style={{ textAlign: 'center', color: '#1e293b' }}>Waiting for valid Shop ID...</h2>
+             <p style={{ textAlign: 'center', color: '#64748b' }}>Current Status: {shopStatus}</p>
+          </div>
+
           <div style={{ fontSize: '60px', marginBottom: '15px' }}>🖨️</div>
           <h2 style={{ color: '#1e293b', margin: '0 0 10px 0', fontSize: '22px' }}>Subhams Print Portal</h2>
           <p style={{ color: '#64748b', fontSize: '14px', lineHeight: '1.6', marginBottom: '30px' }}>
