@@ -86,7 +86,7 @@ const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_
       const checkShopValidity = async () => {
           // 🟢 BYPASS: Accept both 'guest' and 'SUBHAMS-GUEST'
           if (shopId === 'guest' || shopId.toUpperCase() === 'SUBHAMS-GUEST') {
-              setShopStatus('required Shop id 🆔');
+              setShopStatus('guest');
               return;
           }
           
@@ -642,6 +642,10 @@ if (shopId !== 'guest' && !shopStatus === 'valid' && !isScanning) {
             {shopStatus === 'valid' && <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 'bold' }}>✅ Shop Found & Ready!</span>}
             {shopStatus === 'invalid' && shopId.length > 0 && <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 'bold' }}>❌ Invalid Shop ID. Please check again.</span>}
           </div>
+
+{shopStatus === 'guest'  && <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 'bold' }}> 🎉 Welcome Subhams Networks, Please type Shop ID or Qr scanner in Subhams valid shop.</span>}
+          </div>
+
         )}
       </div>
 
