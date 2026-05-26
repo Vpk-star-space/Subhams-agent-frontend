@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import { QRCodeSVG } from 'qrcode.react'; 
+import { useReactToPrint } from 'react-to-print';
+import PrintPass from './PrintPass';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://subhams-vpk.onrender.com';
 const socket = io(BACKEND_URL, { 
@@ -46,14 +48,9 @@ const config = useMemo(() => ({
 message: "✨ Welcome to Subhams Secure Networks | 🚀 We are happy to work with you today | ఈ రోజు మీతో కలిసి పని చేయడం మాకు ఆనందంగా ఉంది |  For more & information click ' ✨Ask Subhams' | 🙏 Thank You !" ,
     postTime: "NA"                
   }), []);
-
-  // 📅 Bulletproof Date Math
+// 📅 Simplified to always show if config.showAnnouncement is true
   const shouldShowMessage = useMemo(() => {
-    if (!config.showAnnouncement) return false;
-    const activeDates = ["22-05-2026", "23-05-2026", "24-05-2026", "25-05-2026"]; 
-    const today = new Date();
-    const formattedToday = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
-    return activeDates.includes(formattedToday);
+    return config.showAnnouncement;
   }, [config.showAnnouncement]);
 
   const hasTopBar = config.showClock || shouldShowMessage;
@@ -86,6 +83,18 @@ message: "✨ Welcome to Subhams Secure Networks | 🚀 We are happy to work wit
   const isCheckingHardware = useRef(false);
   const iframeRef = useRef(null);
   const uploadLink = `${window.location.origin}/u/${auth.shopId}`;
+ 
+
+ // 🟢 PRINT PASS LOGIC 
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [passData, setPassData] = useState({ name: '', address: '', paymentNumber: '', lang: 'en' });
+  const printPassRef = useRef();
+  
+  // 🟢 Renamed to handlePrintPass so it doesn't conflict with your job printer
+ const handlePrintPass = useReactToPrint({
+    contentRef: printPassRef,
+    documentTitle: "Subhams-Pass",
+})
 
   // 🟢 4. FUNCTIONS & EFFECTS
   // Define fetchQueue carefully without the trailing comma
@@ -526,6 +535,17 @@ const handlePrint = (jobId) => {
               <div style={{ background: '#fff', padding: '15px', display: 'flex', justifyContent: 'center', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                 <QRCodeSVG id="shop-qr-code" value={uploadLink} size={180} />
               </div>
+              <button 
+  onClick={() => setIsPrintModalOpen(true)} 
+  style={{
+    ...navBtn,
+    background: '#f59e0b',
+    width: '100%',
+    marginTop: '15px'
+  }}
+>
+  🎟️ Print Shop QR
+</button>
               <button onClick={downloadQR} style={downloadBtn}>📥 Download QR Code</button>
               <div style={{ marginTop: '20px', background: '#f1f5f9', padding: '12px', borderRadius: '8px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>YOUR SHOP ID</span>
@@ -930,6 +950,57 @@ const handlePrint = (jobId) => {
           </div>
         </div>
       )}
+    {/* 🌟 PRINT PASS MODAL */}
+      {isPrintModalOpen && (
+        <div style={modalOverlay}>
+            <div style={modalContent}>
+                <h3 style={{marginTop: 0, borderBottom: '1px solid #e2e8f0', paddingBottom: '10px'}}>Generate Customer Pass</h3>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '15px', margin: '20px 0'}}>
+<input 
+    placeholder="ShopName (max20 words)" 
+    maxLength={20} 
+    onChange={(e) => setPassData({...passData, name: e.target.value})} 
+    style={controlInput} 
+/>
+
+<input 
+    placeholder="Shop Address (max 50 words)" 
+    maxLength={50} 
+    onChange={(e) => setPassData({...passData, address: e.target.value})} 
+    style={controlInput} 
+/>
+
+<input 
+    placeholder="GPay/PhonePe Number (Optional)" 
+    maxLength={10} 
+    onChange={(e) => setPassData({...passData, paymentNumber: e.target.value})} 
+    style={controlInput} 
+/>
+                    <div>
+                        <label style={controlLabel}>Language</label>
+                        <select onChange={(e) => setPassData({...passData, lang: e.target.value})} style={controlInput}>
+                            <option value="en">English</option>
+                            <option value="te">Telugu</option>
+                        </select>
+                    </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                    <button onClick={() => setIsPrintModalOpen(false)} style={{...actionBtn, background: '#f1f5f9'}}>Cancel</button>
+                    <button onClick={() => { handlePrintPass(); setIsPrintModalOpen(false); }} style={{...printBtn, flex: 1, padding: '10px'}}>🖨️ Print Pass</button>
+                </div>
+            </div>
+        </div>
+      )}
+
+{/* 🌟 HIDDEN PRINT COMPONENT */}
+<div style={{ position: 'absolute', top: '-9999px', left: '-9999px', visibility: 'hidden' }}>
+    <PrintPass 
+        ref={printPassRef} 
+        passData={passData} 
+        uploadLink={uploadLink} // 🟢 UPDATED: Passing the full upload link
+        shopId={auth.shopId}
+    />
+</div>
 
       {/* 🌟 5. ANIMATIONS */}
       <style>{`
