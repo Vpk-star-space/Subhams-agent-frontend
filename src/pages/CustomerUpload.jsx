@@ -640,11 +640,11 @@ if (shopId !== 'guest' && !shopStatus === 'valid' && !isScanning) {
             
             {shopStatus === 'checking' && <span style={{ fontSize: '12px', color: '#64748b' }}>⏳ Verifying Shop ID...</span>}
             {shopStatus === 'valid' && <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 'bold' }}>✅ Shop Found & Ready!</span>}
-            {shopStatus === 'invalid' && shopId.length > 0 && <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 'bold' }}>❌ Invalid Shop ID. Please check again.</span>}
+            {shopStatus === 'invalid' && shopId.length > 0 && <span style={{ fontSize: '12px', color: '#8b5cf6', fontWeight: 'bold' }}>  🎉 Hello Dear! Welcome to Subhams Networks! It is an Invalid Shop ID. Please enter a valid Shop ID or use the QR scanner.</span>}
           {/* Guest Message */}
     {shopStatus === 'guest' && (
         <span style={{ fontSize: '12px', color: '#8b5cf6', fontWeight: 'bold' }}> 
-            🎉 Welcome to Subhams Networks! Please enter a valid Shop ID or use the QR scanner.
+            🎉Hello Dear! Welcome to Subhams Networks! Please enter a valid Shop ID or use the QR scanner.
         </span>
     )}
           </div>
