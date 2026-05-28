@@ -611,16 +611,17 @@ if (shopId !== 'guest' && !shopStatus === 'valid' && !isScanning) {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', gap: '10px' }}>
-             <<input 
+             <input 
     type="text" 
     placeholder="SUBHAMS-XXXXXX" 
-    maxLength={14} // 🟢 8 chars for "SUBHAMS-" + 6 chars for the ID
+    maxLength={14} // 🟢 8 chars for "SUBHAMS-" + max 6 chars for the ID
     value={shopId.startsWith('SUBHAMS-') ? shopId : 'SUBHAMS-' + shopId.replace('SUBHAMS-', '')} 
     onChange={(e) => {
         let val = e.target.value.toUpperCase();
         
-        // Prevent deletion of the prefix
+        // 1. Prevent deletion of the prefix
         if (!val.startsWith('SUBHAMS-')) {
+            // If they hit backspace into the prefix, reset it
             if ('SUBHAMS-'.startsWith(val)) {
                 setShopId("SUBHAMS-");
                 return;
@@ -628,31 +629,27 @@ if (shopId !== 'guest' && !shopStatus === 'valid' && !isScanning) {
             val = 'SUBHAMS-' + val.replace('SUBHAMS-', '');
         }
 
-        // Extract the user's typed part
+        // 2. Extract the user's typed part and force limit to 6 characters
         let userPart = val.replace('SUBHAMS-', '');
-
-        // 🟢 Force limit to 6 characters in JS (fallback if they paste)
         userPart = userPart.slice(0, 6);
 
+        // 3. Set the final locked value
         setShopId('SUBHAMS-' + userPart);
-    }}
-    style={controlInput} 
-/>
-
-  style={{
-      ...inputStyle, 
-      flex: 1, 
-      fontWeight: 'bold', 
-      color: shopStatus === 'invalid' ? '#ef4444' : '#2563eb',
-      borderColor: shopStatus === 'invalid' ? '#ef4444' : (shopStatus === 'valid' ? '#10b981' : '#cbd5e1')
-  }} 
+    }} 
+    style={{
+        ...inputStyle, 
+        flex: 1, 
+        fontWeight: 'bold', 
+        color: shopStatus === 'invalid' ? '#ef4444' : '#2563eb',
+        borderColor: shopStatus === 'invalid' ? '#ef4444' : (shopStatus === 'valid' ? '#10b981' : '#cbd5e1')
+    }} 
 />
               <button type="button" style={qrBtnStyle} onClick={() => setIsScanning(true)}>📷 Scan QR</button>
             </div>
             
             {shopStatus === 'checking' && <span style={{ fontSize: '12px', color: '#64748b' }}>⏳ Verifying Shop ID...</span>}
             {shopStatus === 'valid' && <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 'bold' }}>✅ Shop Found & Ready!</span>}
-            {shopStatus === 'invalid' && shopId.length > 0 && (
+           {shopStatus === 'invalid' && shopId.length > 0 && (
     <span style={{ fontSize: '12px', color: '#e11d48', fontWeight: 'bold' }}>  
         ⚠️ Hello Dear! Welcome to Subhams Networks! It is an Invalid Shop ID. Please enter a valid Shop ID or use the QR scanner.
     </span>
@@ -664,7 +661,6 @@ if (shopId !== 'guest' && !shopStatus === 'valid' && !isScanning) {
         🎉 Hello Dear! Welcome to Subhams Networks! Please enter a valid Shop ID or use the QR scanner.
     </span>
 )}
-
           </div>
         )}
       </div>
