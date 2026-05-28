@@ -611,22 +611,34 @@ if (shopId !== 'guest' && !shopStatus === 'valid' && !isScanning) {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', gap: '10px' }}>
-             <input 
-  type="text" 
-  placeholder="SUBHAMS-XXXXXX" 
-  // 🟢 FORCED PREFIX LOGIC
-  value={shopId.startsWith('SUBHAMS-') ? shopId : 'SUBHAMS-' + shopId.replace('SUBHAMS-', '')} 
-  onChange={(e) => {
-      let val = e.target.value.toUpperCase();
-      // If user clears the box, force it back to "SUBHAMS-"
-      if (val === "" || val === "S" || val === "SU" || val === "SUB" || val === "SUBH" || val === "SUBHA" || val === "SUBHAM" || val === "SUBHAMS" || val === "SUBHAMS-") {
-          setShopId("SUBHAMS-");
-      } else if (!val.startsWith('SUBHAMS-')) {
-          setShopId('SUBHAMS-' + val.replace('SUBHAMS-', ''));
-      } else {
-          setShopId(val);
-      }
-  }} 
+             <<input 
+    type="text" 
+    placeholder="SUBHAMS-XXXXXX" 
+    maxLength={14} // 🟢 8 chars for "SUBHAMS-" + 6 chars for the ID
+    value={shopId.startsWith('SUBHAMS-') ? shopId : 'SUBHAMS-' + shopId.replace('SUBHAMS-', '')} 
+    onChange={(e) => {
+        let val = e.target.value.toUpperCase();
+        
+        // Prevent deletion of the prefix
+        if (!val.startsWith('SUBHAMS-')) {
+            if ('SUBHAMS-'.startsWith(val)) {
+                setShopId("SUBHAMS-");
+                return;
+            }
+            val = 'SUBHAMS-' + val.replace('SUBHAMS-', '');
+        }
+
+        // Extract the user's typed part
+        let userPart = val.replace('SUBHAMS-', '');
+
+        // 🟢 Force limit to 6 characters in JS (fallback if they paste)
+        userPart = userPart.slice(0, 6);
+
+        setShopId('SUBHAMS-' + userPart);
+    }}
+    style={controlInput} 
+/>
+
   style={{
       ...inputStyle, 
       flex: 1, 
@@ -640,13 +652,19 @@ if (shopId !== 'guest' && !shopStatus === 'valid' && !isScanning) {
             
             {shopStatus === 'checking' && <span style={{ fontSize: '12px', color: '#64748b' }}>⏳ Verifying Shop ID...</span>}
             {shopStatus === 'valid' && <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 'bold' }}>✅ Shop Found & Ready!</span>}
-            {shopStatus === 'invalid' && shopId.length > 0 && <span style={{ fontSize: '12px', color: '#8b5cf6', fontWeight: 'bold' }}>  🎉 Hello Dear! Welcome to Subhams Networks! It is an Invalid Shop ID. Please enter a valid Shop ID or use the QR scanner.</span>}
-          {/* Guest Message */}
-    {shopStatus === 'guest' && (
-        <span style={{ fontSize: '12px', color: '#8b5cf6', fontWeight: 'bold' }}> 
-            🎉Hello Dear! Welcome to Subhams Networks! Please enter a valid Shop ID or use the QR scanner.
-        </span>
-    )}
+            {shopStatus === 'invalid' && shopId.length > 0 && (
+    <span style={{ fontSize: '12px', color: '#e11d48', fontWeight: 'bold' }}>  
+        ⚠️ Hello Dear! Welcome to Subhams Networks! It is an Invalid Shop ID. Please enter a valid Shop ID or use the QR scanner.
+    </span>
+)}
+
+{/* Guest Message */}
+{shopStatus === 'guest' && (
+    <span style={{ fontSize: '12px', color: '#8b5cf6', fontWeight: 'bold' }}> 
+        🎉 Hello Dear! Welcome to Subhams Networks! Please enter a valid Shop ID or use the QR scanner.
+    </span>
+)}
+
           </div>
         )}
       </div>
