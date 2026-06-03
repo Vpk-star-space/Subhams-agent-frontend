@@ -36,7 +36,6 @@ export default function Login() {
       const response = await axios.post('https://subhams-vpk.onrender.com/api/auth/login', { email, password });
       
       if (response.data.success) {
-        // 🛑 THE FIX: Extract ownerName (if it exists) alongside the rest
         const { accessToken, refreshToken, role, shopId, ownerName } = response.data;
         
         localStorage.setItem('accessToken', accessToken);
@@ -44,7 +43,6 @@ export default function Login() {
         
         if (role === 'business') {
           localStorage.setItem('shopId', shopId);
-          // Save the name if the backend sends it, otherwise save the shopId as a backup identity
           localStorage.setItem('ownerName', ownerName || shopId); 
           navigate('/dashboard');
         } else {
@@ -52,7 +50,12 @@ export default function Login() {
         }
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid credentials.');
+      // 🟢 THE FIX: Catch the Bouncer's 429 Error specifically
+      if (err.response && err.response.status === 429) {
+        setError("🚨 Too many attempts. You have been temporarily locked out. Please wait 15 minutes before trying again.");
+      } else {
+        setError(err.response?.data?.message || 'Invalid credentials.');
+      }
     } finally {
       setLoading(false);
     }
@@ -69,7 +72,6 @@ export default function Login() {
       });
       
       if (response.data.success) {
-        // 🛑 THE FIX: Extract ownerName here too
         const { accessToken, refreshToken, role, shopId, isNewUser, ownerName } = response.data;
         
         localStorage.setItem('accessToken', accessToken);
@@ -90,7 +92,12 @@ export default function Login() {
       }
     } catch (err) {
       console.error("Google Login Error:", err);
-      setError("Google Login failed.");
+      // 🟢 THE FIX: Catch the Bouncer's 429 Error for Google Login too
+      if (err.response && err.response.status === 429) {
+        setError("🚨 Too many attempts. You have been temporarily locked out. Please wait 15 minutes before trying again.");
+      } else {
+        setError("Google Login failed.");
+      }
     }
   };
 
@@ -103,12 +110,14 @@ export default function Login() {
         </p>
       </div>
 
-      {/* 🟢 ONLY SHOW LOGIN FORM IF BUSINESS, ELSE SHOW "ENTER AS GUEST" */}
       {isBusiness ? (
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
           <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required />
+          
+          {/* 🟢 The error message will now display the 15-minute warning */}
           {error && <p style={errorStyle}>{error}</p>}
+          
           <button type="submit" disabled={loading} style={{ ...btnStyle, background: '#0f172a' }}>Sign In</button>
         </form>
       ) : (
@@ -120,7 +129,6 @@ export default function Login() {
         </div>
       )}
 
-      {/* Only show OR and Google login for Business users to keep it clean */}
       {isBusiness && (
         <>
             <div style={dividerStyle}><span>OR</span></div>
@@ -147,4 +155,4 @@ const containerStyle = { maxWidth: '420px', margin: '80px auto', padding: '40px'
 const inputStyle = { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' };
 const btnStyle = { padding: '14px', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', cursor: 'pointer', fontWeight: '600' };
 const dividerStyle = { display: 'flex', alignItems: 'center', margin: '25px 0', color: '#cbd5e1', borderBottom: '1px solid #e2e8f0', lineHeight: '0.1em' };
-const errorStyle = { color: '#ef4444', fontSize: '13px', textAlign: 'center', margin: 0 };
+const errorStyle = { color: '#ef4444', fontSize: '13px', textAlign: 'center', margin: 0, fontWeight: 'bold' };
