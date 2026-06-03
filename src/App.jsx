@@ -8,7 +8,8 @@ import Dashboard from './pages/Dashboard';
 import Manage from './pages/Manage';
 import CustomerUpload from './pages/CustomerUpload';
 import LandingPage from './pages/LandingPage';
-
+// 🟢 Add this line at the top of the file with your other page imports:
+import ForgotPassword from './pages/ForgotPassword'; // Adjust the path if your file is in a different folder!
 // 🤖 IMPORT THE NEW CHATBOT HERE
 import XeroxChatbot from './components/XeroxChatbot'; 
 
@@ -222,6 +223,7 @@ export default function App() {
 
         {/* 🟢 Auth Routes */}
         <Route path="/login" element={<>{!isServerAwake && <ServerBootloader />}<Login /></>} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/register" element={<>{!isServerAwake && <ServerBootloader />}<Register /></>} />
         
         {/* 🟢 Dashboard Routes */}
