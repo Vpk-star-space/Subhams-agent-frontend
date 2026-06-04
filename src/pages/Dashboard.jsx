@@ -85,6 +85,12 @@ message: "✨ Welcome to Subhams Secure Networks | 🚀 We are happy to work wit
   const uploadLink = `${window.location.origin}/u/${auth.shopId}`;
  const [rawDrawImage, setRawDrawImage] = useState(null); // 🟢 Holds the secure image
 
+const [showReleaseNotes, setShowReleaseNotes] = useState(false);
+  const [isCelebrating, setIsCelebrating] = useState(false);
+
+
+
+
  // 🟢 PRINT PASS LOGIC 
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [passData, setPassData] = useState({ name: '', address: '', paymentNumber: '', lang: 'en' });
@@ -110,6 +116,8 @@ message: "✨ Welcome to Subhams Secure Networks | 🚀 We are happy to work wit
       console.error("Queue fetch error:", err); 
     }
   }, [auth.shopId, auth.token, secureAxios, handleLogout]);
+
+  
 // 🟢 1. Initialize state with the default value FIRST
   const [ownerName, setOwnerName] = useState(localStorage.getItem('ownerName') || "Shop Owner");
 
@@ -138,6 +146,22 @@ message: "✨ Welcome to Subhams Secure Networks | 🚀 We are happy to work wit
       console.error("Save pricing error:", err); 
       alert("❌ Failed to update prices.");
     }
+  };
+  
+
+  useEffect(() => {
+    // Check if the shop owner has already seen the V2.0 update
+    const hasSeenUpdate = localStorage.getItem('subhams_seen_update_v2');
+    if (!hasSeenUpdate) {
+      // Show it after a short delay for a premium feel
+      const timer = setTimeout(() => setShowReleaseNotes(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const closeReleaseNotes = () => {
+    localStorage.setItem('subhams_seen_update_v2', 'true');
+    setShowReleaseNotes(false);
   };
 
   // 🟢 2. Use a clean useEffect that only updates IF data is found
@@ -550,6 +574,192 @@ const handlePrint = (jobId) => {
           <button onClick={handleLogout} style={{ ...navBtn, background: '#b91c1c' }}>🚪 Logout</button>
         </div>
       </nav>
+{/* 🌟 PREMIUM "WHAT'S NEW" FEATURE SPOTLIGHT MODAL */}
+      {showReleaseNotes && (
+        <div style={{...modalOverlay, zIndex: 3000, backdropFilter: 'blur(8px)'}}>
+          <style>
+            {`
+              /* 🟢 1. Modal Entrance & Exit Animations */
+              @keyframes slide-up-modal {
+                0% { opacity: 0; transform: translateY(40px) scale(0.95); }
+                100% { opacity: 1; transform: translateY(0) scale(1); }
+              }
+              @keyframes pop-in-feature {
+                0% { opacity: 0; transform: translateX(-20px); }
+                100% { opacity: 1; transform: translateX(0); }
+              }
+              @keyframes float-icon {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(-6px); }
+              }
+              .premium-modal-container {
+                animation: slide-up-modal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+              }
+              
+              /* 🟢 2. The Modal Exit Animation (Zoom away fast for the Shield) */
+              .celebration-exit {
+                animation: modal-zoom-out 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+              }
+              @keyframes modal-zoom-out {
+                0% { transform: scale(1); opacity: 1; }
+                100% { transform: scale(0.5); opacity: 0; }
+              }
+
+              /* 🟢 3. EPIC SECURITY SHIELD ANIMATIONS (Extended Time & New Scanners) */
+              @keyframes shield-materialize {
+                0% { transform: scale(0); opacity: 0; }
+                50% { transform: scale(1.1); opacity: 1; }
+                70% { transform: scale(0.95); opacity: 1; }
+                100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 40px rgba(16, 185, 129, 0.8)); }
+              }
+              @keyframes shockwave-expand {
+                0% { transform: scale(0); opacity: 0.8; border-width: 25px; }
+                100% { transform: scale(6); opacity: 0; border-width: 0px; }
+              }
+              @keyframes text-glow-pulse {
+                0%, 100% { opacity: 0.9; text-shadow: 0 0 10px #6ee7b7; }
+                50% { opacity: 1; text-shadow: 0 0 25px #6ee7b7, 0 0 35px #10b981; }
+              }
+              @keyframes terminal-blink {
+                0%, 100% { opacity: 0.4; }
+                50% { opacity: 1; }
+              }
+
+              /* 🟢 4. Custom Invisible Scrollbar */
+              .feature-scroll-box::-webkit-scrollbar { width: 6px; }
+              .feature-scroll-box::-webkit-scrollbar-track { background: transparent; }
+              .feature-scroll-box::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+            `}
+          </style>
+          
+          {/* 💥 THE MASSIVE SECURITY ACTIVATION OVERLAY */}
+          {isCelebrating && (
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', pointerEvents: 'none' }}>
+              
+              {/* Infinite Forcefield Shockwaves expanding across the screen */}
+              <div style={{ position: 'absolute', width: '300px', height: '300px', borderRadius: '50%', border: 'solid #10b981', animation: 'shockwave-expand 2s ease-out infinite' }}></div>
+              <div style={{ position: 'absolute', width: '300px', height: '300px', borderRadius: '50%', border: 'solid #34d399', animation: 'shockwave-expand 2s ease-out 1s infinite' }}></div>
+              
+              {/* The Glowing Holographic Shield Container */}
+              <div style={{ 
+                animation: 'shield-materialize 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards', 
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                background: 'radial-gradient(circle, rgba(6,78,59,0.95) 0%, rgba(2,44,34,0.98) 100%)', 
+                padding: '50px 60px', borderRadius: '40px', border: '2px solid #10b981', 
+                boxShadow: 'inset 0 0 40px rgba(16, 185, 129, 0.5), 0 20px 50px rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)' 
+              }}>
+                <div style={{ fontSize: '90px', marginBottom: '10px', filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.5))' }}>🛡️</div>
+                <h2 style={{ margin: 0, color: '#6ee7b7', fontSize: '36px', fontWeight: '900', letterSpacing: '3px', textTransform: 'uppercase', animation: 'text-glow-pulse 1.5s infinite', textAlign: 'center' }}>
+                  System Secured
+                </h2>
+                
+                {/* 🟢 NEW: High-Tech Boot-Up Terminal inside the Shield */}
+                <div style={{ marginTop: '25px', textAlign: 'center', background: 'rgba(0,0,0,0.4)', padding: '20px 30px', borderRadius: '16px', border: '1px solid rgba(52, 211, 153, 0.3)', width: '100%', boxSizing: 'border-box' }}>
+                  <p style={{ margin: '0 0 8px 0', color: '#34d399', fontSize: '13px', fontWeight: 'bold', letterSpacing: '2px', textTransform: 'uppercase', animation: 'terminal-blink 1s infinite' }}>
+                    Subhams Secure Networks Activating...
+                  </p>
+                  <p style={{ margin: 0, color: '#fff', fontSize: '20px', fontWeight: '800', letterSpacing: '1px' }}>
+                    Welcome, {ownerName || 'User'}!
+                  </p>
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          <div 
+            className={`premium-modal-container ${isCelebrating ? 'celebration-exit' : ''}`} 
+            style={{ 
+              background: '#fff', padding: '0', borderRadius: '24px', width: '92%', maxWidth: '480px', 
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', border: '1px solid #e2e8f0',
+              display: 'flex', flexDirection: 'column', maxHeight: '85vh'
+            }}
+          >
+            
+            {/* 🌟 Header Area */}
+            <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '35px 20px', textAlign: 'center', position: 'relative', borderBottom: '1px solid #334155', flexShrink: 0 }}>
+              <div style={{ animation: 'float-icon 3s ease-in-out infinite', display: 'inline-block', fontSize: '55px', filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))', marginBottom: '15px' }}>🚀</div>
+              <h2 style={{ color: '#fff', margin: '0', fontSize: '24px', letterSpacing: '0.5px', fontWeight: '800' }}>Subhams Print Portal V2.0</h2>
+              <p style={{ color: '#94a3b8', margin: '8px 0 0 0', fontSize: '14px', lineHeight: '1.5' }}>Your workflow is now faster, smarter, and <b style={{color: '#38bdf8'}}>100% secure</b>.</p>
+            </div>
+
+            {/* 🌟 Scrollable Feature List */}
+            <div className="feature-scroll-box" style={{ padding: '30px 25px', display: 'flex', flexDirection: 'column', gap: '22px', overflowY: 'auto', flex: 1 }}>
+              
+              <div style={{ opacity: 0, animation: 'pop-in-feature 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards', display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                <div style={{ background: '#dcfce3', padding: '12px', borderRadius: '14px', fontSize: '22px', boxShadow: '0 4px 6px rgba(22, 163, 74, 0.1)' }}>🛡️</div>
+                <div>
+                  <h4 style={{ margin: '0 0 5px 0', color: '#0f172a', fontSize: '16px', fontWeight: 'bold' }}>Zero-Trust Cloud Firewall</h4>
+                  <p style={{ margin: 0, color: '#475569', fontSize: '13.5px', lineHeight: '1.5' }}>Malware and viruses are instantly blocked and destroyed in the cloud. <b>Malicious files can never reach your PC.</b></p>
+                </div>
+              </div>
+
+              <div style={{ opacity: 0, animation: 'pop-in-feature 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards', display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '14px', fontSize: '22px', boxShadow: '0 4px 6px rgba(245, 158, 11, 0.1)' }}>⚙️</div>
+                <div>
+                  <h4 style={{ margin: '0 0 5px 0', color: '#0f172a', fontSize: '16px', fontWeight: 'bold' }}>Customer-Driven Copies</h4>
+                  <p style={{ margin: 0, color: '#475569', fontSize: '13.5px', lineHeight: '1.5' }}>Customers set their exact copies and sizes from their phone. <b>You don't edit anything—just click print!</b></p>
+                </div>
+              </div>
+
+              <div style={{ opacity: 0, animation: 'pop-in-feature 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards', display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                <div style={{ background: '#f3e8ff', padding: '12px', borderRadius: '14px', fontSize: '22px', boxShadow: '0 4px 6px rgba(168, 85, 247, 0.1)' }}>⚡</div>
+                <div>
+                  <h4 style={{ margin: '0 0 5px 0', color: '#0f172a', fontSize: '16px', fontWeight: 'bold' }}>1-Click Print Ready</h4>
+                  <p style={{ margin: 0, color: '#475569', fontSize: '13.5px', lineHeight: '1.5' }}>The Dashboard automatically generates a perfect A4 preview. Zero manual resizing or alignment needed on your end.</p>
+                </div>
+              </div>
+
+              <div style={{ opacity: 0, animation: 'pop-in-feature 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards', display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                <div style={{ background: '#fee2e2', padding: '12px', borderRadius: '14px', fontSize: '22px', boxShadow: '0 4px 6px rgba(220, 38, 38, 0.1)' }}>👁️‍🗨️</div>
+                <div>
+                  <h4 style={{ margin: '0 0 5px 0', color: '#0f172a', fontSize: '16px', fontWeight: 'bold' }}>Privacy-First Blind Preview</h4>
+                  <p style={{ margin: 0, color: '#475569', fontSize: '13.5px', lineHeight: '1.5' }}>Customers can securely blur highly private documents. You still get perfect print alignment while earning their trust.</p>
+                </div>
+              </div>
+
+              <div style={{ opacity: 0, animation: 'pop-in-feature 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards', display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                <div style={{ background: '#e0e7ff', padding: '12px', borderRadius: '14px', fontSize: '22px', boxShadow: '0 4px 6px rgba(79, 70, 229, 0.1)' }}>🪪</div>
+                <div>
+                  <h4 style={{ margin: '0 0 5px 0', color: '#0f172a', fontSize: '16px', fontWeight: 'bold' }}>Smart ID Stitching</h4>
+                  <p style={{ margin: 0, color: '#475569', fontSize: '13.5px', lineHeight: '1.5' }}>Customers seamlessly merge the front and back of Aadhaar/PAN cards. It arrives on your screen ready to print.</p>
+                </div>
+              </div>
+
+            </div>
+
+            {/* 🌟 Action Button Area */}
+            <div style={{ padding: '20px 25px 25px 25px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', flexShrink: 0 }}>
+              <button 
+                onClick={() => {
+                  // 🟢 1. Trigger the massive Security UI
+                  setIsCelebrating(true); 
+                  
+                  // 🟢 2. Increased timer to 6000ms (6 seconds) so they can read the boot-up text
+                  setTimeout(() => {
+                    closeReleaseNotes();
+                    setIsCelebrating(false); 
+                  }, 10000);
+                }} 
+                style={{ 
+                  width: '100%', padding: '16px', 
+                  background: 'linear-gradient(to right, #059669, #047857)', 
+                  color: '#fff', border: 'none', borderRadius: '12px', 
+                  fontWeight: '800', fontSize: '16px', cursor: 'pointer', 
+                  boxShadow: '0 10px 15px -3px rgba(5, 150, 105, 0.3)',
+                  transition: 'transform 0.2s',
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                Activate Security & Start Working
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* 🌟 3. MAIN CONTENT */}
       <div style={{ padding: '30px', maxWidth: '1400px', margin: '0 auto' }}>

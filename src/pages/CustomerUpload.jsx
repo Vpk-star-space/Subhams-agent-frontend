@@ -26,8 +26,7 @@ export default function CustomerUpload() {
   const navigate = useNavigate(); 
   
   const [userCode] = useState(getOrCreateUserCode);
-// Default to 'guest' if nothing is provided
-const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_shopId') || 'guest');
+  const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_shopId') || 'guest');
   const [customerName, setCustomerName] = useState(localStorage.getItem('subhams_customerName') || '');
   
   const [shopStatus, setShopStatus] = useState('idle'); 
@@ -39,9 +38,11 @@ const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_
   const [maskAadhaar, setMaskAadhaar] = useState(false);
   const [isBlindPreview, setIsBlindPreview] = useState(false);
   
+  // 🟢 NEW: Mobile Security Animation State
+  const [showSecuritySuccess, setShowSecuritySuccess] = useState(false);
+
   const todayDate = new Date().toLocaleDateString('en-GB'); 
 
-  // 🟢 FIX: Added currentX and currentY to track the magnifier's exact location
   const [drawState, setDrawState] = useState({ isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0, currentRect: null });
   
   const [isScanning, setIsScanning] = useState(false);
@@ -57,6 +58,8 @@ const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_
   const [idMergeModal, setIdMergeModal] = useState({ open: false, front: null, back: null });
   const frontInputRef = useRef(null);
   const backInputRef = useRef(null);
+// 🟢 1. ADD THIS WITH YOUR OTHER STATES
+  const [showBootSequence, setShowBootSequence] = useState(true);
 
   const [liveStatusTracker, setLiveStatusTracker] = useState(() => {
     const saved = localStorage.getItem('subhams_tracker');
@@ -66,15 +69,20 @@ const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
+ useEffect(() => {
+    // 🟢 Set to exactly 10,000 milliseconds (10 seconds)
+    const timer = setTimeout(() => setShowBootSequence(false), 10000);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('subhams_shopId', shopId);
     localStorage.setItem('subhams_customerName', customerName);
     localStorage.setItem('subhams_tracker', JSON.stringify(liveStatusTracker));
   }, [shopId, customerName, liveStatusTracker]);
 
- useEffect(() => {
+  useEffect(() => {
       const normalizedShopId = shopId.trim().toUpperCase();
-      // 🟢 GUARD: Only navigate if we are NOT already on the correct URL
       const isAlreadyOnCorrectPath = window.location.pathname === `/u/${normalizedShopId}`;
       
       if (shopStatus === 'valid' && shopId && !isAlreadyOnCorrectPath) {
@@ -84,7 +92,6 @@ const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_
 
   useEffect(() => {
       const checkShopValidity = async () => {
-          // 🟢 BYPASS: Accept both 'guest' and 'SUBHAMS-GUEST'
           if (shopId === 'guest' || shopId.toUpperCase() === 'SUBHAMS-GUEST') {
               setShopStatus('guest');
               return;
@@ -432,6 +439,11 @@ const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_
       }
       
       setStatus(`✅ Success! Files sent to the queue.`);
+      
+      // 🟢 NEW: Trigger the Mobile Security Success Animation for 4 seconds!
+      setShowSecuritySuccess(true);
+      setTimeout(() => setShowSecuritySuccess(false), 4000);
+
       setFileItems([]); setSecurityMode('none'); setSecurePurpose(''); setMaskAadhaar(false); setIsBlindPreview(false);
       
       setTimeout(() => {
@@ -501,12 +513,170 @@ const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_
 
   const activeOrders = Object.values(liveStatusTracker);
   const getStepNumber = (status) => status === 'SECURED' ? 1 : status === 'PREVIEWING' ? 2 : status === 'PRINTING' ? 3 : status === 'WIPED' ? 4 : 1;
-/// 🟢 UPDATED: This block now only shows if the user is NOT in guest mode and hasn't scanned yet.
-// If shopId is 'guest', this block is skipped entirely, opening the portal.
-
 
  return (
     <div style={containerStyle}>
+{/* 🌟 10-SECOND SECURE BOOT-UP SEQUENCE (No Blur, Transparent Overlay, Multi-Color Sonar) */}
+      {showBootSequence && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          zIndex: 999999, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+          
+          /* 🟢 Perfectly Transparent Overlay - NO BLUR - Website is perfectly visible underneath! */
+          background: 'rgba(248, 250, 252, 0.85)', 
+          
+          overflow: 'hidden',
+          animation: 'boot-exit 0.8s cubic-bezier(0.16, 1, 0.3, 1) 9.5s forwards' 
+        }}>
+          <style>
+            {`
+              @keyframes boot-exit {
+                0% { opacity: 1; transform: scale(1); }
+                100% { opacity: 0; transform: scale(1.1); visibility: hidden; }
+              }
+              /* 🌈 Multi-Color Sonar Scanner Shockwaves */
+              @keyframes shockwave-expand {
+                0% { transform: scale(0); opacity: 0.6; border-width: 15px; }
+                100% { transform: scale(8); opacity: 0; border-width: 0px; }
+              }
+              @keyframes shield-materialize {
+                0% { transform: scale(0); opacity: 0; }
+                50% { transform: scale(1.1); opacity: 1; }
+                70% { transform: scale(0.95); opacity: 1; }
+                100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 10px 20px rgba(139, 92, 246, 0.3)); }
+              }
+              @keyframes text-glow-pulse {
+                0%, 100% { filter: drop-shadow(0 0 4px rgba(139,92,246,0.2)); }
+                50% { filter: drop-shadow(0 0 12px rgba(139,92,246,0.4)); }
+              }
+              @keyframes fade-in-up {
+                0% { opacity: 0; transform: translateY(20px); }
+                100% { opacity: 1; transform: translateY(0); }
+              }
+              @keyframes progress-load {
+                0% { width: 0%; }
+                20% { width: 30%; }
+                50% { width: 60%; }
+                80% { width: 85%; }
+                100% { width: 100%; }
+              }
+              @keyframes terminal-blink {
+                0%, 100% { opacity: 0.4; }
+                50% { opacity: 1; text-shadow: 0 0 8px rgba(126, 34, 206, 0.3); }
+              }
+              /* 🌈 Vibrant Gradient Text */
+              .gradient-text-secure {
+                background: linear-gradient(to right, #2563eb, #9333ea, #db2777);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                display: inline-block;
+              }
+            `}
+          </style>
+
+          {/* 💥 Infinite Forcefield Shockwaves (3 Different Vibrant Colors) */}
+          <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: 'solid #3b82f6', animation: 'shockwave-expand 2.5s ease-out infinite' }}></div> {/* Blue */}
+          <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: 'solid #8b5cf6', animation: 'shockwave-expand 2.5s ease-out 0.8s infinite' }}></div> {/* Purple */}
+          <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: 'solid #ec4899', animation: 'shockwave-expand 2.5s ease-out 1.6s infinite' }}></div> {/* Pink */}
+
+          {/* 🛡️ The Floating Elements (NO BOX AROUND THEM) */}
+          <div style={{ 
+            animation: 'shield-materialize 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards', 
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            width: '90%', maxWidth: '400px', zIndex: 10
+          }}>
+            <div style={{ fontSize: '90px', marginBottom: '15px' }}>🛡️</div>
+            
+            {/* 🌈 Attractive Multi-Color Gradient Heading */}
+            <h2 className="gradient-text-secure" style={{ margin: 0, fontSize: '28px', fontWeight: '900', letterSpacing: '1px', animation: 'text-glow-pulse 2s infinite', textAlign: 'center' }}>
+              Subhams Secure Networks
+            </h2>
+            
+            {/* Sleek Slate Color Subtext */}
+            <p style={{ margin: '12px 0 0 0', color: '#334155', fontSize: '15px', fontWeight: 'bold', lineHeight: '1.6', textAlign: 'center', animation: 'fade-in-up 0.8s ease-out 0.4s forwards', opacity: 0 }}>
+              Politely establishing your encrypted connection...
+            </p>
+
+            {/* 🌈 Attractive vibrant purple text with glowing blink (NO BACKGROUND BOX) */}
+            <p style={{ margin: '30px 0 0 0', color: '#7e22ce', fontSize: '14px', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase', animation: 'fade-in-up 0.8s ease-out 0.6s forwards, terminal-blink 1.5s infinite 1.4s', opacity: 0, textAlign: 'center' }}>
+              Entering Secure Environment
+            </p>
+            
+            {/* ⏳ 10-SECOND PROGRESS BAR (Multi-Color Gradient) */}
+            <div style={{ width: '100%', height: '6px', background: '#cbd5e1', borderRadius: '10px', marginTop: '15px', overflow: 'hidden', animation: 'fade-in-up 0.8s ease-out 0.8s forwards', opacity: 0, boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div style={{ height: '100%', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899)', borderRadius: '10px', animation: 'progress-load 9.5s ease-in-out forwards', boxShadow: '0 0 10px rgba(139,92,246,0.3)' }}></div>
+            </div>
+          </div>
+          
+        </div>
+      )}
+      
+      {/* 🌟 PREMIUM MOBILE SECURITY OVERLAY (Triggers on Upload Success) */}
+      {showSecuritySuccess && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          zIndex: 99999, display: 'flex', justifyContent: 'center', alignItems: 'center',
+          background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(12px)',
+        }}>
+          <style>
+            {`
+              @keyframes lock-drop {
+                0% { transform: translateY(-50px) scale(0.5); opacity: 0; }
+                50% { transform: translateY(10px) scale(1.1); opacity: 1; }
+                100% { transform: translateY(0) scale(1); opacity: 1; filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.8)); }
+              }
+              @keyframes pulse-ring-mobile {
+                0% { transform: scale(0.5); opacity: 0.8; border-width: 15px; }
+                100% { transform: scale(3); opacity: 0; border-width: 0px; }
+              }
+              @keyframes slide-text-up {
+                0% { transform: translateY(20px); opacity: 0; }
+                100% { transform: translateY(0); opacity: 1; }
+              }
+              @keyframes scan-line {
+                0% { top: -10%; opacity: 0; }
+                10% { opacity: 1; }
+                90% { opacity: 1; }
+                100% { top: 110%; opacity: 0; }
+              }
+              .mobile-sec-box {
+                animation: lock-drop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+              }
+            `}
+          </style>
+
+          {/* Indigo/Blue Sonar Rings perfectly fitted for mobile */}
+          <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: 'solid #38bdf8', animation: 'pulse-ring-mobile 1.5s ease-out infinite' }}></div>
+          <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: 'solid #818cf8', animation: 'pulse-ring-mobile 1.5s ease-out 0.4s infinite' }}></div>
+
+          <div className="mobile-sec-box" style={{
+            position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center',
+            background: 'radial-gradient(circle, rgba(30, 27, 75, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)',
+            padding: '40px 30px', borderRadius: '30px', border: '2px solid #38bdf8',
+            boxShadow: 'inset 0 0 30px rgba(56, 189, 248, 0.4), 0 20px 40px rgba(0,0,0,0.5)',
+            width: '85%', maxWidth: '340px', overflow: 'hidden'
+          }}>
+            {/* Holographic Scan Line sweeping down the lock */}
+            <div style={{ position: 'absolute', left: 0, width: '100%', height: '4px', background: '#38bdf8', boxShadow: '0 0 15px #38bdf8', animation: 'scan-line 2s linear infinite' }}></div>
+
+            <div style={{ fontSize: '80px', marginBottom: '10px' }}>🔒</div>
+           {/* 🟢 Your Custom Professional Security Text */}
+            <h2 style={{ margin: '0 0 5px 0', color: '#bae6fd', fontSize: '22px', fontWeight: '900', letterSpacing: '1px', textAlign: 'center', animation: 'slide-text-up 0.5s ease-out 0.3s forwards', opacity: 0, lineHeight: '1.3' }}>
+              Files sent in Secured to Shop
+            </h2>
+            <p style={{ margin: 0, color: '#94a3b8', fontSize: '13px', textAlign: 'center', animation: 'slide-text-up 0.5s ease-out 0.4s forwards', opacity: 0, lineHeight: '1.5' }}>
+              Encrypted & Sent to Subhams Secure Networks
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '20px', background: 'rgba(56, 189, 248, 0.1)', padding: '8px 15px', borderRadius: '20px', border: '1px solid rgba(56, 189, 248, 0.3)', animation: 'slide-text-up 0.5s ease-out 0.5s forwards', opacity: 0 }}>
+              <div style={{ width: '8px', height: '8px', background: '#38bdf8', borderRadius: '50%', boxShadow: '0 0 10px #38bdf8' }}></div>
+              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#7dd3fc', letterSpacing: '0.5px' }}>PRIVACY GUARD ACTIVE</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+    
+
       {idMergeModal.open && (
         <div style={modalOverlay}>
           <div style={modalContent}>
@@ -589,55 +759,55 @@ const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', gap: '10px' }}>
              <input 
-    type="text" 
-    placeholder="SUBHAMS-XXXXXX" 
-    maxLength={14} // 🟢 8 chars for "SUBHAMS-" + max 6 chars for the ID
-    value={shopId.startsWith('SUBHAMS-') ? shopId : 'SUBHAMS-' + shopId.replace('SUBHAMS-', '')} 
-    onChange={(e) => {
-        let val = e.target.value.toUpperCase();
-        
-        // 1. Prevent deletion of the prefix
-        if (!val.startsWith('SUBHAMS-')) {
-            // If they hit backspace into the prefix, reset it
-            if ('SUBHAMS-'.startsWith(val)) {
-                setShopId("SUBHAMS-");
-                return;
-            }
-            val = 'SUBHAMS-' + val.replace('SUBHAMS-', '');
-        }
+                type="text" 
+                placeholder="SUBHAMS-XXXXXX" 
+                maxLength={14} // 🟢 8 chars for "SUBHAMS-" + max 6 chars for the ID
+                value={shopId.startsWith('SUBHAMS-') ? shopId : 'SUBHAMS-' + shopId.replace('SUBHAMS-', '')} 
+                onChange={(e) => {
+                    let val = e.target.value.toUpperCase();
+                    
+                    // 1. Prevent deletion of the prefix
+                    if (!val.startsWith('SUBHAMS-')) {
+                        // If they hit backspace into the prefix, reset it
+                        if ('SUBHAMS-'.startsWith(val)) {
+                            setShopId("SUBHAMS-");
+                            return;
+                        }
+                        val = 'SUBHAMS-' + val.replace('SUBHAMS-', '');
+                    }
 
-        // 2. Extract the user's typed part and force limit to 6 characters
-        let userPart = val.replace('SUBHAMS-', '');
-        userPart = userPart.slice(0, 6);
+                    // 2. Extract the user's typed part and force limit to 6 characters
+                    let userPart = val.replace('SUBHAMS-', '');
+                    userPart = userPart.slice(0, 6);
 
-        // 3. Set the final locked value
-        setShopId('SUBHAMS-' + userPart);
-    }} 
-    style={{
-        ...inputStyle, 
-        flex: 1, 
-        fontWeight: 'bold', 
-        color: shopStatus === 'invalid' ? '#ef4444' : '#2563eb',
-        borderColor: shopStatus === 'invalid' ? '#ef4444' : (shopStatus === 'valid' ? '#10b981' : '#cbd5e1')
-    }} 
-/>
+                    // 3. Set the final locked value
+                    setShopId('SUBHAMS-' + userPart);
+                }} 
+                style={{
+                    ...inputStyle, 
+                    flex: 1, 
+                    fontWeight: 'bold', 
+                    color: shopStatus === 'invalid' ? '#ef4444' : '#2563eb',
+                    borderColor: shopStatus === 'invalid' ? '#ef4444' : (shopStatus === 'valid' ? '#10b981' : '#cbd5e1')
+                }} 
+            />
               <button type="button" style={qrBtnStyle} onClick={() => setIsScanning(true)}>📷 Scan QR</button>
             </div>
             
             {shopStatus === 'checking' && <span style={{ fontSize: '12px', color: '#64748b' }}>⏳ Verifying Shop ID...</span>}
             {shopStatus === 'valid' && <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 'bold' }}>✅ Shop Found & Ready!</span>}
            {shopStatus === 'invalid' && shopId.length > 0 && (
-    <span style={{ fontSize: '12px', color: '#e11d48', fontWeight: 'bold' }}>  
-        ⚠️ Hello Dear! Welcome to Subhams Networks! It is an Invalid Shop ID. Please enter a valid Shop ID or use the QR scanner.
-    </span>
-)}
+            <span style={{ fontSize: '12px', color: '#e11d48', fontWeight: 'bold' }}>  
+                ⚠️ Hello Dear! Welcome to Subhams Networks! It is an Invalid Shop ID. Please enter a valid Shop ID or use the QR scanner.
+            </span>
+            )}
 
-{/* Guest Message */}
-{shopStatus === 'guest' && (
-    <span style={{ fontSize: '12px', color: '#8b5cf6', fontWeight: 'bold' }}> 
-        🎉 Hello Dear! Welcome to Subhams Networks! Please enter a valid Shop ID or use the QR scanner.
-    </span>
-)}
+            {/* Guest Message */}
+            {shopStatus === 'guest' && (
+                <span style={{ fontSize: '12px', color: '#8b5cf6', fontWeight: 'bold' }}> 
+                    🎉 Hello Dear! Welcome to Subhams Networks! Please enter a valid Shop ID or use the QR scanner.
+                </span>
+            )}
           </div>
         )}
       </div>
@@ -753,7 +923,6 @@ const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_
             </div>
         </div>
         {/* 🟢 END OF BANNER */}
-        {/* 🟢 END OF BANNER */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           <button type="button" onClick={() => fileInputRef.current.click()} style={uploadBtnStyle}><span style={{ fontSize: '24px' }}>📁</span><br/>Browse Files</button>
           <input type="file" multiple accept=".pdf,image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
@@ -813,8 +982,6 @@ const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_
                                                 <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', color: '#1e293b', textAlign: 'center' }}>
                                                     Mask Tools / మాస్క్ సాధనాలు
                                                 </p>
-                                                
-                                                {/* ... DO NOT DELETE THE REST OF YOUR MASK BUTTONS/CODE DOWN HERE ... */}
                                                 
                                                 <button
                                                     type="button"
