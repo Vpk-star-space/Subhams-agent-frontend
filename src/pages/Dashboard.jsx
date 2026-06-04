@@ -83,7 +83,7 @@ message: "✨ Welcome to Subhams Secure Networks | 🚀 We are happy to work wit
   const isCheckingHardware = useRef(false);
   const iframeRef = useRef(null);
   const uploadLink = `${window.location.origin}/u/${auth.shopId}`;
- 
+ const [rawDrawImage, setRawDrawImage] = useState(null); // 🟢 Holds the secure image
 
  // 🟢 PRINT PASS LOGIC 
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
@@ -495,9 +495,55 @@ const handlePrint = (jobId) => {
       )}
  
 
-      {/* 🌟 2. NAVBAR */}
+     {/* 🌟 2. NAVBAR */}
+      <style>
+        {`
+          /* 1. The Active Scanning Radar Effect */
+          @keyframes radar-scan {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); }
+            70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+          }
+          
+          /* 2. The Premium Glass Shine Sweep */
+          @keyframes premium-shine {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+          }
+
+          .premium-security-badge {
+            background: linear-gradient(110deg, #064e3b 40%, #047857 50%, #064e3b 60%);
+            background-size: 200% auto;
+            animation: radar-scan 2.5s infinite, premium-shine 5s linear infinite;
+            border: 1px solid #22c55e;
+          }
+        `}
+      </style>
+
       <nav style={{ background: '#0f172a', color: 'white', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-        <h2 style={{ margin: 0, color: '#facc15' }}>Subhams Dashboard</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <h2 style={{ margin: 0, color: '#facc15' }}>Subhams Dashboard</h2>
+          
+          {/* 🟢 NEW: Premium Anti-Virus Marketing Badge */}
+          <div 
+            className="premium-security-badge"
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: '8px', 
+              padding: '6px 14px', borderRadius: '30px', 
+              cursor: 'help' /* Shows a question mark on hover */
+            }} 
+            title="Subhams destroys hidden viruses in customer files before they ever touch your PC. No more pendrive viruses!"
+          >
+            <span style={{ fontSize: '15px', filter: 'drop-shadow(0 0 4px rgba(74,222,128,0.9))' }}>🛡️</span>
+            <span style={{ 
+              fontSize: '11px', color: '#bbf7d0', fontWeight: '900', 
+              letterSpacing: '0.8px', textTransform: 'uppercase' 
+            }}>
+              Anti-Virus Guard Active
+            </span>
+          </div>
+        </div>
+
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={() => setIsSettingsOpen(true)} style={{...navBtn, background: '#475569'}}>⚙️ Set Rates</button>
           <button onClick={fetchQueue} style={navBtn}>🔄 Refresh Queue</button>
@@ -728,12 +774,28 @@ const handlePrint = (jobId) => {
                                             <span style={{fontSize: '11px', color: '#166534', fontWeight: 'bold'}}>✅ Customer Provided Mask</span>
                                         </div>
                                     ) : (
-                                        <button 
-                                            onClick={() => { setIsDrawingMode(!isDrawingMode); setPreviewImage(null); }} 
-                                            style={{ fontSize: '11px', padding: '6px', background: isDrawingMode ? '#fee2e2' : '#fef3c7', border: isDrawingMode ? '1px solid #ef4444' : '1px solid #f59e0b', borderRadius: '4px', cursor: 'pointer', color: isDrawingMode ? '#991b1b' : '#b45309', fontWeight: 'bold', width: '100%' }}
-                                        >
-                                            {isDrawingMode ? '❌ Cancel Drawing' : '✏️ Draw Mask Manually'}
-                                        </button>
+                                       <button 
+    onClick={async () => { 
+        if (!isDrawingMode) {
+            try {
+                // 🟢 Securely fetch the image using your locked-down Axios!
+                const response = await secureAxios.get(`/jobs/download/${activeJob.jobId}`, { responseType: 'blob' });
+                setRawDrawImage(URL.createObjectURL(response.data));
+                setIsDrawingMode(true); 
+                setPreviewImage(null);
+            } catch (err) {
+                console.error(err);
+                alert("❌ File lost from server! The server restarted or went to sleep and erased the temporary files.");
+            }
+        } else {
+            setIsDrawingMode(false); 
+            setPreviewImage(null); 
+        }
+    }} 
+    style={{ fontSize: '11px', padding: '6px', background: isDrawingMode ? '#fee2e2' : '#fef3c7', border: isDrawingMode ? '1px solid #ef4444' : '1px solid #f59e0b', borderRadius: '4px', cursor: 'pointer', color: isDrawingMode ? '#991b1b' : '#b45309', fontWeight: 'bold', width: '100%' }}
+>
+    {isDrawingMode ? '❌ Cancel Drawing' : '✏️ Draw Mask Manually'}
+</button>
                                     )}
                                 </div>
                             )}
@@ -785,17 +847,21 @@ const handlePrint = (jobId) => {
                                       }}
                                   >
                                       <img 
-                                        src={`${BACKEND_URL}/api/jobs/download/${activeJob.jobId}`} 
-                                        alt="Original File" 
-                                        style={{ 
-                                            width: '100%', height: '100%', 
-                                            objectFit: 'fill', display: 'block', background: 'white',
-                                            filter: `${printSettings.colorMode === 'bw' ? 'grayscale(100%) contrast(120%) ' : ''}${printSettings.isBlindPreview ? 'blur(4px)' : ''}`.trim() || 'none',
-                                            transform: `rotate(${printSettings.rotate || 0}deg)`, transition: 'transform 0.3s ease, filter 0.3s ease'
-                                        }} 
-                                        draggable={false}
-                                        onError={(e) => { e.target.style.display = 'none'; alert("Cannot draw mask on PDF files. Please use an image file."); setIsDrawingMode(false); }}
-                                      />
+    src={rawDrawImage} /* 🟢 Uses the securely fetched image */
+    alt="Original File" 
+    style={{ 
+        width: '100%', height: '100%', 
+        objectFit: 'fill', display: 'block', background: 'white',
+        filter: `${printSettings.colorMode === 'bw' ? 'grayscale(100%) contrast(120%) ' : ''}${printSettings.isBlindPreview ? 'blur(4px)' : ''}`.trim() || 'none',
+        transform: `rotate(${printSettings.rotate || 0}deg)`, transition: 'transform 0.3s ease, filter 0.3s ease'
+    }} 
+    draggable={false}
+    onError={(e) => { 
+        e.target.style.display = 'none'; 
+        alert("❌ The image format is not supported by your browser (e.g., Apple .HEIC photo)."); 
+        setIsDrawingMode(false); 
+    }}
+/>
                                       
                                       {printSettings.maskRectArray.map((rect, rectIndex) => (
                                           <div key={rectIndex} style={{
