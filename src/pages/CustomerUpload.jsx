@@ -588,7 +588,7 @@ export default function CustomerUpload() {
             
             {/* Soft Light Gray Subtext */}
             <p style={{ margin: '12px 0 0 0', color: '#cbd5e1', fontSize: '15px', fontWeight: 'bold', lineHeight: '1.6', textAlign: 'center', animation: 'fade-in-up 0.6s ease-out 0.3s forwards', opacity: 0 }}>
-              Politely establishing your encrypted connection...
+            Subhams Networks establishing your encrypted connection...
             </p>
 
             {/* 🟢 Neon Green Status Text */}
