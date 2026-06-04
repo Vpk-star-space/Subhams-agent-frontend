@@ -504,30 +504,7 @@ const [shopId, setShopId] = useState(urlShopId || localStorage.getItem('subhams_
 /// 🟢 UPDATED: This block now only shows if the user is NOT in guest mode and hasn't scanned yet.
 // If shopId is 'guest', this block is skipped entirely, opening the portal.
 
-if (shopId !== 'guest' && !shopStatus === 'valid' && !isScanning) {
-    return (
-      <div style={{ ...containerStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ background: '#fff', padding: '40px 20px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
-          <div style={{ fontSize: '60px', marginBottom: '15px' }}>🖨️</div>
-          <h2 style={{ color: '#1e293b', margin: '0 0 10px 0', fontSize: '22px' }}>Subhams Print Portal</h2>
-          <p style={{ color: '#64748b', fontSize: '14px', lineHeight: '1.6', marginBottom: '30px' }}>
-            To securely upload and print documents, please scan the QR Code on the shop counter.
-          </p>
-          
-          <button onClick={() => setIsScanning(true)} style={{...uploadBtnStyle, width: '100%', padding: '18px', background: '#2563eb', color: 'white', border: 'none', fontSize: '16px', boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)'}}>
-            📸 Scan Shop QR Now
-          </button>
-          
-          <div style={{ marginTop: '40px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
-            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 8px 0' }}>Are you a Shop Owner?</p>
-            <a href="https://subhams-agent-vpk.vercel.app" style={{ color: '#2563eb', fontWeight: 'bold', textDecoration: 'none', fontSize: '14px' }}>
-              Register your Shop ↗
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-}
+
  return (
     <div style={containerStyle}>
       {idMergeModal.open && (
@@ -712,7 +689,71 @@ if (shopId !== 'guest' && !shopStatus === 'valid' && !isScanning) {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px', paddingBottom: '20px' }}>
+     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px', paddingBottom: '20px' }}>
+        
+        {/* 🟢 NEW: Premium Security Shield & Sparkling Text Animation */}
+        <style>
+          {`
+            /* 1. Shield Pulsing Animation */
+            @keyframes shield-glow {
+              0%, 100% { 
+                transform: scale(1); 
+                filter: drop-shadow(0 0 0px rgba(79, 70, 229, 0)); 
+              }
+              50% { 
+                transform: scale(1.15); 
+                filter: drop-shadow(0 0 10px rgba(79, 70, 229, 0.7)); /* Blue protective glow */
+              }
+            }
+            .shield-icon {
+              display: inline-block;
+              animation: shield-glow 2.5s infinite ease-in-out;
+              transform-origin: center center;
+            }
+
+            /* 2. Premium Star Sparkle Text Animation */
+            @keyframes text-shine {
+              0% { background-position: 0% center; }
+              100% { background-position: 200% center; }
+            }
+            .sparkle-text {
+              background: linear-gradient(to right, #4f46e5, #ec4899, #ea580c, #4f46e5); /* Indigo -> Pink -> Amber */
+              background-size: 200% auto;
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+              animation: text-shine 3s linear infinite;
+              font-weight: 900;
+            }
+          `}
+        </style>
+        
+        <div style={{ 
+            background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)', /* Premium soft pearl/blue background */
+            border: '1px solid #a5b4fc', 
+            borderRadius: '12px', 
+            padding: '15px', 
+            display: 'flex', 
+            gap: '15px', 
+            alignItems: 'center',
+            boxShadow: '0 4px 10px rgba(79, 70, 229, 0.15)'
+        }}>
+            <div className="shield-icon" style={{ fontSize: '35px' }}>🛡️</div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.5' }}>
+                    <span className="sparkle-text">✨ YOU control the copies! Click </span>
+                    <span style={{ background: '#2563eb', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', display: 'inline-block', fontWeight: 'bold' }}>⚙️ Adjust</span>
+                    <span className="sparkle-text"> after uploading to set your exact copies and sizes.</span>
+                </p>
+                <p style={{ margin: 0, fontSize: '12px', lineHeight: '1.5' }}>
+                    <span className="sparkle-text">✨ గమనిక: ఫైల్ అప్‌లోడ్ చేసిన తర్వాత </span>
+                    <span style={{ background: '#2563eb', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', display: 'inline-block', fontWeight: 'bold' }}>⚙️ Adjust</span>
+                    <span className="sparkle-text"> పై క్లిక్ చేసి మీకు ఎన్ని కాపీలు కావాలో మీరే సెట్ చేసుకోండి.</span>
+                </p>
+            </div>
+        </div>
+        {/* 🟢 END OF BANNER */}
+        {/* 🟢 END OF BANNER */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           <button type="button" onClick={() => fileInputRef.current.click()} style={uploadBtnStyle}><span style={{ fontSize: '24px' }}>📁</span><br/>Browse Files</button>
           <input type="file" multiple accept=".pdf,image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
