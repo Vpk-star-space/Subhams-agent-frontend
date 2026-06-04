@@ -516,15 +516,18 @@ export default function CustomerUpload() {
 
  return (
     <div style={containerStyle}>
-{/* 🌟 10-SECOND SECURE BOOT-UP SEQUENCE (No Blur, Transparent Overlay, Multi-Color Sonar) */}
+{/* 🌟 10-SECOND SECURE BOOT-UP SEQUENCE (Premium Deep Frosted Glass, Mobile Optimized) */}
       {showBootSequence && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
           zIndex: 999999, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
           
-          /* 🟢 Perfectly Transparent Overlay - NO BLUR - Website is perfectly visible underneath! */
-          background: 'rgba(248, 250, 252, 0.85)', 
+          /* 🟢 Premium Deep Frosted Glass - Solves all readability issues! */
+          background: 'rgba(15, 23, 42, 0.85)', /* Deep Slate/Navy tint */
+          backdropFilter: 'blur(12px)', /* Blurs the website behind it so text is readable */
+          WebkitBackdropFilter: 'blur(12px)', /* Safari support */
           
+          pointerEvents: 'none', 
           overflow: 'hidden',
           animation: 'boot-exit 0.8s cubic-bezier(0.16, 1, 0.3, 1) 9.5s forwards' 
         }}>
@@ -534,83 +537,80 @@ export default function CustomerUpload() {
                 0% { opacity: 1; transform: scale(1); }
                 100% { opacity: 0; transform: scale(1.1); visibility: hidden; }
               }
-              /* 🌈 Multi-Color Sonar Scanner Shockwaves */
+              /* 🟢 Hardware-Accelerated Shockwaves */
               @keyframes shockwave-expand {
-                0% { transform: scale(0); opacity: 0.6; border-width: 15px; }
-                100% { transform: scale(8); opacity: 0; border-width: 0px; }
+                0% { transform: scale(0.5); opacity: 0.8; }
+                100% { transform: scale(6); opacity: 0; }
               }
               @keyframes shield-materialize {
-                0% { transform: scale(0); opacity: 0; }
-                50% { transform: scale(1.1); opacity: 1; }
-                70% { transform: scale(0.95); opacity: 1; }
-                100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 10px 20px rgba(139, 92, 246, 0.3)); }
+                0% { transform: scale(0.8); opacity: 0; }
+                100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 10px 30px rgba(16, 185, 129, 0.5)); }
               }
               @keyframes text-glow-pulse {
-                0%, 100% { filter: drop-shadow(0 0 4px rgba(139,92,246,0.2)); }
-                50% { filter: drop-shadow(0 0 12px rgba(139,92,246,0.4)); }
+                0%, 100% { filter: drop-shadow(0 0 5px rgba(52, 211, 153, 0.4)); }
+                50% { filter: drop-shadow(0 0 15px rgba(52, 211, 153, 0.8)); }
               }
               @keyframes fade-in-up {
-                0% { opacity: 0; transform: translateY(20px); }
+                0% { opacity: 0; transform: translateY(15px); }
                 100% { opacity: 1; transform: translateY(0); }
               }
               @keyframes progress-load {
-                0% { width: 0%; }
-                20% { width: 30%; }
-                50% { width: 60%; }
-                80% { width: 85%; }
-                100% { width: 100%; }
+                0% { transform: scaleX(0); }
+                20% { transform: scaleX(0.3); }
+                50% { transform: scaleX(0.6); }
+                80% { transform: scaleX(0.85); }
+                100% { transform: scaleX(1); }
               }
               @keyframes terminal-blink {
                 0%, 100% { opacity: 0.4; }
-                50% { opacity: 1; text-shadow: 0 0 8px rgba(126, 34, 206, 0.3); }
-              }
-              /* 🌈 Vibrant Gradient Text */
-              .gradient-text-secure {
-                background: linear-gradient(to right, #2563eb, #9333ea, #db2777);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                display: inline-block;
+                50% { opacity: 1; text-shadow: 0 0 10px rgba(52, 211, 153, 0.6); }
               }
             `}
           </style>
 
-          {/* 💥 Infinite Forcefield Shockwaves (3 Different Vibrant Colors) */}
-          <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: 'solid #3b82f6', animation: 'shockwave-expand 2.5s ease-out infinite' }}></div> {/* Blue */}
-          <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: 'solid #8b5cf6', animation: 'shockwave-expand 2.5s ease-out 0.8s infinite' }}></div> {/* Purple */}
-          <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: 'solid #ec4899', animation: 'shockwave-expand 2.5s ease-out 1.6s infinite' }}></div> {/* Pink */}
+          {/* 💥 Infinite Forcefield Shockwaves (Vibrant Greens) */}
+          <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: '8px solid #059669', animation: 'shockwave-expand 2.5s linear infinite', willChange: 'transform, opacity' }}></div> 
+          <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: '8px solid #10b981', animation: 'shockwave-expand 2.5s linear 0.8s infinite', willChange: 'transform, opacity' }}></div> 
+          <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: '8px solid #34d399', animation: 'shockwave-expand 2.5s linear 1.6s infinite', willChange: 'transform, opacity' }}></div> 
 
-          {/* 🛡️ The Floating Elements (NO BOX AROUND THEM) */}
+          {/* 🛡️ The Floating Elements */}
           <div style={{ 
-            animation: 'shield-materialize 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards', 
+            animation: 'shield-materialize 0.6s ease-out forwards', 
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             width: '90%', maxWidth: '400px', zIndex: 10
           }}>
             <div style={{ fontSize: '90px', marginBottom: '15px' }}>🛡️</div>
             
-            {/* 🌈 Attractive Multi-Color Gradient Heading */}
-            <h2 className="gradient-text-secure" style={{ margin: 0, fontSize: '28px', fontWeight: '900', letterSpacing: '1px', animation: 'text-glow-pulse 2s infinite', textAlign: 'center' }}>
-              Subhams Secure Networks
+            {/* 🟢 High-Contrast White Heading with Green Glow */}
+            <h2 style={{ margin: 0, color: '#ffffff', fontSize: '28px', fontWeight: '900', letterSpacing: '1px', animation: 'text-glow-pulse 2s infinite', textAlign: 'center' }}>
+              Subhams Secure
             </h2>
             
-            {/* Sleek Slate Color Subtext */}
-            <p style={{ margin: '12px 0 0 0', color: '#334155', fontSize: '15px', fontWeight: 'bold', lineHeight: '1.6', textAlign: 'center', animation: 'fade-in-up 0.8s ease-out 0.4s forwards', opacity: 0 }}>
+            {/* Soft Light Gray Subtext */}
+            <p style={{ margin: '12px 0 0 0', color: '#cbd5e1', fontSize: '15px', fontWeight: 'bold', lineHeight: '1.6', textAlign: 'center', animation: 'fade-in-up 0.6s ease-out 0.3s forwards', opacity: 0 }}>
               Politely establishing your encrypted connection...
             </p>
 
-            {/* 🌈 Attractive vibrant purple text with glowing blink (NO BACKGROUND BOX) */}
-            <p style={{ margin: '30px 0 0 0', color: '#7e22ce', fontSize: '14px', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase', animation: 'fade-in-up 0.8s ease-out 0.6s forwards, terminal-blink 1.5s infinite 1.4s', opacity: 0, textAlign: 'center' }}>
+            {/* 🟢 Neon Green Status Text */}
+            <p style={{ margin: '30px 0 0 0', color: '#34d399', fontSize: '14px', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase', animation: 'fade-in-up 0.6s ease-out 0.5s forwards, terminal-blink 1.5s infinite 1.2s', opacity: 0, textAlign: 'center' }}>
               Entering Secure Environment
             </p>
             
-            {/* ⏳ 10-SECOND PROGRESS BAR (Multi-Color Gradient) */}
-            <div style={{ width: '100%', height: '6px', background: '#cbd5e1', borderRadius: '10px', marginTop: '15px', overflow: 'hidden', animation: 'fade-in-up 0.8s ease-out 0.8s forwards', opacity: 0, boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)' }}>
-              <div style={{ height: '100%', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899)', borderRadius: '10px', animation: 'progress-load 9.5s ease-in-out forwards', boxShadow: '0 0 10px rgba(139,92,246,0.3)' }}></div>
+            {/* ⏳ 10-SECOND PROGRESS BAR */}
+            <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', marginTop: '15px', overflow: 'hidden', animation: 'fade-in-up 0.6s ease-out 0.7s forwards', opacity: 0 }}>
+              <div style={{ 
+                height: '100%', 
+                background: 'linear-gradient(90deg, #059669, #10b981, #34d399)', 
+                borderRadius: '10px', 
+                transformOrigin: 'left', 
+                animation: 'progress-load 9.5s ease-in-out forwards',
+                willChange: 'transform' 
+              }}></div>
             </div>
           </div>
           
         </div>
       )}
-      
       {/* 🌟 PREMIUM MOBILE SECURITY OVERLAY (Triggers on Upload Success) */}
       {showSecuritySuccess && (
         <div style={{
