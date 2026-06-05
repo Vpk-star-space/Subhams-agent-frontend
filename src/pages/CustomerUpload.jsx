@@ -37,10 +37,20 @@ export default function CustomerUpload() {
   const [securePurpose, setSecurePurpose] = useState('');
   const [maskAadhaar, setMaskAadhaar] = useState(false);
   const [isBlindPreview, setIsBlindPreview] = useState(false);
+  const [blindAnim, setBlindAnim] = useState(false); // 🟢 NEW: Animation state for Blind Preview
   
-  // 🟢 NEW: Mobile Security Animation State
   const [showSecuritySuccess, setShowSecuritySuccess] = useState(false);
-
+// 🟢 SYSTEM ALERT STATE
+  // Toggle 'type' to: 'static', 'scrolling', or 'pulsing'
+ // 🟢 SYSTEM ALERT CONTROLLER
+  const [sysAlert, setSysAlert] = useState({ 
+      show: true, 
+      type: 'scrolling', // 'static', 'scrolling', or 'pulsing'
+      speed: '23s',      // 👈 SPEED CONTROL: Increase to '35s' or '40s' for slower speed!
+      dismissible: true, // 👈 NEW: 'false' hides the X. 'true' shows the X.
+      msgEn: "🌟 Welcome to Subhams Secure Print! Upload your files safely and skip the queue.",
+      msgTe: "సుభమ్స్ జిరాక్స్‌కు స్వాగతం! మీ ఫైల్స్ ఇక్కడ సురక్షితంగా మరియు వేగంగా ప్రింట్ చేసుకోండి." 
+  });
   const todayDate = new Date().toLocaleDateString('en-GB'); 
 
   const [drawState, setDrawState] = useState({ isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0, currentRect: null });
@@ -58,8 +68,6 @@ export default function CustomerUpload() {
   const [idMergeModal, setIdMergeModal] = useState({ open: false, front: null, back: null });
   const frontInputRef = useRef(null);
   const backInputRef = useRef(null);
-// 🟢 1. ADD THIS WITH YOUR OTHER STATES
-  const [showBootSequence, setShowBootSequence] = useState(true);
 
   const [liveStatusTracker, setLiveStatusTracker] = useState(() => {
     const saved = localStorage.getItem('subhams_tracker');
@@ -69,11 +77,23 @@ export default function CustomerUpload() {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
- useEffect(() => {
-    // 🟢 Set to exactly 10,000 milliseconds (10 seconds)
-    const timer = setTimeout(() => setShowBootSequence(false), 10000);
-    return () => clearTimeout(timer);
-  }, []);
+  const [showBootSequence, setShowBootSequence] = useState(() => {
+    const hasBooted = sessionStorage.getItem('subhams_booted');
+    if (!hasBooted) {
+      sessionStorage.setItem('subhams_booted', 'true');
+      return true; 
+    }
+    return false; 
+  });
+
+  useEffect(() => {
+    if (showBootSequence) {
+      const timer = setTimeout(() => {
+        setShowBootSequence(false);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [showBootSequence]);
 
   useEffect(() => {
     localStorage.setItem('subhams_shopId', shopId);
@@ -96,7 +116,6 @@ export default function CustomerUpload() {
               setShopStatus('guest');
               return;
           }
-          
           if (!shopId || shopId.length < 5) {
               setShopStatus('idle');
               return;
@@ -312,6 +331,13 @@ export default function CustomerUpload() {
       setFileItems(updated);
   };
 
+  // 🟢 NEW: Function to trigger the Blind View eye-shutter animation
+  const handleBlindToggle = (e) => {
+      setIsBlindPreview(e.target.checked);
+      setBlindAnim(true);
+      setTimeout(() => setBlindAnim(false), 400); // Reset after animation plays
+  };
+
   const startDrawing = (e, index) => {
       if (securityMode !== 'private' || !maskAadhaar || fileItems[index].isPdf) return;
       e.preventDefault(); 
@@ -440,7 +466,6 @@ export default function CustomerUpload() {
       
       setStatus(`✅ Success! Files sent to the queue.`);
       
-      // 🟢 NEW: Trigger the Mobile Security Success Animation for 4 seconds!
       setShowSecuritySuccess(true);
       setTimeout(() => setShowSecuritySuccess(false), 4000);
 
@@ -516,18 +541,169 @@ export default function CustomerUpload() {
 
  return (
     <div style={containerStyle}>
-{/* 🌟 10-SECOND SECURE BOOT-UP SEQUENCE (Premium Deep Frosted Glass, Mobile Optimized) */}
+
+  {/* 🟢 SYSTEM ALERT BANNER (Seamless Infinite Loop Fix) */}
+      {sysAlert.show && (
+        <div style={{
+            position: sysAlert.type === 'static' ? 'sticky' : 'relative',
+            top: sysAlert.type === 'static' ? '0' : 'auto',
+            zIndex: sysAlert.type === 'static' ? 999 : 1,
+            background: 'linear-gradient(90deg, #ef4444, #f97316)',
+            color: 'white', padding: '10px 15px',
+            borderRadius: sysAlert.type === 'static' ? '0' : '8px',
+            marginBottom: '15px', fontSize: '13px', fontWeight: 'bold',
+            boxShadow: '0 4px 10px rgba(234, 88, 12, 0.3)',
+            overflow: 'hidden',
+            display: 'flex', 
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            animation: sysAlert.type === 'pulsing' ? 'alert-pulse 1.5s infinite' : 'none'
+        }}>
+            
+            {/* The Scrolling Container */}
+            <div style={{ flex: 1, overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <div style={{
+                    display: 'flex',
+                    whiteSpace: 'nowrap',
+                    width: sysAlert.type === 'scrolling' ? 'max-content' : '100%',
+                    animation: sysAlert.type === 'scrolling' ? `alert-scroll ${sysAlert.speed} linear infinite` : 'none',
+                    justifyContent: sysAlert.type === 'static' ? 'center' : 'flex-start'
+                }}>
+                    
+                    {sysAlert.type === 'scrolling' ? (
+                        <>
+                            {/* Block 1 */}
+                            <div style={{ display: 'flex', gap: '50px', paddingRight: '50px' }}>
+                                <span>🔔 {sysAlert.msgEn}</span>
+                                <span>🔔 {sysAlert.msgTe}</span>
+                            </div>
+                            {/* Block 2 (Seamless clone to prevent empty screen) */}
+                            <div style={{ display: 'flex', gap: '50px', paddingRight: '50px' }}>
+                                <span>🔔 {sysAlert.msgEn}</span>
+                                <span>🔔 {sysAlert.msgTe}</span>
+                            </div>
+                        </>
+                    ) : (
+                        <div style={{ width: '100%', textAlign: 'center' }}>
+                            <span>🔔 {sysAlert.msgEn} | {sysAlert.msgTe}</span>
+                        </div>
+                    )}
+                    
+                </div>
+            </div>
+            
+         {/* ... (rest of your scrolling text code above) ... */}
+            
+            {/* 🟢 NEW: Close Button only shows if dismissible is TRUE */}
+            {sysAlert.dismissible && (
+                <button 
+                    onClick={() => setSysAlert({ ...sysAlert, show: false })} 
+                    style={{ background: 'rgba(0,0,0,0.2)', border: 'none', color: 'white', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '15px', flexShrink: 0, zIndex: 10 }}
+                >
+                    ✖
+                </button>
+            )}
+        </div>
+      )}
+   
+      
+      {/* 🟢 NEW UI UPGRADES (Global Styles for animations and elements) */}
+      <style>
+        {`
+      /* 🟢 SEAMLESS SCROLL FIX: No more blank waiting spaces! */
+          @keyframes alert-scroll { 
+            0% { transform: translateX(0); } 
+            100% { transform: translateX(-50%); } 
+          }
+          @keyframes alert-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+          /* Glassmorphism Header */
+          .glass-header {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+          }
+          .text-gradient {
+            background: linear-gradient(to right, #2563eb, #9333ea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          }
+
+          /* Shutter/Eye Blink Animation for Blind Preview */
+          @keyframes shutter-blink {
+            0% { transform: scaleY(1); opacity: 1; }
+            50% { transform: scaleY(0.05); opacity: 0.5; background-color: #000; }
+            100% { transform: scaleY(1); opacity: 1; }
+          }
+          .shutter-animate {
+            animation: shutter-blink 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+          }
+
+          /* Animated Badges (Popular / Advanced) */
+          .badge {
+            position: absolute; 
+            top: -12px; right: -5px;
+            color: white; font-size: 9px; padding: 3px 8px;
+            border-radius: 12px; font-weight: 900;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 5;
+          }
+          .badge-popular {
+            background: linear-gradient(135deg, #ef4444, #f97316);
+            animation: badge-bounce 2s infinite;
+          }
+          .badge-advanced {
+            background: linear-gradient(135deg, #8b5cf6, #d946ef);
+            animation: badge-bounce 2s infinite 1s; /* Delayed start so they don't bounce identically */
+          }
+          @keyframes badge-bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-3px) scale(1.05); }
+          }
+
+          /* Round Colorful Upload Buttons */
+          .upload-circle {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 24px; padding: 22px 10px;
+            border: none; cursor: pointer; color: white;
+            font-weight: 800; font-size: 14px;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+          }
+          .upload-circle:active { transform: scale(0.95); }
+          .btn-browse { background: linear-gradient(135deg, #3b82f6, #60a5fa); box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35); }
+          .btn-camera { background: linear-gradient(135deg, #ec4899, #f472b6); box-shadow: 0 8px 20px rgba(236, 72, 153, 0.35); }
+          .btn-smart { 
+            background: linear-gradient(135deg, #f59e0b, #fbbf24); 
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.35); 
+            width: 100%; 
+            margin-top: 15px; 
+            flex-direction: row; 
+            gap: 15px; 
+            border-radius: 24px; 
+            padding: 18px;
+          }
+        `}
+      </style>
+
+      {/* 🌟 10-SECOND SECURE BOOT-UP SEQUENCE (Premium Badge, No Messy Rings) */}
       {showBootSequence && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
           zIndex: 999999, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
           
-          /* 🟢 Premium Deep Frosted Glass - Solves all readability issues! */
-          background: 'rgba(15, 23, 42, 0.85)', /* Deep Slate/Navy tint */
-          backdropFilter: 'blur(12px)', /* Blurs the website behind it so text is readable */
-          WebkitBackdropFilter: 'blur(12px)', /* Safari support */
+          background: 'rgba(15, 23, 42, 0.95)', 
+          backdropFilter: 'blur(20px)', 
+          WebkitBackdropFilter: 'blur(20px)',
           
-          pointerEvents: 'none', 
+          pointerEvents: 'none',
           overflow: 'hidden',
           animation: 'boot-exit 0.8s cubic-bezier(0.16, 1, 0.3, 1) 9.5s forwards' 
         }}>
@@ -535,20 +711,12 @@ export default function CustomerUpload() {
             {`
               @keyframes boot-exit {
                 0% { opacity: 1; transform: scale(1); }
-                100% { opacity: 0; transform: scale(1.1); visibility: hidden; }
+                100% { opacity: 0; transform: scale(1.05); visibility: hidden; }
               }
-              /* 🟢 Hardware-Accelerated Shockwaves */
-              @keyframes shockwave-expand {
-                0% { transform: scale(0.5); opacity: 0.8; }
-                100% { transform: scale(6); opacity: 0; }
-              }
-              @keyframes shield-materialize {
-                0% { transform: scale(0.8); opacity: 0; }
-                100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 10px 30px rgba(16, 185, 129, 0.5)); }
-              }
-              @keyframes text-glow-pulse {
-                0%, 100% { filter: drop-shadow(0 0 5px rgba(52, 211, 153, 0.4)); }
-                50% { filter: drop-shadow(0 0 15px rgba(52, 211, 153, 0.8)); }
+              @keyframes subtle-pulse {
+                0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+                70% { box-shadow: 0 0 0 40px rgba(16, 185, 129, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
               }
               @keyframes fade-in-up {
                 0% { opacity: 0; transform: translateY(15px); }
@@ -557,60 +725,53 @@ export default function CustomerUpload() {
               @keyframes progress-load {
                 0% { transform: scaleX(0); }
                 20% { transform: scaleX(0.3); }
-                50% { transform: scaleX(0.6); }
-                80% { transform: scaleX(0.85); }
+                50% { transform: scaleX(0.7); }
+                80% { transform: scaleX(0.9); }
                 100% { transform: scaleX(1); }
               }
-              @keyframes terminal-blink {
-                0%, 100% { opacity: 0.4; }
-                50% { opacity: 1; text-shadow: 0 0 10px rgba(52, 211, 153, 0.6); }
+              .premium-shield-badge {
+                width: 90px; 
+                height: 90px;
+                border-radius: 50%;
+                background: radial-gradient(circle, #064e3b 0%, #022c22 100%);
+                display: flex; 
+                justify-content: center; 
+                align-items: center;
+                font-size: 40px;
+                border: 2px solid #10b981;
+                animation: subtle-pulse 2s infinite, fade-in-up 0.5s ease-out forwards;
+                margin-bottom: 35px;
               }
             `}
           </style>
 
-          {/* 💥 Infinite Forcefield Shockwaves (Vibrant Greens) */}
-          <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: '8px solid #059669', animation: 'shockwave-expand 2.5s linear infinite', willChange: 'transform, opacity' }}></div> 
-          <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: '8px solid #10b981', animation: 'shockwave-expand 2.5s linear 0.8s infinite', willChange: 'transform, opacity' }}></div> 
-          <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: '8px solid #34d399', animation: 'shockwave-expand 2.5s linear 1.6s infinite', willChange: 'transform, opacity' }}></div> 
+          <div className="premium-shield-badge">🛡️</div>
 
-          {/* 🛡️ The Floating Elements */}
-          <div style={{ 
-            animation: 'shield-materialize 0.6s ease-out forwards', 
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            width: '90%', maxWidth: '400px', zIndex: 10
-          }}>
-            <div style={{ fontSize: '90px', marginBottom: '15px' }}>🛡️</div>
-            
-            {/* 🟢 High-Contrast White Heading with Green Glow */}
-            <h2 style={{ margin: 0, color: '#ffffff', fontSize: '28px', fontWeight: '900', letterSpacing: '1px', animation: 'text-glow-pulse 2s infinite', textAlign: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '85%', maxWidth: '320px' }}>
+            <h2 style={{ margin: '0 0 12px 0', color: '#ffffff', fontSize: '24px', fontWeight: '800', letterSpacing: '0.5px', animation: 'fade-in-up 0.6s ease-out 0.2s forwards', opacity: 0 }}>
               Subhams Secure
             </h2>
-            
-            {/* Soft Light Gray Subtext */}
-            <p style={{ margin: '12px 0 0 0', color: '#cbd5e1', fontSize: '15px', fontWeight: 'bold', lineHeight: '1.6', textAlign: 'center', animation: 'fade-in-up 0.6s ease-out 0.3s forwards', opacity: 0 }}>
-            Subhams Networks establishing your encrypted connection...
+            <p style={{ margin: '0 0 35px 0', color: '#94a3b8', fontSize: '14px', lineHeight: '1.6', textAlign: 'center', animation: 'fade-in-up 0.6s ease-out 0.3s forwards', opacity: 0 }}>
+              Politely establishing your encrypted connection...
+            </p>
+            <p style={{ margin: '0 0 10px 0', color: '#10b981', fontSize: '11px', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase', animation: 'fade-in-up 0.6s ease-out 0.5s forwards', opacity: 0 }}>
+              Securing Environment
             </p>
 
-            {/* 🟢 Neon Green Status Text */}
-            <p style={{ margin: '30px 0 0 0', color: '#34d399', fontSize: '14px', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase', animation: 'fade-in-up 0.6s ease-out 0.5s forwards, terminal-blink 1.5s infinite 1.2s', opacity: 0, textAlign: 'center' }}>
-              Entering Secure Environment
-            </p>
-            
-            {/* ⏳ 10-SECOND PROGRESS BAR */}
-            <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', marginTop: '15px', overflow: 'hidden', animation: 'fade-in-up 0.6s ease-out 0.7s forwards', opacity: 0 }}>
+            <div style={{ width: '100%', height: '3px', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', overflow: 'hidden', animation: 'fade-in-up 0.6s ease-out 0.6s forwards', opacity: 0 }}>
               <div style={{ 
                 height: '100%', 
-                background: 'linear-gradient(90deg, #059669, #10b981, #34d399)', 
+                background: '#10b981', 
                 borderRadius: '10px', 
-                transformOrigin: 'left', 
-                animation: 'progress-load 9.5s ease-in-out forwards',
-                willChange: 'transform' 
+                transformOrigin: 'left',
+                animation: 'progress-load 9.5s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                boxShadow: '0 0 8px #10b981'
               }}></div>
             </div>
           </div>
-          
         </div>
       )}
+
       {/* 🌟 PREMIUM MOBILE SECURITY OVERLAY (Triggers on Upload Success) */}
       {showSecuritySuccess && (
         <div style={{
@@ -642,10 +803,10 @@ export default function CustomerUpload() {
               .mobile-sec-box {
                 animation: lock-drop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
               }
+                
             `}
           </style>
 
-          {/* Indigo/Blue Sonar Rings perfectly fitted for mobile */}
           <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: 'solid #38bdf8', animation: 'pulse-ring-mobile 1.5s ease-out infinite' }}></div>
           <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: 'solid #818cf8', animation: 'pulse-ring-mobile 1.5s ease-out 0.4s infinite' }}></div>
 
@@ -656,17 +817,39 @@ export default function CustomerUpload() {
             boxShadow: 'inset 0 0 30px rgba(56, 189, 248, 0.4), 0 20px 40px rgba(0,0,0,0.5)',
             width: '85%', maxWidth: '340px', overflow: 'hidden'
           }}>
-            {/* Holographic Scan Line sweeping down the lock */}
             <div style={{ position: 'absolute', left: 0, width: '100%', height: '4px', background: '#38bdf8', boxShadow: '0 0 15px #38bdf8', animation: 'scan-line 2s linear infinite' }}></div>
 
             <div style={{ fontSize: '80px', marginBottom: '10px' }}>🔒</div>
-           {/* 🟢 Your Custom Professional Security Text */}
+            
             <h2 style={{ margin: '0 0 5px 0', color: '#bae6fd', fontSize: '22px', fontWeight: '900', letterSpacing: '1px', textAlign: 'center', animation: 'slide-text-up 0.5s ease-out 0.3s forwards', opacity: 0, lineHeight: '1.3' }}>
               Files sent in Secured to Shop
             </h2>
             <p style={{ margin: 0, color: '#94a3b8', fontSize: '13px', textAlign: 'center', animation: 'slide-text-up 0.5s ease-out 0.4s forwards', opacity: 0, lineHeight: '1.5' }}>
               Encrypted & Sent to Subhams Secure Networks
             </p>
+
+            <div style={{ 
+              marginTop: '18px', 
+              padding: '12px 25px', 
+              background: 'rgba(56, 189, 248, 0.05)', 
+              borderRadius: '16px', 
+              border: '1px dashed rgba(56, 189, 248, 0.4)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '12px', 
+              animation: 'slide-text-up 0.5s ease-out 0.45s forwards', 
+              opacity: 0,
+              boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+            }}>
+              <div style={{ fontSize: '24px' }}>🏪</div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '10px', color: '#7dd3fc', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>Delivered To Shop</span>
+                <span style={{ fontSize: '16px', color: '#ffffff', fontWeight: '900', letterSpacing: '1px' }}>
+                  {shopId}
+                </span>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '20px', background: 'rgba(56, 189, 248, 0.1)', padding: '8px 15px', borderRadius: '20px', border: '1px solid rgba(56, 189, 248, 0.3)', animation: 'slide-text-up 0.5s ease-out 0.5s forwards', opacity: 0 }}>
               <div style={{ width: '8px', height: '8px', background: '#38bdf8', borderRadius: '50%', boxShadow: '0 0 10px #38bdf8' }}></div>
               <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#7dd3fc', letterSpacing: '0.5px' }}>PRIVACY GUARD ACTIVE</span>
@@ -674,8 +857,7 @@ export default function CustomerUpload() {
           </div>
         </div>
       )}
-
-    
+      
 
       {idMergeModal.open && (
         <div style={modalOverlay}>
@@ -723,8 +905,28 @@ export default function CustomerUpload() {
         </div>
       )}
 
-      <h2 style={{ textAlign: 'center', color: '#1e293b', margin: '0 0 5px 0' }}>Subhams Xerox</h2>
-      <p style={{ textAlign: 'center', color: '#64748b', fontSize: '13px', marginBottom: '20px' }}>Mobile Fast Print Portal</p>
+    {/* 🟢 3. TEXT-ONLY SCANNING LOGO */}
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <style>{`
+          @keyframes text-scan-sweep {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+          }
+          .scan-text-logo {
+            background: linear-gradient(90deg, #1e293b 0%, #1e293b 40%, #38bdf8 50%, #1e293b 60%, #1e293b 100%);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: text-scan-sweep 3s linear infinite;
+            font-size: 26px;
+            font-weight: 900;
+            margin: 0 0 5px 0;
+          }
+        `}</style>
+        <h2 className="scan-text-logo"> Subhams Xerox</h2>
+        <p style={{ margin: 0, color: '#64748b', fontSize: '12px', fontWeight: 'bold' }}>Mobile Fast Print Portal ⚡</p>
+      </div>
 
       <div style={{...sectionCard, marginBottom: '15px'}}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
@@ -761,14 +963,12 @@ export default function CustomerUpload() {
              <input 
                 type="text" 
                 placeholder="SUBHAMS-XXXXXX" 
-                maxLength={14} // 🟢 8 chars for "SUBHAMS-" + max 6 chars for the ID
+                maxLength={14} 
                 value={shopId.startsWith('SUBHAMS-') ? shopId : 'SUBHAMS-' + shopId.replace('SUBHAMS-', '')} 
                 onChange={(e) => {
                     let val = e.target.value.toUpperCase();
                     
-                    // 1. Prevent deletion of the prefix
                     if (!val.startsWith('SUBHAMS-')) {
-                        // If they hit backspace into the prefix, reset it
                         if ('SUBHAMS-'.startsWith(val)) {
                             setShopId("SUBHAMS-");
                             return;
@@ -776,11 +976,9 @@ export default function CustomerUpload() {
                         val = 'SUBHAMS-' + val.replace('SUBHAMS-', '');
                     }
 
-                    // 2. Extract the user's typed part and force limit to 6 characters
                     let userPart = val.replace('SUBHAMS-', '');
                     userPart = userPart.slice(0, 6);
 
-                    // 3. Set the final locked value
                     setShopId('SUBHAMS-' + userPart);
                 }} 
                 style={{
@@ -802,7 +1000,6 @@ export default function CustomerUpload() {
             </span>
             )}
 
-            {/* Guest Message */}
             {shopStatus === 'guest' && (
                 <span style={{ fontSize: '12px', color: '#8b5cf6', fontWeight: 'bold' }}> 
                     🎉 Hello Dear! Welcome to Subhams Networks! Please enter a valid Shop ID or use the QR scanner.
@@ -815,24 +1012,32 @@ export default function CustomerUpload() {
       <div style={{...sectionCard, background: securityMode !== 'none' ? '#f0fdf4' : '#fff', border: securityMode !== 'none' ? '2px solid #22c55e' : '1px solid #e2e8f0'}}>
         <h4 style={{ margin: '0 0 10px 0', color: '#166534', fontSize: '14px' }}>🛡️ Document Privacy Guard</h4>
         
-        <div style={{ marginBottom: '15px', background: isBlindPreview ? '#fee2e2' : '#f8fafc', padding: '10px', borderRadius: '8px', border: isBlindPreview ? '1px solid #ef4444' : '1px solid #e2e8f0', transition: '0.3s' }}>
+      {/* 🟢 1. BLIND PREVIEW SHUTTER FIX & ICON */}
+        <div className={blindAnim ? 'shutter-animate' : ''} style={{ marginBottom: '15px', background: isBlindPreview ? '#fee2e2' : '#f8fafc', padding: '10px', borderRadius: '8px', border: isBlindPreview ? '1px solid #ef4444' : '1px solid #e2e8f0', transition: '0.3s' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: isBlindPreview ? '#991b1b' : '#334155' }}>
-                <input type="checkbox" checked={isBlindPreview} onChange={(e) => setIsBlindPreview(e.target.checked)} style={{ width: '18px', height: '18px' }} />
-                👁️‍🗨️ Blind Preview (Hide document details from shopkeeper)
+                <input type="checkbox" checked={isBlindPreview} onChange={handleBlindToggle} style={{ width: '18px', height: '18px' }} />
+                {isBlindPreview ? '🔒' : '👁️'} Blind Preview (Hide document details from shopkeeper)
             </label>
             <p style={{fontSize: '11px', color: '#64748b', marginTop: '5px', margin: 0}}>Shopkeeper will only see a softly blurred outline to adjust position, ensuring absolute privacy without breaking alignment.</p>
         </div>
         
+        {/* 🟢 3. ANIMATED POPULAR & ADVANCED BADGES ON TOP OF BUTTONS */}
         <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
             <button type="button" onClick={() => setSecurityMode('none')} style={{...securityBtn, background: securityMode === 'none' ? '#334155' : '#f1f5f9', color: securityMode === 'none' ? 'white' : '#64748b'}}>
                 Standard
             </button>
-            <button type="button" onClick={() => setSecurityMode('govt')} style={{...securityBtn, background: securityMode === 'govt' ? '#2563eb' : '#f1f5f9', color: securityMode === 'govt' ? 'white' : '#64748b'}}>
-                🏛️ Govt/Bank
-            </button>
-            <button type="button" onClick={() => setSecurityMode('private')} style={{...securityBtn, background: securityMode === 'private' ? '#ea580c' : '#f1f5f9', color: securityMode === 'private' ? 'white' : '#64748b'}}>
-                🏢 Private Use
-            </button>
+            <div style={{ position: 'relative', flex: 1 }}>
+                <span className="badge badge-popular">🔥 POPULAR</span>
+                <button type="button" onClick={() => setSecurityMode('govt')} style={{...securityBtn, width: '100%', background: securityMode === 'govt' ? '#2563eb' : '#f1f5f9', color: securityMode === 'govt' ? 'white' : '#64748b'}}>
+                    🏛️ Govt/Bank
+                </button>
+            </div>
+            <div style={{ position: 'relative', flex: 1 }}>
+                <span className="badge badge-advanced">✨ ADVANCED</span>
+                <button type="button" onClick={() => setSecurityMode('private')} style={{...securityBtn, width: '100%', background: securityMode === 'private' ? '#ea580c' : '#f1f5f9', color: securityMode === 'private' ? 'white' : '#64748b'}}>
+                    🏢 Private Use
+                </button>
+            </div>
         </div>
 
         {securityMode !== 'none' && (
@@ -861,10 +1066,8 @@ export default function CustomerUpload() {
 
      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px', paddingBottom: '20px' }}>
         
-        {/* 🟢 NEW: Premium Security Shield & Sparkling Text Animation */}
         <style>
           {`
-            /* 1. Shield Pulsing Animation */
             @keyframes shield-glow {
               0%, 100% { 
                 transform: scale(1); 
@@ -872,7 +1075,7 @@ export default function CustomerUpload() {
               }
               50% { 
                 transform: scale(1.15); 
-                filter: drop-shadow(0 0 10px rgba(79, 70, 229, 0.7)); /* Blue protective glow */
+                filter: drop-shadow(0 0 10px rgba(79, 70, 229, 0.7));
               }
             }
             .shield-icon {
@@ -881,24 +1084,69 @@ export default function CustomerUpload() {
               transform-origin: center center;
             }
 
-            /* 2. Premium Star Sparkle Text Animation */
             @keyframes text-shine {
               0% { background-position: 0% center; }
               100% { background-position: 200% center; }
             }
             .sparkle-text {
-              background: linear-gradient(to right, #4f46e5, #ec4899, #ea580c, #4f46e5); /* Indigo -> Pink -> Amber */
+              background: linear-gradient(to right, #4f46e5, #ec4899, #ea580c, #4f46e5);
               background-size: 200% auto;
               -webkit-background-clip: text;
               -webkit-text-fill-color: transparent;
               animation: text-shine 3s linear infinite;
               font-weight: 900;
             }
+              /* 🟢 NEW: Animated Border Line Style */
+            @keyframes border-glow-spin {
+              0% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+              100% { background-position: 0% 50%; }
+            }
+            .animated-border-wrap {
+              border-radius: 14px;
+              background: linear-gradient(90deg, #3b82f6, #ec4899, #f59e0b, #3b82f6);
+              background-size: 300% 300%;
+              animation: border-glow-spin 3s linear infinite;
+              padding: 3px; /* This creates the animated border line */
+              cursor: pointer;
+            }
+            .inner-btn {
+              width: 100%; height: 100%; box-sizing: border-box;
+              background: #f1f5f9; border-radius: 11px;
+              display: flex; flex-direction: column; align-items: center; justify-content: center;
+              color: #475569; font-weight: bold; font-size: 13px; padding: 18px 10px; border: none;
+            }
+              /* 🟢 4A. ANIMATED BORDER STYLES */
+          @keyframes border-glow-spin {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          .border-wrap-browse {
+            border-radius: 14px; padding: 3px; cursor: pointer;
+            background: linear-gradient(90deg, #cbd5e1, #94a3b8, #cbd5e1);
+            background-size: 300% 300%; animation: border-glow-spin 3s linear infinite;
+          }
+          .border-wrap-camera {
+            border-radius: 14px; padding: 3px; cursor: pointer;
+            background: linear-gradient(90deg, #93c5fd, #3b82f6, #93c5fd);
+            background-size: 300% 300%; animation: border-glow-spin 3s linear infinite;
+          }
+          .border-wrap-smart {
+            border-radius: 14px; padding: 3px; cursor: pointer; margin-top: 10px;
+            background: linear-gradient(90deg, #fde68a, #f59e0b, #fde68a);
+            background-size: 300% 300%; animation: border-glow-spin 3s linear infinite;
+          }
+          .old-inner-btn {
+            width: 100%; height: 100%; box-sizing: border-box; border-radius: 11px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: none; color: #475569; font-weight: bold; font-size: 13px; padding: 20px 10px;
+          }
           `}
         </style>
         
         <div style={{ 
-            background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)', /* Premium soft pearl/blue background */
+            background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)',
             border: '1px solid #a5b4fc', 
             borderRadius: '12px', 
             padding: '15px', 
@@ -922,21 +1170,33 @@ export default function CustomerUpload() {
                 </p>
             </div>
         </div>
-        {/* 🟢 END OF BANNER */}
+        
+      {/* 🟢 4B. BUTTONS WITH OLD STYLE INSIDE ANIMATED BORDER */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          <button type="button" onClick={() => fileInputRef.current.click()} style={uploadBtnStyle}><span style={{ fontSize: '24px' }}>📁</span><br/>Browse Files</button>
+          <div className="border-wrap-browse" onClick={() => fileInputRef.current.click()}>
+            <button type="button" className="old-inner-btn" style={{ background: '#f1f5f9' }}>
+              <span style={{ fontSize: '24px', marginBottom: '5px' }}>📁</span> Browse Files
+            </button>
+          </div>
           <input type="file" multiple accept=".pdf,image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
-          <button type="button" onClick={() => cameraInputRef.current.click()} style={{...uploadBtnStyle, background: '#eff6ff', borderColor: '#bfdbfe'}}><span style={{ fontSize: '24px' }}>📸</span><br/>Take Photo</button>
+          
+          <div className="border-wrap-camera" onClick={() => cameraInputRef.current.click()}>
+            <button type="button" className="old-inner-btn" style={{ background: '#eff6ff' }}>
+              <span style={{ fontSize: '24px', marginBottom: '5px' }}>📸</span> Take Photo
+            </button>
+          </div>
           <input type="file" accept="image/*" capture="environment" multiple ref={cameraInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
         </div>
 
-        <button type="button" onClick={() => setIdMergeModal({open: true, front: null, back: null})} style={{...uploadBtnStyle, background: '#fef3c7', borderColor: '#fde68a', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '15px'}}>
-          <span style={{ fontSize: '28px' }}>🪪</span>
-          <div style={{textAlign: 'left'}}>
-            <span style={{fontWeight: 'bold', color: '#b45309', display: 'block', fontSize: '14px'}}>Smart ID Merge</span>
-            <span style={{fontSize: '11px', color: '#92400e'}}>Combine Front & Back instantly</span>
-          </div>
-        </button>
+        <div className="border-wrap-smart" onClick={() => setIdMergeModal({open: true, front: null, back: null})}>
+          <button type="button" className="old-inner-btn" style={{ background: '#fef3c7', flexDirection: 'row', gap: '10px', padding: '15px' }}>
+            <span style={{ fontSize: '28px' }}>🪪</span>
+            <div style={{textAlign: 'left'}}>
+              <span style={{fontWeight: 'bold', color: '#b45309', display: 'block', fontSize: '14px'}}>Smart ID Merge</span>
+              <span style={{fontSize: '11px', color: '#92400e'}}>Combine Front & Back instantly</span>
+            </div>
+          </button>
+        </div>
 
         {fileItems.length > 0 && (
           <div style={sectionCard}>
@@ -976,7 +1236,6 @@ export default function CustomerUpload() {
                                         
                                      
                                         
-                                        {/* 🟢 2. KEEP YOUR EXISTING MASK TOOLS BELOW IT */}
                                         {securityMode === 'private' && maskAadhaar && (
                                             <div style={{ background: '#fff', padding: '10px', borderRadius: '8px', border: '2px dashed #cbd5e1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                 <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', color: '#1e293b', textAlign: 'center' }}>
@@ -1052,7 +1311,7 @@ export default function CustomerUpload() {
                                                         ...getImgSize(item.scale), 
                                                         position: 'relative', 
                                                         display: 'inline-block',
-                                                        touchAction: 'none', // 🟢 FIX: Forces browser to ignore swipe/scroll on this box so drawing works perfectly
+                                                        touchAction: 'none', 
                                                         cursor: (securityMode === 'private' && maskAadhaar) ? 'crosshair' : 'default',
                                                         userSelect: 'none',
                                                         WebkitUserSelect: 'none'
@@ -1097,12 +1356,11 @@ export default function CustomerUpload() {
                                                         }}></div>
                                                     )}
 
-                                                    {/* 🟢 FIX: GOOGLE-STYLE TOUCH MAGNIFIER ZOOM FOR PERFECT MASK PLACEMENT */}
                                                     {drawState.isDrawing && (
                                                         <div style={{
                                                             position: 'absolute',
                                                             left: `calc(${drawState.currentX}% - 40px)`,
-                                                            top: `calc(${drawState.currentY}% - 100px)`, // Hover above finger
+                                                            top: `calc(${drawState.currentY}% - 100px)`, 
                                                             width: '80px', height: '80px',
                                                             borderRadius: '50%',
                                                             border: '3px solid #2563eb',
@@ -1120,7 +1378,6 @@ export default function CustomerUpload() {
                                                                 objectFit: 'fill',
                                                                 transform: `rotate(${item.rotate || 0}deg)`,
                                                             }} />
-                                                            {/* Crosshairs */}
                                                             <div style={{position: 'absolute', top: '39px', left: '35px', width: '10px', height: '2px', background: '#ef4444'}}></div>
                                                             <div style={{position: 'absolute', top: '35px', left: '39px', width: '2px', height: '10px', background: '#ef4444'}}></div>
                                                         </div>
@@ -1211,6 +1468,7 @@ export default function CustomerUpload() {
                 </div>
               ))}
             </div>
+            
           </div>
         )}
 
@@ -1259,6 +1517,63 @@ export default function CustomerUpload() {
           </div>
         </div>
       )}
+    {/* 🟢 ULTRA-PREMIUM ANIMATED FOOTER (For all your projects) */}
+      <div style={{ textAlign: 'center', marginTop: '40px', paddingBottom: '25px', position: 'relative' }}>
+        <style>
+          {`
+            /* 1. Sweeping Gradient Shine for the SUBHAMS text */
+            @keyframes premium-shine {
+              0% { background-position: -200% center; }
+              100% { background-position: 200% center; }
+            }
+            
+            /* 2. Floating and Glowing Animation for the Sparks */
+            @keyframes float-sparkle {
+              0%, 100% { transform: translateY(0px) scale(0.8); opacity: 0.4; }
+              50% { transform: translateY(-4px) scale(1.2); opacity: 1; filter: drop-shadow(0 0 6px #fbbf24); }
+            }
+            
+            /* 3. The Breathing Underline Glow */
+            @keyframes line-breathe {
+              0%, 100% { width: 30px; opacity: 0.3; }
+              50% { width: 60px; opacity: 0.8; box-shadow: 0 0 10px #3b82f6; }
+            }
+
+            .subhams-brand-text {
+              background: linear-gradient(90deg, #3b82f6, #a855f7, #ec4899, #3b82f6);
+              background-size: 200% auto;
+              color: transparent;
+              -webkit-background-clip: text;
+              background-clip: text;
+              animation: premium-shine 3.5s linear infinite;
+              font-weight: 900;
+              font-size: 14px;
+              letter-spacing: 2px;
+            }
+          `}
+        </style>
+        
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          {/* Left Sparkle (Animates instantly) */}
+          <span style={{ animation: 'float-sparkle 2s ease-in-out infinite', fontSize: '13px' }}>✨</span>
+          
+          <p style={{ fontSize: '10px', color: '#64748b', fontWeight: '800', margin: 0, letterSpacing: '1.5px' }}>
+            POWERED BY <span className="subhams-brand-text">SUBHAMS</span>
+          </p>
+          
+          {/* Right Sparkle (Delayed by 1s so they twinkle back and forth) */}
+          <span style={{ animation: 'float-sparkle 2s ease-in-out infinite 1s', fontSize: '13px' }}>✨</span>
+        </div>
+
+        {/* Beautiful Animated Glowing Underline */}
+        <div style={{ 
+            height: '3px', 
+            background: 'linear-gradient(90deg, transparent, #3b82f6, #a855f7, transparent)', 
+            margin: '8px auto 0 auto', 
+            borderRadius: '10px',
+            animation: 'line-breathe 3s ease-in-out infinite' 
+        }}></div>
+      </div>
     </div>
   );
 }
@@ -1269,7 +1584,6 @@ const sectionCard = { background: '#fff', padding: '15px', borderRadius: '12px',
 const labelStyle = { fontSize: '12px', fontWeight: 'bold', color: '#64748b', display: 'block', marginBottom: '6px' };
 const inputStyle = { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '16px', background: '#f8fafc', boxSizing: 'border-box' };
 const qrBtnStyle = { padding: '0 15px', background: '#1e293b', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' };
-const uploadBtnStyle = { padding: '20px 10px', background: '#f1f5f9', border: '2px dashed #cbd5e1', borderRadius: '12px', cursor: 'pointer', color: '#475569', fontWeight: 'bold', fontSize: '13px' };
 const removeBtnStyle = { background: '#fee2e2', color: '#991b1b', border: 'none', cursor: 'pointer', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' };
 const submitBtn = { width: '100%', padding: '18px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '10px', boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)' };
 const statusBox = { marginTop: '20px', padding: '15px', borderRadius: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '14px' };
