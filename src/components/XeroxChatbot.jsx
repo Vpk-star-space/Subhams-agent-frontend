@@ -32,8 +32,8 @@ const getDictionary = (path, lang, name, teName) => {
                 ? `${timeGreeting}, **${name}**! 👨‍💼 Welcome to your Subhams Command Center. How may I assist with your operations today?`
                 : `${timeGreeting}, **${teName}**! 👨‍💼 మీ కమాండ్ సెంటర్‌కు స్వాగతం. ఈరోజు నేను ఎలా సహాయపడగలను?`,
             options: lang === "EN"
-                ? ["📊 Queue & Analytics", "🛡️ Security Matrix", "📲 QR & Onboarding", "🖥️ Windows Agent", "⚙️ Server Limits", "✨ What is Subhams?","❓ How Subhams Works", "🌐 Our Other Projects", "⏱️ Email & OTP Delays","👑 Architect Support"]
-                : ["📊 క్యూ & అనలిటిక్స్", "🛡️ సెక్యూరిటీ మ్యాట్రిక్స్", "📲 QR ద్వారా పొందండి", "🖥️ విండోస్ ఏజెంట్", "⚙️ సర్వర్ పరిమితులు","✨ సుభమ్స్ అంటే ఏమిటి?", "❓ ఎలా పనిచేస్తుంది", "🌐 మా ఇతర ప్రాజెక్ట్‌లు", "⏱️ OTP ఆలస్యం గురించి","👑 అడ్మిన్ సపోర్ట్"],
+                ? ["📊 Queue & Analytics", "🛡️ Security Matrix","⚠️ WhatsApp/Email Dangers", "📲 QR & Onboarding", "🖥️ Windows Agent", "⚙️ Server Limits", "✨ What is Subhams?","❓ How Subhams Works", "🌐 Our Other Projects", "⏱️ Email & OTP Delays","👑 Architect Support"]
+                : ["📊 క్యూ & అనలిటిక్స్", "🛡️ సెక్యూరిటీ మ్యాట్రిక్స్","⚠️ వాట్సాప్/ఈమెయిల్ ప్రమాదాలు", "📲 QR ద్వారా పొందండి", "🖥️ విండోస్ ఏజెంట్", "⚙️ సర్వర్ పరిమితులు","✨ సుభమ్స్ అంటే ఏమిటి?", "❓ ఎలా పనిచేస్తుంది", "🌐 మా ఇతర ప్రాజెక్ట్‌లు", "⏱️ OTP ఆలస్యం గురించి","👑 అడ్మిన్ సపోర్ట్"],
             menuLabel: lang === "EN" ? "🏠 Return to Main Menu" : "🏠 ప్రధాన మెనూకు వెళ్లండి",
             menuHeader: lang === "EN" ? "Please select a strategic category:" : "దయచేసి ఒక వర్గాన్ని ఎంచుకోండి:",
             placeholder: lang === "EN" ? "Query the system..." : "వ్యవస్థ గురించి అడగండి..."
