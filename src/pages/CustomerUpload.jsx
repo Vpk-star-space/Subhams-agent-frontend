@@ -525,6 +525,9 @@ export default function CustomerUpload() {
       setLiveStatusTracker({});
     }
   };
+// 🟢 FIX 1: Bring back the position calculators!
+  const getJustify = (pos) => pos.includes('left') ? 'flex-start' : pos.includes('right') ? 'flex-end' : 'center';
+  const getAlign = (pos) => pos.includes('top') ? 'flex-start' : pos.includes('bottom') ? 'flex-end' : 'center';
 
   const getImgSize = (scale) => {
       if (scale === 'fit') return { width: '100%', height: '100%' };
@@ -1314,11 +1317,16 @@ export default function CustomerUpload() {
                                             border: (securityMode === 'govt' || securityMode === 'private') ? '2px solid #0f172a' : '1px solid #cbd5e1'
                                         }}>
                                          {/* 🟢 FIX 2: TIGHT IMAGE WRAPPER (This guarantees masks NEVER misplace when page size changes!) */}
+                                     {/* 🟢 FIX 2: TIGHT IMAGE WRAPPER (Now perfectly linked to the 9-grid placement buttons!) */}
                                         <div style={{ 
                                             ...getImgSize(item.scale), 
                                             background: '#f8fafc', 
                                             border: (securityMode === 'govt' || securityMode === 'private') ? '2px solid #0f172a' : '1px solid #cbd5e1',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative'
+                                            display: 'flex', 
+                                            /* 👇 This allows the photo to move freely around the paper based on button clicks! */
+                                            alignItems: getAlign(item.position), 
+                                            justifyContent: getJustify(item.position), 
+                                            overflow: 'hidden', position: 'relative'
                                         }}>
                                              {/* The Drawing box now tightly hugs the image itself, NOT the outer paper container! */}
                                              <div 
