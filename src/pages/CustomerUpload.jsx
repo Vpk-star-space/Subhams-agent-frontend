@@ -382,8 +382,10 @@ export default function CustomerUpload() {
       }));
   };
 
+ // 🟢 FIX 1: Prevents tiny accidental lines when the user tries to scroll!
   const stopDrawing = (e, index) => {
-      if (drawState.isDrawing && drawState.currentRect && drawState.currentRect.width > 2) {
+      // Only save the mask if they actually drew a box bigger than 4% of the screen
+      if (drawState.isDrawing && drawState.currentRect && drawState.currentRect.width > 4 && drawState.currentRect.height > 4) {
           const updatedFileItems = [...fileItems];
           updatedFileItems[index].maskRectArray.push(drawState.currentRect);
           setFileItems(updatedFileItems);
@@ -1303,7 +1305,7 @@ export default function CustomerUpload() {
                                                 alignItems: getAlign(item.position)
                                             }}>
                                                 
-                                               <div 
+                                             <div 
                                                     onPointerDown={(e) => startDrawing(e, index)}
                                                     onPointerMove={keepDrawing}
                                                     onPointerUp={(e) => stopDrawing(e, index)}
@@ -1312,7 +1314,6 @@ export default function CustomerUpload() {
                                                         ...getImgSize(item.scale), 
                                                         position: 'relative', 
                                                         display: 'inline-block',
-                                                        /* 🟢 FIX 1: Only lock scrolling IF they are actively drawing a mask! */
                                                         touchAction: (securityMode === 'private' && maskAadhaar) ? 'none' : 'auto', 
                                                         cursor: (securityMode === 'private' && maskAadhaar) ? 'crosshair' : 'default',
                                                         userSelect: 'none',
@@ -1325,9 +1326,7 @@ export default function CustomerUpload() {
                                                         style={{
                                                             width: '100%', 
                                                             height: '100%', 
-                                                            /* 🟢 FIX 2: 'contain' prevents stretching so human faces look natural! */
                                                             objectFit: 'contain', 
-                                                            /* 🟢 FIX 3: Removed extreme contrast so B&W mode looks like a normal photocopy */
                                                             filter: `${item.colorMode === 'bw' ? 'grayscale(100%) ' : ''}${isBlindPreview ? 'blur(4px) ' : ''}`.trim() || 'none',
                                                             transform: `rotate(${item.rotate || 0}deg)`,
                                                             transition: 'transform 0.3s ease, filter 0.3s ease',
@@ -1337,53 +1336,65 @@ export default function CustomerUpload() {
                                                         draggable={false} 
                                                     />
                                                     
+                                                    {/* 🟢 FIX 2: Beautiful Centered "XXXX" Text inside the drawn masks */}
                                                     {item.maskRectArray.map((rect, rectIndex) => (
                                                         <div key={rectIndex} style={{
                                                             position: 'absolute',
                                                             left: `${rect.x}%`, top: `${rect.y}%`,
                                                             width: `${rect.width}%`, height: `${rect.height}%`,
-                                                            backgroundColor: 'black', opacity: 0.95,
+                                                            backgroundColor: '#0f172a',
+                                                            border: '1px solid rgba(255,255,255,0.2)',
+                                                            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                                                            borderRadius: '4px',
                                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                            pointerEvents: 'none' 
+                                                            overflow: 'hidden', pointerEvents: 'none' 
                                                         }}>
-                                                            <span style={{color: 'white', fontSize: '6px', fontWeight: 'bold'}}>XXXX XXXX</span>
+                                                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', letterSpacing: '2px', whiteSpace: 'nowrap' }}>
+                                                                ████
+                                                            </span>
                                                         </div>
                                                     ))}
 
+                                                    {/* Active Drawing Box (Dashed Blue) */}
                                                     {drawState.isDrawing && drawState.currentRect && (
                                                          <div style={{
                                                             position: 'absolute',
                                                             left: `${drawState.currentRect.x}%`, top: `${drawState.currentRect.y}%`,
                                                             width: `${drawState.currentRect.width}%`, height: `${drawState.currentRect.height}%`,
-                                                            backgroundColor: 'black', opacity: 0.5, border: '1px dashed yellow',
+                                                            backgroundColor: 'rgba(15, 23, 42, 0.5)', border: '2px dashed #38bdf8',
                                                             pointerEvents: 'none'
                                                         }}></div>
                                                     )}
 
+                                                    {/* 🟢 FIX 3: HD Magnifier Glass with Perfect Crosshairs */}
                                                     {drawState.isDrawing && (
                                                         <div style={{
                                                             position: 'absolute',
-                                                            left: `calc(${drawState.currentX}% - 40px)`,
-                                                            top: `calc(${drawState.currentY}% - 100px)`, 
-                                                            width: '80px', height: '80px',
+                                                            left: `calc(${drawState.currentX}% - 60px)`, // Centered exactly over finger
+                                                            top: `calc(${drawState.currentY}% - 140px)`, // Hovering high above thumb
+                                                            width: '120px', height: '120px', // Bigger glass!
                                                             borderRadius: '50%',
-                                                            border: '3px solid #2563eb',
+                                                            border: '4px solid #3b82f6',
                                                             overflow: 'hidden',
                                                             zIndex: 50,
-                                                            boxShadow: '0 4px 10px rgba(0,0,0,0.5)',
+                                                            boxShadow: '0 8px 25px rgba(0,0,0,0.6), inset 0 0 15px rgba(0,0,0,0.2)',
                                                             background: '#fff',
                                                             pointerEvents: 'none'
                                                         }}>
+                                                            {/* Adjusted zoom to 250% for HD clarity */}
                                                             <img src={item.previewUrl} style={{
                                                                 position: 'absolute',
-                                                                width: '400%', height: '400%', 
-                                                                left: `calc(-${drawState.currentX * 4}% + 40px)`,
-                                                                top: `calc(-${drawState.currentY * 4}% + 40px)`,
-                                                                objectFit: 'fill',
+                                                                width: '250%', height: '250%', 
+                                                                left: `calc(-${drawState.currentX * 2.5}% + 60px)`,
+                                                                top: `calc(-${drawState.currentY * 2.5}% + 60px)`,
+                                                                objectFit: 'contain',
                                                                 transform: `rotate(${item.rotate || 0}deg)`,
                                                             }} />
-                                                            <div style={{position: 'absolute', top: '39px', left: '35px', width: '10px', height: '2px', background: '#ef4444'}}></div>
-                                                            <div style={{position: 'absolute', top: '35px', left: '39px', width: '2px', height: '10px', background: '#ef4444'}}></div>
+                                                            
+                                                            {/* Perfect Sniper Crosshairs */}
+                                                            <div style={{position: 'absolute', top: '50%', left: '0', width: '100%', height: '1px', background: 'rgba(239, 68, 68, 0.4)'}}></div>
+                                                            <div style={{position: 'absolute', top: '0', left: '50%', width: '1px', height: '100%', background: 'rgba(239, 68, 68, 0.4)'}}></div>
+                                                            <div style={{position: 'absolute', top: 'calc(50% - 4px)', left: 'calc(50% - 4px)', width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%', boxShadow: '0 0 5px rgba(0,0,0,0.5)'}}></div>
                                                         </div>
                                                     )}
                                                 </div>
