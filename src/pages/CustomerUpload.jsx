@@ -398,15 +398,16 @@ export default function CustomerUpload() {
       setFileItems(updatedFileItems);
   };
 
+ // 🟢 FIX 4: Increased slide speed from 2 to 4 so buttons feel highly responsive
   const moveLastMask = (index, direction) => {
       const updated = [...fileItems];
       const masks = updated[index].maskRectArray;
       if (masks.length === 0) return;
       const last = { ...masks[masks.length - 1] };
-      if (direction === 'left') last.x = Math.max(0, last.x - 2);
-      if (direction === 'right') last.x = Math.min(100 - last.width, last.x + 2);
-      if (direction === 'up') last.y = Math.max(0, last.y - 2);
-      if (direction === 'down') last.y = Math.min(100 - last.height, last.y + 2);
+      if (direction === 'left') last.x = Math.max(0, last.x - 4);
+      if (direction === 'right') last.x = Math.min(100 - last.width, last.x + 4);
+      if (direction === 'up') last.y = Math.max(0, last.y - 4);
+      if (direction === 'down') last.y = Math.min(100 - last.height, last.y + 4);
       masks[masks.length - 1] = last;
       setFileItems(updated);
   };
@@ -416,10 +417,10 @@ export default function CustomerUpload() {
       const masks = updated[index].maskRectArray;
       if (masks.length === 0) return;
       const last = { ...masks[masks.length - 1] };
-      if (type === 'w+') last.width = Math.min(100 - last.x, last.width + 2);
-      if (type === 'w-') last.width = Math.max(2, last.width - 2);
-      if (type === 'h+') last.height = Math.min(100 - last.y, last.height + 2);
-      if (type === 'h-') last.height = Math.max(2, last.height - 2);
+      if (type === 'w+') last.width = Math.min(100 - last.x, last.width + 4);
+      if (type === 'w-') last.width = Math.max(4, last.width - 4);
+      if (type === 'h+') last.height = Math.min(100 - last.y, last.height + 4);
+      if (type === 'h-') last.height = Math.max(4, last.height - 4);
       masks[masks.length - 1] = last;
       setFileItems(updated);
   };
@@ -1302,7 +1303,7 @@ export default function CustomerUpload() {
                                                 alignItems: getAlign(item.position)
                                             }}>
                                                 
-                                                <div 
+                                               <div 
                                                     onPointerDown={(e) => startDrawing(e, index)}
                                                     onPointerMove={keepDrawing}
                                                     onPointerUp={(e) => stopDrawing(e, index)}
@@ -1311,7 +1312,8 @@ export default function CustomerUpload() {
                                                         ...getImgSize(item.scale), 
                                                         position: 'relative', 
                                                         display: 'inline-block',
-                                                        touchAction: 'none', 
+                                                        /* 🟢 FIX 1: Only lock scrolling IF they are actively drawing a mask! */
+                                                        touchAction: (securityMode === 'private' && maskAadhaar) ? 'none' : 'auto', 
                                                         cursor: (securityMode === 'private' && maskAadhaar) ? 'crosshair' : 'default',
                                                         userSelect: 'none',
                                                         WebkitUserSelect: 'none'
@@ -1323,8 +1325,10 @@ export default function CustomerUpload() {
                                                         style={{
                                                             width: '100%', 
                                                             height: '100%', 
-                                                            objectFit: 'fill', 
-                                                            filter: `${item.colorMode === 'bw' ? 'grayscale(100%) contrast(120%) ' : ''}${isBlindPreview ? 'blur(4px) ' : ''}`.trim() || 'none',
+                                                            /* 🟢 FIX 2: 'contain' prevents stretching so human faces look natural! */
+                                                            objectFit: 'contain', 
+                                                            /* 🟢 FIX 3: Removed extreme contrast so B&W mode looks like a normal photocopy */
+                                                            filter: `${item.colorMode === 'bw' ? 'grayscale(100%) ' : ''}${isBlindPreview ? 'blur(4px) ' : ''}`.trim() || 'none',
                                                             transform: `rotate(${item.rotate || 0}deg)`,
                                                             transition: 'transform 0.3s ease, filter 0.3s ease',
                                                             userSelect: 'none',
