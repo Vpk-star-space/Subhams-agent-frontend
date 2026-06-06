@@ -526,9 +526,6 @@ export default function CustomerUpload() {
     }
   };
 
-  const getJustify = (pos) => pos.includes('left') ? 'flex-start' : pos.includes('right') ? 'flex-end' : 'center';
-  const getAlign = (pos) => pos.includes('top') ? 'flex-start' : pos.includes('bottom') ? 'flex-end' : 'center';
-  
   const getImgSize = (scale) => {
       if (scale === 'fit') return { width: '100%', height: '100%' };
       if (scale === 'aadhaar') return { width: '85%', aspectRatio: '241 / 153' };
@@ -1248,25 +1245,25 @@ export default function CustomerUpload() {
                                         
                                         {securityMode === 'private' && maskAadhaar && (
                                             <div style={{ background: '#fff', padding: '10px', borderRadius: '8px', border: '2px dashed #cbd5e1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', color: '#1e293b', textAlign: 'center' }}>
+                                              <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', color: '#1e293b', textAlign: 'center' }}>
                                                     Mask Tools / మాస్క్ సాధనాలు
                                                 </p>
                                                 
-                                                {/* 🟢 NEW: Draw Mode Toggle Button */}
+                                                {/* 🟢 FIX 1: Buttons are now stacked with a gap to prevent accidental mistouches! */}
                                                 <button
                                                     type="button"
                                                     onClick={() => setIsDrawingMode(!isDrawingMode)}
                                                     style={{
-                                                        width: '100%', padding: '12px', borderRadius: '8px', border: 'none', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', transition: '0.2s',
+                                                        width: '100%', padding: '12px', borderRadius: '8px', border: 'none', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: '0.2s',
+                                                        marginBottom: '10px', /* 👈 Big gap to protect the user */
                                                         background: isDrawingMode ? '#10b981' : '#f1f5f9',
                                                         color: isDrawingMode ? 'white' : '#475569',
                                                         boxShadow: isDrawingMode ? '0 4px 10px rgba(16, 185, 129, 0.3)' : 'inset 0 2px 4px rgba(0,0,0,0.05)'
                                                     }}
                                                 >
-                                                    {isDrawingMode ? '✅ Drawing Mode ON (Swipe to mask)' : '✏️ Tap to Enable Drawing Mode'}
+                                                    {isDrawingMode ? '✅ Drawing Mode ON (Swipe to mask)' : '✏️ Enable Drawing (డ్రాయింగ్ మోడ్)'}
                                                 </button>
-                                                {/* ---------------------------------- */}
-                                                
+
                                                 <button
                                                     type="button"
                                                     onClick={() => {
@@ -1275,11 +1272,10 @@ export default function CustomerUpload() {
                                                         updated[index].maskRectArray.push(newRect);
                                                         setFileItems(updated);
                                                     }}
-                                                    style={{ width: '100%', padding: '8px', background: '#2563eb', color: 'white', borderRadius: '6px', border: 'none', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}
+                                                    style={{ width: '100%', padding: '12px', background: '#2563eb', color: 'white', borderRadius: '6px', border: 'none', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}
                                                 >
                                                     ➕ Add Mask / మాస్క్ బాక్స్ జోడించండి
                                                 </button>
-
                                                 {item.maskRectArray.length > 0 && (
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px' }}>
@@ -1317,88 +1313,93 @@ export default function CustomerUpload() {
                                             padding: (securityMode === 'govt' || securityMode === 'private') ? '6px' : '0', 
                                             border: (securityMode === 'govt' || securityMode === 'private') ? '2px solid #0f172a' : '1px solid #cbd5e1'
                                         }}>
-                                            <div style={{ 
-                                                height: (securityMode === 'govt' || securityMode === 'private') ? '75%' : '100%', 
-                                                display: 'flex', 
-                                                padding: '4px', 
-                                                boxSizing: 'border-box', 
-                                                position: 'relative',
-                                                justifyContent: getJustify(item.position), 
-                                                alignItems: getAlign(item.position)
-                                            }}>
-                                                
-                                         <div 
-                                                    onPointerDown={(e) => isDrawingMode && startDrawing(e, index)}
-                                                    onPointerMove={keepDrawing}
-                                                    onPointerUp={(e) => stopDrawing(e, index)}
-                                                    onPointerCancel={(e) => stopDrawing(e, index)}
-                                                    style={{ 
-                                                        ...getImgSize(item.scale), 
-                                                        position: 'relative', 
-                                                        display: 'inline-block',
-                                                        touchAction: isDrawingMode ? 'none' : 'auto', // 🟢 Only locks scroll if Drawing Mode is ON!
-                                                        cursor: isDrawingMode ? 'crosshair' : 'default',
-                                                        userSelect: 'none', WebkitUserSelect: 'none'
-                                                    }}
-                                                >
-                                                    <img 
-                                                        src={item.previewUrl} 
-                                                        alt="Preview" 
-                                                        style={{
-                                                            width: '100%', height: '100%', 
-                                                            objectFit: 'contain', 
-                                                            filter: `${item.colorMode === 'bw' ? 'grayscale(100%) ' : ''}${isBlindPreview ? 'blur(4px) ' : ''}`.trim() || 'none',
-                                                            transform: `rotate(${item.rotate || 0}deg)`,
-                                                            userSelect: 'none', pointerEvents: 'none' 
-                                                        }} 
-                                                        draggable={false} 
-                                                    />
-                                                    
-                                                    {item.maskRectArray.map((rect, rectIndex) => (
-                                                        <div key={rectIndex} style={{
-                                                            position: 'absolute', left: `${rect.x}%`, top: `${rect.y}%`, width: `${rect.width}%`, height: `${rect.height}%`,
-                                                            backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                                                            borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', pointerEvents: 'none' 
-                                                        }}>
-                                                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', letterSpacing: '2px' }}>████</span>
-                                                        </div>
-                                                    ))}
+                                         {/* 🟢 FIX 2: TIGHT IMAGE WRAPPER (This guarantees masks NEVER misplace when page size changes!) */}
+                                        <div style={{ 
+                                            ...getImgSize(item.scale), 
+                                            background: '#f8fafc', 
+                                            border: (securityMode === 'govt' || securityMode === 'private') ? '2px solid #0f172a' : '1px solid #cbd5e1',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative'
+                                        }}>
+                                             {/* The Drawing box now tightly hugs the image itself, NOT the outer paper container! */}
+                                             <div 
+                                                 onPointerDown={(e) => isDrawingMode && startDrawing(e, index)}
+                                                 onPointerMove={keepDrawing}
+                                                 onPointerUp={(e) => stopDrawing(e, index)}
+                                                 onPointerCancel={(e) => stopDrawing(e, index)}
+                                                 style={{ 
+                                                     position: 'relative', 
+                                                     maxWidth: '100%', maxHeight: '100%', 
+                                                     display: 'inline-block',
+                                                     touchAction: isDrawingMode ? 'none' : 'auto', 
+                                                     cursor: isDrawingMode ? 'crosshair' : 'default',
+                                                     userSelect: 'none', WebkitUserSelect: 'none'
+                                                 }}
+                                             >
+                                                 <img 
+                                                     src={item.previewUrl} 
+                                                     alt="Preview" 
+                                                     style={{
+                                                         display: 'block', maxWidth: '100%', maxHeight: '100%', 
+                                                         filter: `${item.colorMode === 'bw' ? 'grayscale(100%) ' : ''}${isBlindPreview ? 'blur(4px) ' : ''}`.trim() || 'none',
+                                                         transform: `rotate(${item.rotate || 0}deg)`,
+                                                         pointerEvents: 'none', userSelect: 'none' 
+                                                     }} 
+                                                     draggable={false} 
+                                                 />
+                                                 
+                                                 {/* 🟢 FIX 3: SMART "MASKED" TEXT SIZING */}
+                                                 {item.maskRectArray.map((rect, rectIndex) => (
+                                                     <div key={rectIndex} style={{
+                                                         position: 'absolute', left: `${rect.x}%`, top: `${rect.y}%`, width: `${rect.width}%`, height: `${rect.height}%`,
+                                                         backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                                                         borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', pointerEvents: 'none' 
+                                                     }}>
+                                                         <span style={{ 
+                                                             color: 'rgba(255,255,255,0.6)', 
+                                                             fontWeight: '900', letterSpacing: '1px',
+                                                             /* Mathematical formula to dynamically scale the font based on the box height! */
+                                                             fontSize: `clamp(6px, ${Math.max(6, rect.height * 1.8)}px, 24px)`,
+                                                             whiteSpace: 'nowrap'
+                                                         }}>
+                                                             MASKED
+                                                         </span>
+                                                     </div>
+                                                 ))}
 
-                                                    {drawState.isDrawing && drawState.currentRect && (
+                                                 {/* Active Drawing Box (also with Smart Text) */}
+                                                 {drawState.isDrawing && drawState.currentRect && (
+                                                      <div style={{
+                                                         position: 'absolute', left: `${drawState.currentRect.x}%`, top: `${drawState.currentRect.y}%`, width: `${drawState.currentRect.width}%`, height: `${drawState.currentRect.height}%`,
+                                                         backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '2px dashed #38bdf8', pointerEvents: 'none',
+                                                         display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
+                                                     }}>
+                                                         <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: '900', fontSize: `clamp(6px, ${Math.max(6, drawState.currentRect.height * 1.8)}px, 24px)`}}>MASKED</span>
+                                                     </div>
+                                                 )}
+
+                                                 {/* HD Magnifier Glass */}
+                                                 {drawState.isDrawing && drawState.currentRect && (
+                                                     <div style={{
+                                                         position: 'absolute', left: `calc(${drawState.currentX}% - 60px)`, top: `calc(${drawState.currentY}% - 140px)`, 
+                                                         width: '120px', height: '120px', borderRadius: '50%', border: '4px solid #3b82f6', overflow: 'hidden', zIndex: 50,
+                                                         boxShadow: '0 8px 25px rgba(0,0,0,0.6), inset 0 0 15px rgba(0,0,0,0.2)', background: '#fff', pointerEvents: 'none'
+                                                     }}>
                                                          <div style={{
-                                                            position: 'absolute', left: `${drawState.currentRect.x}%`, top: `${drawState.currentRect.y}%`,
-                                                            width: `${drawState.currentRect.width}%`, height: `${drawState.currentRect.height}%`,
-                                                            backgroundColor: 'rgba(15, 23, 42, 0.5)', border: '2px dashed #38bdf8', pointerEvents: 'none'
-                                                        }}></div>
-                                                    )}
-
-                                                    {/* 🟢 FIX 2: UPGRADED MAGNIFIER (Now shows the active mask inside the zoom!) */}
-                                                    {drawState.isDrawing && drawState.currentRect && (
-                                                        <div style={{
-                                                            position: 'absolute', left: `calc(${drawState.currentX}% - 60px)`, top: `calc(${drawState.currentY}% - 140px)`, 
-                                                            width: '120px', height: '120px', borderRadius: '50%', border: '4px solid #3b82f6', overflow: 'hidden', zIndex: 50,
-                                                            boxShadow: '0 8px 25px rgba(0,0,0,0.6), inset 0 0 15px rgba(0,0,0,0.2)', background: '#fff', pointerEvents: 'none'
-                                                        }}>
-                                                            {/* 🟢 This container scales BOTH the image and the mask together perfectly */}
-                                                            <div style={{
-                                                                position: 'absolute', width: '250%', height: '250%', 
-                                                                left: `calc(-${drawState.currentX * 2.5}% + 60px)`, top: `calc(-${drawState.currentY * 2.5}% + 60px)`
-                                                            }}>
-                                                                <img src={item.previewUrl} style={{ width: '100%', height: '100%', objectFit: 'contain', transform: `rotate(${item.rotate || 0}deg)` }} />
-                                                                <div style={{
-                                                                    position: 'absolute', left: `${drawState.currentRect.x}%`, top: `${drawState.currentRect.y}%`,
-                                                                    width: `${drawState.currentRect.width}%`, height: `${drawState.currentRect.height}%`,
-                                                                    backgroundColor: 'rgba(15, 23, 42, 0.5)', border: '2px dashed #38bdf8'
-                                                                }}></div>
-                                                            </div>
-                                                            
-                                                            {/* Sniper Crosshairs */}
-                                                            <div style={{position: 'absolute', top: '50%', left: '0', width: '100%', height: '1px', background: 'rgba(239, 68, 68, 0.6)'}}></div>
-                                                            <div style={{position: 'absolute', top: '0', left: '50%', width: '1px', height: '100%', background: 'rgba(239, 68, 68, 0.6)'}}></div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
+                                                             position: 'absolute', width: '250%', height: '250%', 
+                                                             left: `calc(-${drawState.currentX * 2.5}% + 60px)`, top: `calc(-${drawState.currentY * 2.5}% + 60px)`
+                                                         }}>
+                                                             <img src={item.previewUrl} style={{ width: '100%', height: '100%', display: 'block', transform: `rotate(${item.rotate || 0}deg)` }} />
+                                                             <div style={{
+                                                                 position: 'absolute', left: `${drawState.currentRect.x}%`, top: `${drawState.currentRect.y}%`, width: `${drawState.currentRect.width}%`, height: `${drawState.currentRect.height}%`,
+                                                                 backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '2px dashed #38bdf8'
+                                                             }}></div>
+                                                         </div>
+                                                         <div style={{position: 'absolute', top: '50%', left: '0', width: '100%', height: '1px', background: 'rgba(239, 68, 68, 0.6)'}}></div>
+                                                         <div style={{position: 'absolute', top: '0', left: '50%', width: '1px', height: '100%', background: 'rgba(239, 68, 68, 0.6)'}}></div>
+                                                     </div>
+                                                 )}
+                                             </div>
+                                        </div>
                                             
                                             {securityMode === 'private' && (
                                                 <div style={getWatermarkStyle(securePurpose ? `${securePurpose.toUpperCase()} - ${todayDate}` : 'PRIVATE USE')}></div>
