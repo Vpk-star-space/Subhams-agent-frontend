@@ -1,7 +1,14 @@
 import axios from 'axios';
 
+// 🟢 Define your Trap Door Key once here
+const TRAP_DOOR_KEY = 'subhams_front_auth_998877';
+
 const api = axios.create({
   baseURL: 'https://subhams-vpk.onrender.com/api',
+  // 🟢 FIX 1: Automatically attach the key to EVERY standard API request
+  headers: {
+    'x-subhams-secure-token': TRAP_DOOR_KEY
+  }
 });
 
 api.interceptors.request.use((config) => {
@@ -21,7 +28,14 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        const res = await axios.post('https://subhams-vpk.onrender.com/api/auth/refresh', { refreshToken });
+        
+        // 🟢 FIX 2: Attach the key to the raw Axios refresh request so the Trap Door lets it in!
+        const res = await axios.post('https://subhams-vpk.onrender.com/api/auth/refresh', 
+          { refreshToken },
+          { 
+            headers: { 'x-subhams-secure-token': TRAP_DOOR_KEY } 
+          }
+        );
 
         if (res.data.success) {
           localStorage.setItem('accessToken', res.data.accessToken);
@@ -29,7 +43,6 @@ api.interceptors.response.use(
           return api(originalRequest);
         }
       } catch (refreshError) {
-        // ✅ Fixed: Now using the error variable to log the failure
         console.error("Session expired or refresh failed:", refreshError);
         localStorage.clear();
         window.location.href = '/login?role=business';

@@ -466,8 +466,14 @@ export default function CustomerUpload() {
               }
           }
 
-          formData.append('documents', item.file);
-          const response = await axios.post('https://subhams-vpk.onrender.com/api/jobs/upload', formData);
+         formData.append('documents', item.file);
+          
+          // 🟢 SECURE TRAP DOOR KEY: This proves to your backend that the request is legit!
+          const response = await axios.post('https://subhams-vpk.onrender.com/api/jobs/upload', formData, {
+              headers: {
+                  'x-subhams-secure-token': 'subhams_front_auth_998877'
+              }
+          });
           
           setLiveStatusTracker(prev => ({
             ...prev, [response.data.jobId]: { jobId: response.data.jobId, fileName: item.file.name, status: 'SECURED', msg: 'File securely added to queue.' }
