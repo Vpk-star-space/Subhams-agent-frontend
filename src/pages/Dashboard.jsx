@@ -985,12 +985,15 @@ const handlePrint = (jobId) => {
                                         </div>
                                     ) : (
                                        <button 
-    onClick={async () => { 
+  onClick={async () => { 
         if (!isDrawingMode) {
             try {
-                // 🟢 Securely fetch the image using your locked-down Axios!
-                const response = await secureAxios.get(`/jobs/download/${activeJob.jobId}`, { responseType: 'blob' });
+                // 🟢 Added the secureToken directly into the URL!
+                const downloadUrl = `/jobs/download/${activeJob.jobId}?secureToken=subhams_front_auth_998877`;
+                
+                const response = await secureAxios.get(downloadUrl, { responseType: 'blob' });
                 setRawDrawImage(URL.createObjectURL(response.data));
+                
                 setIsDrawingMode(true); 
                 setPreviewImage(null);
             } catch (err) {
@@ -1001,7 +1004,7 @@ const handlePrint = (jobId) => {
             setIsDrawingMode(false); 
             setPreviewImage(null); 
         }
-    }} 
+    }}
     style={{ fontSize: '11px', padding: '6px', background: isDrawingMode ? '#fee2e2' : '#fef3c7', border: isDrawingMode ? '1px solid #ef4444' : '1px solid #f59e0b', borderRadius: '4px', cursor: 'pointer', color: isDrawingMode ? '#991b1b' : '#b45309', fontWeight: 'bold', width: '100%' }}
 >
     {isDrawingMode ? '❌ Cancel Drawing' : '✏️ Draw Mask Manually'}
