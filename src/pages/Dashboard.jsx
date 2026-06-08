@@ -7,9 +7,9 @@ import { useReactToPrint } from 'react-to-print';
 import PrintPass from './PrintPass';
 import AIDocWriter from '../components/AIDocWriter';
 import { Document, Page, pdfjs } from 'react-pdf';
-// Import the required CSS so it looks correct
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-import 'react-pdf/dist/esm/Page/TextLayer.css';
+// 🟢 UPDATED: Use the standard path without /esm/
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
 // 🟢 CRITICAL: This connects the "brain" of the PDF reader for Vite
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
