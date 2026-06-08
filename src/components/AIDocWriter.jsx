@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import ReactQuill from 'react-quill-new'; 
+// 🟢 FIX 1: Import the CSS directly here to stop the massive black arrows!
+import 'react-quill-new/dist/quill.snow.css'; 
 import api from '../api/api';
 
 const secureAxios = api;
@@ -39,7 +41,14 @@ export default function AIDocWriter() {
             
             <style>
                 {`
-                /* 🟢 SCREEN STYLING (Looks like a desk) */
+                /* 🟢 FIX 2: Stop global CSS (like Tailwind) from making SVG icons massive */
+                .ql-picker-label svg, .ql-icon-picker svg {
+                    width: 18px !important;
+                    height: 18px !important;
+                    display: inline-block !important;
+                }
+
+                /* SCREEN STYLING (Looks like a desk) */
                 .a4-quill-wrapper .ql-container {
                     background: #f1f5f9;
                     border: 1px solid #cbd5e1;
@@ -65,57 +74,58 @@ export default function AIDocWriter() {
                     color: #000;
                 }
 
-                /* 🟢 BULLETPROOF PRINT STYLING */
+                /* 🟢 FIX 3: PERFECT PRINT STYLING */
                 @media print {
-                    /* 1. Force EVERYTHING on the entire screen to be invisible */
-                    * {
-                        visibility: hidden !important;
+                    /* Turn off browser URL, Date, and Page Numbers */
+                    @page {
+                        margin: 0 !important; 
                     }
 
-                    /* 2. Un-hide ONLY our text editor and the text inside it */
-                    .ql-editor, .ql-editor * {
-                        visibility: visible !important;
+                    /* Hide ALL dashboard elements completely */
+                    body * {
+                        visibility: hidden;
                     }
 
-                    /* 3. Snap the editor to the absolute top-left corner of the page */
-                    .ql-editor {
+                    /* Detach the paper and force it to the absolute top-left of the screen.
+                       This deletes the invisible gap caused by the dashboard header! */
+                    .a4-quill-wrapper {
                         position: absolute !important;
                         top: 0 !important;
                         left: 0 !important;
                         width: 100% !important;
-                        
-                        /* This fixes the "2 blank pages" bug */
-                        height: auto !important; 
-                        min-height: auto !important; 
-                        
-                        padding: 0 !important;
                         margin: 0 !important;
-                        box-shadow: none !important;
-                        border: none !important;
-                        overflow: visible !important;
+                        padding: 0 !important;
+                        z-index: 999999 !important;
                     }
 
-                    /* 4. Completely DESTROY the dashboard navigation and toolbars so they take up 0 space */
-                    .ql-toolbar, 
-                    .no-print, 
-                    nav, 
-                    header, 
-                    footer {
+                    /* Make the editor and its contents visible again */
+                    .a4-quill-wrapper, .a4-quill-wrapper * {
+                        visibility: visible !important;
+                    }
+
+                    /* Delete the toolbar from the print */
+                    .ql-toolbar {
                         display: none !important;
-                        height: 0 !important;
-                        margin: 0 !important;
+                    }
+
+                    /* Clean up the paper borders for printing */
+                    .a4-quill-wrapper .ql-container {
+                        border: none !important;
                         padding: 0 !important;
                     }
 
-                    /* 5. Let the physical printer handle the margins, not the code */
-                    @page {
-                        size: A4 portrait;
-                        margin: 15mm; 
+                    .a4-quill-wrapper .ql-editor {
+                        box-shadow: none !important;
+                        width: 100% !important;
+                        min-height: auto !important;
+                        padding: 20mm !important; /* Simulates the physical paper margin safely */
+                        overflow: visible !important;
                     }
                 }
                 `}
             </style>
 
+            {/* EVERYTHING IN THIS DIV HIDES DURING PRINTING */}
             <div className="no-print">
                 <h2>✨ Subhams Writer</h2>
 
