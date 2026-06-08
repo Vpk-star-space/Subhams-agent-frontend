@@ -5,6 +5,7 @@ import { io } from 'socket.io-client';
 import { QRCodeSVG } from 'qrcode.react'; 
 import { useReactToPrint } from 'react-to-print';
 import PrintPass from './PrintPass';
+import AIDocWriter from '../components/AIDocWriter';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://subhams-vpk.onrender.com';
 const socket = io(BACKEND_URL, { 
@@ -87,6 +88,7 @@ message: "✨ Welcome to Subhams Secure Networks | 🚀 We are happy to work wit
 
 const [showReleaseNotes, setShowReleaseNotes] = useState(false);
   const [isCelebrating, setIsCelebrating] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard');
 
 
 
@@ -568,7 +570,11 @@ const handlePrint = (jobId) => {
           </div>
         </div>
 
+        
+
         <div style={{ display: 'flex', gap: '10px' }}>
+       <button onClick={() => setActiveTab('subhamsWriter')} style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', color: '#facc15', border: '1px solid #facc15', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>✨ Subhams Writer</button>
+       
           <button onClick={() => setIsSettingsOpen(true)} style={{...navBtn, background: '#475569'}}>⚙️ Set Rates</button>
           <button onClick={fetchQueue} style={navBtn}>🔄 Refresh Queue</button>
           <button onClick={handleLogout} style={{ ...navBtn, background: '#b91c1c' }}>🚪 Logout</button>
@@ -763,8 +769,13 @@ const handlePrint = (jobId) => {
 
       {/* 🌟 3. MAIN CONTENT */}
       <div style={{ padding: '30px', maxWidth: '1400px', margin: '0 auto' }}>
-        
-        {/* 🚨 THE NEW BIG HARDWARE SECURITY POPUP 🚨 */}
+
+{/* 🟢 THIS LINE MAKES THE IMPORT "USED" */}
+{activeTab === 'subhamsWriter' ? (
+    <AIDocWriter />
+) : (
+    <>
+         {/* 🚨 THE NEW BIG HARDWARE SECURITY POPUP 🚨 */}
         {pendingHardware && (
           <div style={securityBannerStyle}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -1165,13 +1176,18 @@ const handlePrint = (jobId) => {
                   <p style={{ textAlign: 'center', lineHeight: '1.5' }}>
                     Select a job to preview content <br/> 
                     కంటెంట్‌ను చూడటానికి 'View' క్లిక్ చేయండి
-                  </p>
-                </div>
-              )}
-            </div>
+                   </p>
+    </div>
+  )}
+
           </div>
         </div>
       </div>
+
+    </>
+  )}
+
+</div>
 
       {/* 🌟 4. OVERLAYS & MODALS */}
       {needsUpdate && (
@@ -1344,6 +1360,7 @@ const handlePrint = (jobId) => {
         }}></div>
       </div>
     </div>
+       
   );
 }
 

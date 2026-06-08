@@ -12,6 +12,7 @@ import LandingPage from './pages/LandingPage';
 import ForgotPassword from './pages/ForgotPassword'; // Adjust the path if your file is in a different folder!
 // 🤖 IMPORT THE NEW CHATBOT HERE
 import XeroxChatbot from './components/XeroxChatbot'; 
+import AIDocWriter from './components/AIDocWriter'; // Import the new AI Document Writer component
 
 // 🛑 THE MASTER SWITCH: Change to 'true' to lock down the app for updates!
 const IS_MAINTENANCE_MODE = false; 
@@ -229,7 +230,7 @@ export default function App() {
         {/* 🟢 Dashboard Routes */}
         <Route path="/dashboard" element={<ProtectedRoute>{!isServerAwake && <ServerBootloader />}<Dashboard /></ProtectedRoute>} />
         <Route path="/manage" element={<ProtectedRoute>{!isServerAwake && <ServerBootloader />}<Manage /></ProtectedRoute>} />
-
+<Route path="/writer" element={<ProtectedRoute>{!isServerAwake && <ServerBootloader />}<AIDocWriter /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
