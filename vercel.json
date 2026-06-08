@@ -17,10 +17,10 @@
           "key": "Cross-Origin-Embedder-Policy",
           "value": "unsafe-none"
         },
-       {
-  "key": "Content-Security-Policy",
-  "value": "default-src 'self'; connect-src 'self' blob: https://subhams-vpk.onrender.com wss://subhams-vpk.onrender.com https://accounts.google.com; img-src 'self' data: https: blob:; frame-src 'self' blob: https://accounts.google.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com; worker-src 'self' blob:;"
-}
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; connect-src 'self' blob: https://subhams-vpk.onrender.com wss://subhams-vpk.onrender.com https://accounts.google.com; img-src 'self' data: https: blob:; frame-src 'self' blob: https://accounts.google.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com; worker-src 'self' blob:;"
+        }
       ]
     }
   ]
