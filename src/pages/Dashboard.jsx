@@ -6,6 +6,16 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useReactToPrint } from 'react-to-print';
 import PrintPass from './PrintPass';
 import AIDocWriter from '../components/AIDocWriter';
+import { Document, Page, pdfjs } from 'react-pdf';
+// Import the required CSS so it looks correct
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+
+// 🟢 CRITICAL: This connects the "brain" of the PDF reader for Vite
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://subhams-vpk.onrender.com';
 const socket = io(BACKEND_URL, { 
@@ -82,7 +92,7 @@ message: "✨ Welcome to Subhams Secure Networks | 🚀 We are happy to work wit
   
   const initialFetchDone = useRef(false);
   const isCheckingHardware = useRef(false);
-  const iframeRef = useRef(null);
+
   const uploadLink = `${window.location.origin}/u/${auth.shopId}`;
  const [rawDrawImage, setRawDrawImage] = useState(null); // 🟢 Holds the secure image
 
@@ -1129,7 +1139,7 @@ const handlePrint = (jobId) => {
                               </button>
                           </div>
                       </div>
-            ) : previewImage ? (
+     ) : previewImage ? (
   <div 
     style={{ position: 'relative', width: '100%', flex: 1, display: 'flex', flexDirection: 'column', minHeight: '400px' }} 
     onContextMenu={(e) => e.preventDefault()}
@@ -1141,6 +1151,8 @@ const handlePrint = (jobId) => {
         background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://w3.org' version='1.1' height='100px' width='100px'><text transform='translate(20, 100) rotate(-45)' fill='rgba(255,0,0,0.15)' font-size='20'>🚫 NO PRINT</text></svg>");
         pointer-events: none; z-index: 50;
       }
+      /* 🟢 Hides the default white background of react-pdf pages to match your dark theme */
+      .react-pdf__Page__canvas { margin: 0 auto; }
     `}</style>
 
     <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', marginTop: '10px' }}>
@@ -1150,35 +1162,53 @@ const handlePrint = (jobId) => {
 
     <div id="secure-scroll-box" style={{ position: 'relative', width: '100%', height: '500px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#222' }}>
         <div className="watermark-tile" />
+        {/* Anti-click transparent overlay */}
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '3000px', zIndex: 40, background: 'transparent' }} />
 
-        <div style={{ width: '100%', height: '100%', filter: !isWindowActive ? 'blur(20px) grayscale(100%)' : 'none', transition: 'filter 0.1s' }}>
-            <iframe 
-                ref={iframeRef} src={previewImage} 
-                style={{ width: '100%', height: '3000px', border: 'none', pointerEvents: 'none', filter: `${printSettings?.colorMode === 'bw' ? 'grayscale(100%) ' : ''}${printSettings?.isBlindPreview ? 'blur(4px)' : ''}`.trim() || 'none' }} 
-                title="Preview" 
-            />
+        {/* Security Blur Container */}
+        <div style={{ width: '100%', minHeight: '100%', display: 'flex', justifyContent: 'center', filter: !isWindowActive ? 'blur(20px) grayscale(100%)' : 'none', transition: 'filter 0.1s', paddingTop: '20px' }}>
+            
+            {/* 🚀 THE FIX: react-pdf completely replaces the iframe */}
+            <div style={{ 
+                pointerEvents: 'none', 
+                /* 🟢 Applies your Black & White and Blind Preview filters directly to the PDF Canvas */
+                filter: `${printSettings?.colorMode === 'bw' ? 'grayscale(100%) contrast(120%)' : ''} ${printSettings?.isBlindPreview ? 'blur(4px)' : ''}`.trim() || 'none' 
+            }}>
+                <Document 
+                    file={previewImage}
+                    loading={<span style={{ color: 'white' }}>Loading Secure PDF...</span>}
+                    error={<span style={{ color: 'red' }}>Failed to load PDF. Format error.</span>}
+                >
+                    <Page 
+                        pageNumber={1} 
+                        width={450} /* Adjust this number to make the A4 paper wider or thinner inside the black box */
+                        renderTextLayer={false} 
+                        renderAnnotationLayer={false}
+                    />
+                </Document>
+            </div>
+
         </div>
     </div>
   </div>
 ) : (
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#64748b', fontWeight: 'bold', textAlign: 'center' }}>
-                       <span style={{ marginBottom: '8px' }}>⚙️ Generating Accurate A4 Preview...</span>
-                       <span style={{ fontSize: '12px', fontWeight: 'normal', color: '#94a3b8' }}>
-                         (Please wait, free servers may take a few extra seconds to process)
-                       </span>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
-                  <span style={{ fontSize: '48px', marginBottom: '10px' }}>📄</span>
-                  <p style={{ textAlign: 'center', lineHeight: '1.5' }}>
-                    Select a job to preview content <br/> 
-                    కంటెంట్‌ను చూడటానికి 'View' క్లిక్ చేయండి
-                   </p>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#64748b', fontWeight: 'bold', textAlign: 'center' }}>
+       <span style={{ marginBottom: '8px' }}>⚙️ Generating Accurate A4 Preview...</span>
+       <span style={{ fontSize: '12px', fontWeight: 'normal', color: '#94a3b8' }}>
+         (Please wait, free servers may take a few extra seconds to process)
+       </span>
     </div>
   )}
+  </>
+) : (
+  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+    <span style={{ fontSize: '48px', marginBottom: '10px' }}>📄</span>
+    <p style={{ textAlign: 'center', lineHeight: '1.5' }}>
+      Select a job to preview content <br/> 
+      కంటెంట్‌ను చూడటానికి 'View' క్లిక్ చేయండి
+     </p>
+  </div>
+)}
 
           </div>
         </div>
