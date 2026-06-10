@@ -56,13 +56,10 @@ export default function AIDocWriter() {
             setLoading(false);
         }
     };
-     return (
+return (
         <div style={{ padding: '40px 20px', maxWidth: '900px', margin: 'auto', fontFamily: 'Arial, Helvetica, sans-serif' }}>
             <style>
-
-                
                 {`
-
                 /* UI ELEMENTS AND CONTAINER STYLES */
                 h2 {
                     font-weight: 700;
@@ -184,49 +181,76 @@ export default function AIDocWriter() {
                     padding: 30px; 
                     border-radius: 14px;
                     border: 1px solid #e2e8f0;
+                    pointer-events: auto !important; /* 🟢 Added fallback to ensure wrapper allows mouse actions */
                 }
+
                 .a4-quill-wrapper .ql-editor { 
-                    width: 210mm; min-height: 297mm; background: white; 
-                    padding: 20mm; color: #000; margin: auto;
+                    width: 210mm; 
+                    min-height: 297mm; 
+                    background: white; 
+                    padding: 20mm; 
+                    color: #000; 
+                    margin: auto;
                     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
                     border-radius: 4px;
+                    
+                    /* 🟢 Forcing complete system default cursor rendering */
+                    cursor: text !important;
+                    pointer-events: auto !important;
+                    caret-color: #000 !important;
                 }
 
-/* --- 16 FONT DROP-DOWN LABELS (Fixes the invisible logo/name issue) --- */
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="arial"]::before { content: "Arial" !important; font-family: Arial !important; }
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="times"]::before { content: "Times New Roman" !important; font-family: 'Times New Roman' !important; }
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="courier"]::before { content: "Courier" !important; font-family: 'Courier New' !important; }
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="georgia"]::before { content: "Georgia" !important; font-family: Georgia !important; }
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="garamond"]::before { content: "Garamond" !important; font-family: Garamond !important; }
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="verdana"]::before { content: "Verdana" !important; font-family: Verdana !important; }
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="impact"]::before { content: "Impact" !important; font-family: Impact !important; }
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="comic"]::before { content: "Comic Sans" !important; font-family: 'Comic Sans MS' !important; }
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="trebuchet"]::before { content: "Trebuchet" !important; font-family: 'Trebuchet MS' !important; }
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="black"]::before { content: "Arial Black" !important; font-family: 'Arial Black' !important; }
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="tahoma"]::before { content: "Tahoma" !important; font-family: Tahoma !important; }
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="lucida"]::before { content: "Lucida Sans" !important; font-family: 'Lucida Sans Unicode' !important; }
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="century"]::before { content: "Century Gothic" !important; font-family: 'Century Gothic' !important; }
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="geneva"]::before { content: "Geneva" !important; font-family: Geneva !important; }
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="palatino"]::before { content: "Palatino" !important; font-family: 'Palatino Linotype' !important; }
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="bookman"]::before { content: "Bookman" !important; font-family: 'Bookman Old Style' !important; }
-
+                /* --- 16 FONT DROP-DOWN LABELS (Fixes the invisible logo/name issue) --- */
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="arial"]::before { content: "Arial" !important; font-family: Arial !important; }
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="times"]::before { content: "Times New Roman" !important; font-family: 'Times New Roman' !important; }
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="courier"]::before { content: "Courier" !important; font-family: 'Courier New' !important; }
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="georgia"]::before { content: "Georgia" !important; font-family: Georgia !important; }
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="garamond"]::before { content: "Garamond" !important; font-family: Garamond !important; }
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="verdana"]::before { content: "Verdana" !important; font-family: Verdana !important; }
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="impact"]::before { content: "Impact" !important; font-family: Impact !important; }
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="comic"]::before { content: "Comic Sans" !important; font-family: 'Comic Sans MS' !important; }
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="trebuchet"]::before { content: "Trebuchet" !important; font-family: 'Trebuchet MS' !important; }
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="black"]::before { content: "Arial Black" !important; font-family: 'Arial Black' !important; }
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="tahoma"]::before { content: "Tahoma" !important; font-family: Tahoma !important; }
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="lucida"]::before { content: "Lucida Sans" !important; font-family: 'Lucida Sans Unicode' !important; }
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="century"]::before { content: "Century Gothic" !important; font-family: 'Century Gothic' !important; }
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="geneva"]::before { content: "Geneva" !important; font-family: Geneva !important; }
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="palatino"]::before { content: "Palatino" !important; font-family: 'Palatino Linotype' !important; }
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="bookman"]::before { content: "Bookman" !important; font-family: 'Bookman Old Style' !important; }
 /* --- EDITOR FONT CLASS MAPPINGS --- */
-.ql-font-arial { font-family: Arial !important; }
-.ql-font-times { font-family: 'Times New Roman' !important; }
-.ql-font-courier { font-family: 'Courier New' !important; }
-.ql-font-georgia { font-family: Georgia !important; }
-.ql-font-garamond { font-family: Garamond !important; }
-.ql-font-verdana { font-family: Verdana !important; }
-.ql-font-impact { font-family: Impact !important; }
-.ql-font-comic { font-family: 'Comic Sans MS' !important; }
-.ql-font-trebuchet { font-family: 'Trebuchet MS' !important; }
-.ql-font-black { font-family: 'Arial Black' !important; }
-.ql-font-tahoma { font-family: Tahoma !important; }
-.ql-font-lucida { font-family: 'Lucida Sans Unicode' !important; }
-.ql-font-century { font-family: 'Century Gothic' !important; }
-.ql-font-geneva { font-family: Geneva !important; }
-.ql-font-palatino { font-family: 'Palatino Linotype' !important; }
-.ql-font-bookman { font-family: 'Bookman Old Style' !important; }
+                .ql-font-arial { font-family: Arial !important; }
+                .ql-font-times { font-family: 'Times New Roman' !important; }
+                .ql-font-courier { font-family: 'Courier New' !important; }
+                .ql-font-georgia { font-family: Georgia !important; }
+                .ql-font-garamond { font-family: Garamond !important; }
+                .ql-font-verdana { font-family: Verdana !important; }
+                .ql-font-impact { font-family: Impact !important; }
+                .ql-font-comic { font-family: 'Comic Sans MS' !important; }
+                .ql-font-trebuchet { font-family: 'Trebuchet MS' !important; }
+                .ql-font-black { font-family: 'Arial Black' !important; }
+                .ql-font-tahoma { font-family: Tahoma !important; }
+                .ql-font-lucida { font-family: 'Lucida Sans Unicode' !important; }
+                .ql-font-century { font-family: 'Century Gothic' !important; }
+                .ql-font-geneva { font-family: Geneva !important; }
+                .ql-font-palatino { font-family: 'Palatino Linotype' !important; }
+                .ql-font-bookman { font-family: 'Bookman Old Style' !important; }
+
+                .a4-quill-wrapper .ql-editor { 
+                    width: 210mm; 
+                    min-height: 297mm; 
+                    /* 🔴 CHANGED: Light grey background so the white cursor shows up */
+                    background: #fcfcfc !important; 
+                    padding: 20mm; 
+                    color: #000; 
+                    margin: auto;
+                    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+                    border-radius: 4px;
+                    
+                    /* 🔴 Makes the typing line (caret) bright red */
+                    caret-color: red !important; 
+                    cursor: text !important;
+                    pointer-events: auto !important;
+                }
 
                 /* CRITICAL PRINTER ENGINE PROTECTION PARAMS */
                 @media print {
@@ -234,6 +258,7 @@ export default function AIDocWriter() {
                         size: A4 portrait;
                         margin: 20mm 15mm;
                     }
+ 
                     html, body, #root, div, section, main {
                         visibility: hidden !important;
                         background: none !important;
@@ -267,28 +292,38 @@ export default function AIDocWriter() {
                         top: 0 !important;
                         width: 100% !important;
                     }
-                    .ql-container { border: none !important; box-shadow: none !important; }
-                    .ql-editor {
-                        width: 100% !important;
-                        height: auto !important;
-                        min-height: 0 !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
-                        overflow: visible !important;
-                        color: #000000 !important;
+
+                    /* 🟢 FIX: Target the specific Quill container class to override defaults */
+                    .ql-container.ql-snow .ql-editor { 
+                        width: 210mm; 
+                        min-height: 297mm; 
+                        background: white; 
+                        padding: 20mm; 
+                        color: #000; 
+                        margin: auto;
+                        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+                        border-radius: 4px;
+                        
+                        /* 🔴 FORCING VISIBILITY */
+                        cursor: text !important; 
+                        caret-color: red !important; 
+                        pointer-events: auto !important;
                     }
+
                     /* Force browser engine to keep rendering logos, pictures and colors */
                     * {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                     }
-                    /* Lock in Sans-Serif stack for all printed elements */
-                    .ql-editor, .ql-editor *, .ql-editor p, .ql-editor span, .ql-editor h1, .ql-editor h2 {
-                        font-family: Arial, Helvetica, sans-serif !important;
+
+                    /* 🟢 FIXED: Soft font fallback that allows custom classes to apply on print */
+                    .ql-editor {
+                        font-family: Arial, Helvetica, sans-serif;
                     }
                 }
                 `}
             </style>
+
               {/* MAIN NAVIGATION AND CONTROLS SECTION */}
             <div className="no-print">
                 <button onClick={() => navigate(-1)} className="btn-back" style={{ marginBottom: '20px' }}>← Back</button>
