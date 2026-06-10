@@ -3,11 +3,10 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  
-  // 🟢 ADDED: This fixes the Cross-Origin-Opener-Policy console error
   server: {
     headers: {
-      "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+      /* 🟢 CHANGED: "unsafe-none" completely unblocks Google Sign-In iframes */
+      "Cross-Origin-Opener-Policy": "unsafe-none",
       "Cross-Origin-Embedder-Policy": "unsafe-none",
     },
   },
