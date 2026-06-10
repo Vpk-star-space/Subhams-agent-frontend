@@ -293,6 +293,7 @@ const generateDoc = async () => {
                                 e.target.style.height = e.target.scrollHeight + 'px'; // Grows to fit new text
                             }} 
                             placeholder="What document do you need?" 
+                            
                             className="custom-textarea" 
                             style={{ 
                                 width: '100%', 
@@ -302,6 +303,7 @@ const generateDoc = async () => {
                                 boxSizing: 'border-box'/* Keeps it from breaking your layout */
                             }} 
                         />
+                        {/* 🟢 AI Warning & Privacy Notice */} <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', fontSize: '13px', lineHeight: '1.5', color: '#bdbdbd' }} > <strong style={{ color: '#ffffff' }}> Subhams Writer AI </strong>{" "} uses advanced privacy-focused AI models. AI can sometimes make mistakes, so please verify important information before use. </div>
                     </div>
                 </div>
 

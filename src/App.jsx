@@ -15,8 +15,8 @@ import XeroxChatbot from './components/XeroxChatbot';
 import AIDocWriter from './components/AIDocWriter'; // Import the new AI Document Writer component
 
 // 🛑 THE MASTER SWITCH: Change to 'true' to lock down the app for updates!
-const IS_MAINTENANCE_MODE = false; 
-const TARGET_LAUNCH_DATE = new Date("2026-05-26T10:00:00"); 
+const IS_MAINTENANCE_MODE = true; 
+const TARGET_LAUNCH_DATE = new Date("2026-06-11T10:00:00 PM"); 
 
 // 🛡️ THE PROFESSIONAL BOUNCER (Only protects Shop Owners)
 const ProtectedRoute = ({ children }) => {
