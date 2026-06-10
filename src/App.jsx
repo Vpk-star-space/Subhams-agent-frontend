@@ -16,7 +16,7 @@ import AIDocWriter from './components/AIDocWriter'; // Import the new AI Documen
 
 // 🛑 THE MASTER SWITCH: Change to 'true' to lock down the app for updates!
 const IS_MAINTENANCE_MODE = true; 
-const TARGET_LAUNCH_DATE = new Date("2026-06-11T10:00:00"); 
+ const TARGET_LAUNCH_TEXT = "11 June 2026 • 10:00 PM";
 
 // 🛡️ THE PROFESSIONAL BOUNCER (Only protects Shop Owners)
 const ProtectedRoute = ({ children }) => {
@@ -69,12 +69,19 @@ const MaintenanceScreen = () => {
           <p style={{ margin: '0 0 5px 0', fontSize: '11px', color: '#6ee7b7', fontWeight: 'bold', letterSpacing: '1px' }}>
             ESTIMATED LAUNCH / ప్రారంభ సమయం
           </p>
-          <div style={{ fontSize: '15px', color: '#10b981', fontWeight: 'bold', marginBottom: '2px' }}>
-            {TARGET_LAUNCH_DATE.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-          </div>
-          <div style={{ fontSize: '12px', color: '#34d399' }}>
-            {TARGET_LAUNCH_DATE.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </div>
+     
+<div
+  style={{
+    fontSize: '15px',
+    color: '#10b981',
+    fontWeight: 'bold',
+    marginBottom: '2px'
+  }}
+>
+  {TARGET_LAUNCH_TEXT}
+</div>
+
+
         </div>
       </div>
 
