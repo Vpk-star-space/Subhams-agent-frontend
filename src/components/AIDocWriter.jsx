@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import ReactQuill, { Quill } from 'react-quill-new'; 
 import 'react-quill-new/dist/quill.snow.css'; 
 import api from '../api/api';
@@ -36,7 +36,7 @@ const modules = {
 const formats = ['font', 'size', 'bold', 'italic', 'underline', 'strike', 'color', 'background', 'list', 'align'];
 
 export default function AIDocWriter() {
-    const navigate = useNavigate();
+
     const [topic, setTopic] = useState('');
     const [language, setLanguage] = useState('English');
     const [html, setHtml] = useState('');
@@ -184,8 +184,18 @@ export default function AIDocWriter() {
             </style>
 
             <div className="no-print">
-                <button onClick={() => navigate(-2)} className="btn-back" style={{ marginBottom: '20px' }}>⬅️ Back</button>
-                <h2>✨ Subhams Writer</h2>
+<button 
+    onClick={() => {
+        // This forces the browser to physically reload the dashboard, clearing the writer!
+        window.location.href = '/dashboard'; 
+    }} 
+    className="btn-back" 
+    style={{ marginBottom: '20px' }}
+>
+    ⬅️ Back to Dashboard
+</button>
+
+ <h2>✨ Subhams Writer</h2>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px', marginBottom: '20px' }}>
                     <div>
