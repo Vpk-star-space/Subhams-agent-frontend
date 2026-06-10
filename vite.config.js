@@ -3,6 +3,12 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  // 🟢 FIX: We completely removed the dangerous "define: process.env" block!
-  // Vite automatically handles import.meta.env securely for you.
+  
+  // 🟢 ADDED: This fixes the Cross-Origin-Opener-Policy console error
+  server: {
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+      "Cross-Origin-Embedder-Policy": "unsafe-none",
+    },
+  },
 });
