@@ -91,7 +91,7 @@ export default function CustomerUpload() {
     if (showBootSequence) {
       const timer = setTimeout(() => {
         setShowBootSequence(false);
-      }, 10000);
+      }, 6000);
       return () => clearTimeout(timer);
     }
   }, [showBootSequence]);
