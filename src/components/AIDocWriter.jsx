@@ -46,34 +46,74 @@ export default function AIDocWriter() {
     const editorRef = useRef(null);
     const quillRef = useRef(null);
 
-    // AI Document Writer Data Handler
-    const generateDoc = async () => {
-        if (!topic) return alert('Please enter a topic!');
-        setLoading(true);
-        
-        try {
-            const res = await secureAxios.post('/ai/generate', { topic, language, style: 'Official Document' });
-            
-            // Runs the 3-second icon animation step safely
-            setTimeout(() => {
-                setHtml(res.data.html || '');
-                setLoading(false);
-                
-                // 🟢 NEW: Instantly scroll down to the document after generating
-                setTimeout(() => {
-                    if (editorRef.current) {
-                        editorRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }, 300);
+const generateDoc = async () => {
+    if (!topic) return alert('Please enter a topic!');
+    setLoading(true);
+    setHtml(''); // Clear previous document immediately
+    
+    try {
+        const res = await secureAxios.post('/ai/generate', { 
+            topic, 
+            language, 
+            style: 'Official Document' 
+        });
 
-            }, 3000);
-
-        } catch (error) {
-            console.error(error);
-            alert('Error generating document');
+        // 🟢 1. INSTANT SECURITY CHECK (Red Box)
+        if (res.data.type === 'SECURITY_ALERT') {
+            setHtml(`
+                <div style="border: 2px solid #ef4444; background: #fee2e2; padding: 20px; color: #991b1b; font-weight: bold; border-radius: 8px;">
+                    🛑 SECURITY ALERT: ${res.data.message}
+                </div>
+            `);
             setLoading(false);
+            return; // Stop execution here
         }
-    };
+        
+        // 🟢 2. INSTANT RATE LIMIT CHECK (Yellow Box)
+        if (res.data.type === 'RATE_LIMIT') {
+            setHtml(`
+                <div style="border: 2px solid #f59e0b; background: #fef3c7; padding: 20px; color: #b45309; font-weight: bold; border-radius: 8px;">
+                    ⏳ SERVER BUSY: ${res.data.message}
+                </div>
+            `);
+            setLoading(false);
+            return; // Stop execution here
+        }
+
+        // 🟢 3. SUCCESS PATH (Run the 3-second animation)
+        setTimeout(() => {
+            setHtml(res.data.html || '');
+            setLoading(false);
+            
+            // Scroll down after the text appears
+            setTimeout(() => {
+                if (editorRef.current) {
+                    editorRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 300);
+
+        }, 3000);
+
+    } catch (error) {
+        console.error("AI Generation Failed:", error);
+        
+        // 🟢 4. ADVANCED ERROR CATCHING
+        // If the server throws a 429 status code directly, catch it here
+        if (error.response && error.response.status === 429) {
+            setHtml(`
+                <div style="border: 2px solid #f59e0b; background: #fef3c7; padding: 20px; color: #b45309; font-weight: bold; border-radius: 8px;">
+                    ⏳ SERVER BUSY: ${error.response.data.message || 'Subhams Writer is currently busy processing too many requests. Please wait a moment and try again.'}
+                </div>
+            `);
+        } else {
+            // Standard crash alert
+            const errorMsg = error.response?.data?.message || 'Error connecting to Subhams Server';
+            alert('Subhams Writer Error: ' + errorMsg);
+        }
+        
+        setLoading(false);
+    }
+};
 
     // 🟢 NEW: Custom Undo/Redo Handlers
     const handleUndo = () => {
@@ -194,6 +234,8 @@ export default function AIDocWriter() {
 }
 .ai-warning-box strong { color: #664d03; }
 
+
+
                 `}
             </style>
 
@@ -210,12 +252,25 @@ export default function AIDocWriter() {
 </button>
 
  <h2>✨ Subhams Writer</h2>
-  <div className="ai-warning-box">
-        <strong>⚠️ Content Verification Notice:</strong> Subhams Writer uses AI to generate content. 
-        Please review the output carefully. You <strong>must</strong> manually verify all details, 
-        especially the placeholders highlighted in <span style={{ color: 'red', fontWeight: 'bold' }}>red</span>, 
-        to ensure accuracy before final use.
-    </div>
+<div className="ai-warning-box" style={{ backgroundColor: '#fefaf0', border: '1px solid #fbbf24', padding: '16px', borderRadius: '8px', marginBottom: '20px', color: '#92400e' }}>
+    <strong style={{ fontSize: '16px', display: 'block', marginBottom: '10px' }}>
+        ⚠️ Subhams Writer - Official Security & Privacy Notice
+    </strong>
+    <ul style={{ marginTop: '0', marginBottom: '0', paddingLeft: '24px', lineHeight: '1.6' }}>
+        <li>
+            <strong>Maximum Privacy (Powered by Groq):</strong> We exclusively use Groq’s enterprise-grade AI infrastructure to guarantee your privacy. Subhams Writer operates under strict <strong>zero-retention rules</strong>. We do not track, save, or use your prompt data to train AI models. 
+        </li>
+        <li>
+            <strong>High-Speed Infrastructure:</strong> Designed specifically for fast, professional service, our advanced tech stack delivers lightning-fast document generation without compromising quality.
+        </li>
+        <li>
+            <strong>Human Verification:</strong> While our AI generates highly accurate drafts, you are strictly responsible for reviewing the accuracy, context, and legality of the final content.
+        </li>
+        <li>
+            <strong>Mandatory Action:</strong> To protect sensitive data (like Aadhaar/PAN), you <strong>must</strong> manually type real details into the secure placeholders highlighted in <span style={{ color: 'red', fontWeight: 'bold' }}>red</span> before final printing.
+        </li>
+    </ul>
+</div>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px', marginBottom: '20px' }}>
                     <div>
