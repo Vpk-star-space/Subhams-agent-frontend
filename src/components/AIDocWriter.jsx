@@ -180,6 +180,20 @@ export default function AIDocWriter() {
                     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                     .ql-editor { font-family: Arial, Helvetica, sans-serif; }
                 }
+                                        /* AI VERIFICATION NOTICE */
+.ai-warning-box {
+    background: #fff8e1;
+    border-left: 4px solid #ffc107;
+    padding: 12px;
+    margin: 20px 0;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: #856404;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.ai-warning-box strong { color: #664d03; }
+
                 `}
             </style>
 
@@ -196,6 +210,12 @@ export default function AIDocWriter() {
 </button>
 
  <h2>✨ Subhams Writer</h2>
+  <div className="ai-warning-box">
+        <strong>⚠️ Content Verification Notice:</strong> Subhams Writer uses AI to generate content. 
+        Please review the output carefully. You <strong>must</strong> manually verify all details, 
+        especially the placeholders highlighted in <span style={{ color: 'red', fontWeight: 'bold' }}>red</span>, 
+        to ensure accuracy before final use.
+    </div>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px', marginBottom: '20px' }}>
                     <div>
@@ -203,6 +223,7 @@ export default function AIDocWriter() {
                         <select value={language} onChange={(e) => setLanguage(e.target.value)} className="custom-select" style={{ width: '100%' }}>
                             <option value="English">English</option>
                             <option value="Telugu">Telugu</option>
+                               <option value="English & Telugu Mix">English & Telugu (Bilingual)</option>
                         </select>
                     </div>
 
