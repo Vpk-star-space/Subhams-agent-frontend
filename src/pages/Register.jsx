@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/api';
 import { QRCodeSVG } from 'qrcode.react';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google'; 
 import { jwtDecode } from 'jwt-decode';            
@@ -30,7 +30,7 @@ export default function Register() {
 
   // 🟢 Fetch the Google Client ID securely on load
   useEffect(() => {
-    axios.get('https://subhams-vpk.onrender.com/api/auth/google-client-id')
+api.get('/auth/google-client-id')
       .then(res => {
           if (res.data.success) {
               setClientId(res.data.clientId);
@@ -45,7 +45,7 @@ export default function Register() {
     setLoading(true);
     setError('');
     try {
-      await axios.post('https://subhams-vpk.onrender.com/api/auth/request-register-otp', { email });
+  await api.post('/auth/request-register-otp', { email });
       setStep(2);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send OTP.');
@@ -59,7 +59,7 @@ export default function Register() {
     setLoading(true);
     setError('');
     try {
-      const response = await axios.post('https://subhams-vpk.onrender.com/api/auth/verify-register', { 
+      const response = await api.post('/auth/verify-register', { 
         email, 
         otp, 
         password,
@@ -89,7 +89,7 @@ export default function Register() {
     setError('');
     try {
       const decoded = jwtDecode(credentialResponse.credential);
-      const response = await axios.post('https://subhams-vpk.onrender.com/api/auth/google-login', {
+      const response = await api.post('/auth/google-login', {
         email: decoded.email,
         name: decoded.name,
         googleId: decoded.sub,

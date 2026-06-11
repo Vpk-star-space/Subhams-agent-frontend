@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Send, X, CheckCircle, Globe, Sparkles } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/api';
 
 const getCurrentTime = () => {
     return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toLowerCase();
@@ -156,10 +156,9 @@ const XeroxChatbot = () => {
 
         try {
             const token = localStorage.getItem('accessToken');
-            const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://subhams-vpk.onrender.com';
+           
 
-            const res = await axios.post(
-                `${BACKEND_URL}/api/support/chat`, 
+        const res = await api.post('/support/chat', 
                 { 
                     message: text, 
                     lang: language, 

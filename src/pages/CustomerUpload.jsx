@@ -1,10 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom'; 
-import axios from 'axios';
 import { Html5Qrcode } from 'html5-qrcode'; 
 import { io } from 'socket.io-client'; 
 
-const socket = io('https://subhams-vpk.onrender.com', {
+// 🟢 Import your auto-switching API and BASE_URL
+import api, { BASE_URL } from '../api/api';
+
+const socket = io(BASE_URL, {
     transports: ['websocket', 'polling'],
     reconnectionAttempts: 5
 });
@@ -122,9 +124,9 @@ export default function CustomerUpload() {
               return;
           }
           
-          setShopStatus('checking');
+        setShopStatus('checking');
           try {
-              const res = await axios.get(`https://subhams-vpk.onrender.com/api/shop/pricing/${shopId}`);
+              const res = await api.get(`/shop/pricing/${shopId}`);
               if (res.data.success) {
                   setShopStatus('valid');
               } else {
@@ -469,7 +471,8 @@ export default function CustomerUpload() {
          formData.append('documents', item.file);
           
           // 🟢 SECURE TRAP DOOR KEY: This proves to your backend that the request is legit!
-          const response = await axios.post('https://subhams-vpk.onrender.com/api/jobs/upload', formData, {
+          // URL CHANGED to use 'api' instance, SECURITY HEADERS KEPT exactly as requested!
+          const response = await api.post('/jobs/upload', formData, {
               headers: {
                   'x-subhams-secure-token': 'subhams_front_auth_998877'
               }
@@ -1415,9 +1418,9 @@ export default function CustomerUpload() {
                                              </div>
                                         </div>
                                             
-                                            {securityMode === 'private' && (
-                                                <div style={getWatermarkStyle(securePurpose ? `${securePurpose.toUpperCase()} - ${todayDate}` : 'PRIVATE USE')}></div>
-                                            )}
+                                        {securityMode === 'private' && (
+                                            <div style={getWatermarkStyle(securePurpose ? `${securePurpose.toUpperCase()} - ${todayDate}` : 'PRIVATE USE')}></div>
+                                        )}
                                         </div>
 
                                         {(securityMode === 'govt' || securityMode === 'private') && (

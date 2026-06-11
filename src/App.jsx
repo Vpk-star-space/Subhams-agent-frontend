@@ -1,3 +1,4 @@
+import { BASE_URL } from './api/api';
 import { io } from 'socket.io-client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -15,7 +16,7 @@ import XeroxChatbot from './components/XeroxChatbot';
 import AIDocWriter from './components/AIDocWriter'; // Import the new AI Document Writer component
 
 // 🛑 THE MASTER SWITCH: Change to 'true' to lock down the app for updates!
-const IS_MAINTENANCE_MODE = true; 
+const IS_MAINTENANCE_MODE = false; 
  const TARGET_LAUNCH_TEXT = "11 June 2026 • 10:00 PM";
 
 // 🛡️ THE PROFESSIONAL BOUNCER (Only protects Shop Owners)
@@ -176,10 +177,8 @@ export default function App() {
   const [isServerAwake, setIsServerAwake] = useState(false);
 
   useEffect(() => {
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://subhams-vpk.onrender.com';
-
-    // 🟢 1. Connect Socket to Render
-    const socket = io(BACKEND_URL);
+    // 🟢 1. Connect Socket using the MAGIC BASE_URL!
+    const socket = io(BASE_URL);
 
     // 🟢 2. Listen for Vercel Update Command
     socket.on('CRITICAL_UPDATE_REFRESH', () => {
@@ -190,11 +189,12 @@ export default function App() {
         }, 3000);
     });
     
-    const pingServer = async () => {
+const pingServer = async () => {
       if (IS_MAINTENANCE_MODE) return; 
 
       try {
-        const res = await fetch(`${BACKEND_URL}/api/health`);
+        // 🟢 Increase wait time for Render cold-starts
+        const res = await fetch(`${BASE_URL}/api/health`);
         if (res.ok) {
           console.log("🟢 Server is Awake!");
           setIsServerAwake(true);
@@ -202,12 +202,13 @@ export default function App() {
           throw new Error("Not ready");
         }
       } catch  {
-        console.log("🟡 Server is sleeping. Retrying in 3 seconds...");
-        setTimeout(pingServer, 3000); 
+        console.log("🟡 Server is sleeping. Retrying in 8 seconds...");
+        // 🟢 Changed from 3000ms to 8000ms to give the server breathing room
+        setTimeout(pingServer, 8000); 
       }
     };
 
-  pingServer();
+    pingServer();
 
     // Cleanup socket on unmount
     return () => socket.disconnect();

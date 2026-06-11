@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/api';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google'; 
 import { jwtDecode } from 'jwt-decode';
 
@@ -51,7 +51,7 @@ export default function Login() {
   }, [lockoutTimer]);
 
   useEffect(() => {
-    axios.get('https://subhams-vpk.onrender.com/api/auth/google-client-id')
+api.get('/auth/google-client-id')
       .then(res => {
           if (res.data.success) {
               setClientId(res.data.clientId);
@@ -78,7 +78,7 @@ export default function Login() {
     setError('');
     
     try {
-      const response = await axios.post('https://subhams-vpk.onrender.com/api/auth/login', { email, password });
+      const response = await api.post('/auth/login', { email, password });
       
       if (response.data.success) {
         setFailedAttempts(0);
@@ -126,7 +126,7 @@ export default function Login() {
 
     try {
       const decoded = jwtDecode(credentialResponse.credential);
-      const response = await axios.post('https://subhams-vpk.onrender.com/api/auth/google-login', {
+      const response = await api.post('/auth/google-login', {
         email: decoded.email,
         name: decoded.name,
         googleId: decoded.sub,

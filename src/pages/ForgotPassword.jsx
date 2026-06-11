@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/api';
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -60,7 +60,7 @@ export default function ForgotPassword() {
     setMessage('');
     
     try {
-      const res = await axios.post('https://subhams-vpk.onrender.com/api/auth/forgot-password/request-otp', { email });
+   const res = await api.post('/auth/forgot-password/request-otp', { email });
       if (res.data.success) {
         setFailedAttempts(0);
         localStorage.removeItem('localForgotAttempts');
@@ -93,7 +93,7 @@ export default function ForgotPassword() {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.post('https://subhams-vpk.onrender.com/api/auth/forgot-password/reset', {
+      const res = await api.post('/auth/forgot-password/reset', {
         email,
         otp,
         newPassword,

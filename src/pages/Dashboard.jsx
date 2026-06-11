@@ -1,49 +1,39 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { io } from 'socket.io-client';
 import { QRCodeSVG } from 'qrcode.react'; 
 import { useReactToPrint } from 'react-to-print';
 import PrintPass from './PrintPass';
 import AIDocWriter from '../components/AIDocWriter';
 import { Document, Page, pdfjs } from 'react-pdf';
-// 🟢 UPDATED: Use the standard path without /esm/
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
-// 🟢 CRITICAL: This connects the "brain" of the PDF reader for Vite
+// 🟢 Correct Import path to your api folder
+import api, { BASE_URL } from '../api/api'; 
+
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
   import.meta.url,
 ).toString();
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://subhams-vpk.onrender.com';
-const socket = io(BACKEND_URL, { 
+const socket = io(BASE_URL, { 
     autoConnect: false,
     transports: ['websocket', 'polling'],
     reconnectionAttempts: 5
 });
 
 
-
 export default function Dashboard() {
   const navigate = useNavigate();
 
 
- 
+
   
   const auth = useMemo(() => ({
     shopId: localStorage.getItem('shopId') || '', 
     token: localStorage.getItem('accessToken') || '' 
   }), []);
-
-  // 🟢 1. CORE TOOLS (Defined first so they can be used everywhere without errors)
-  const secureAxios = useMemo(() => {
-    return axios.create({
-      baseURL: `${BACKEND_URL}/api`,
-      headers: { Authorization: `Bearer ${auth.token}` }
-    });
-  }, [auth.token]);
 
   const handleLogout = useCallback(() => {
     localStorage.clear();
@@ -114,12 +104,10 @@ const [showReleaseNotes, setShowReleaseNotes] = useState(false);
     documentTitle: "Subhams-Pass",
 })
 
-  // 🟢 4. FUNCTIONS & EFFECTS
-  // Define fetchQueue carefully without the trailing comma
-  const fetchQueue = useCallback(async () => {
+const fetchQueue = useCallback(async () => {
     if (!auth.shopId || !auth.token) return;
     try {
-      const response = await secureAxios.get(`/jobs/queue/${auth.shopId}`);
+      const response = await api.get(`/jobs/queue/${auth.shopId}`);
       if (response.data.success) {
         setJobs(response.data.jobs);
       }
@@ -127,30 +115,28 @@ const [showReleaseNotes, setShowReleaseNotes] = useState(false);
       if (err.response?.status === 401) handleLogout();
       console.error("Queue fetch error:", err); 
     }
-  }, [auth.shopId, auth.token, secureAxios, handleLogout]);
+  }, [auth.shopId, auth.token, handleLogout]);
 
   
 // 🟢 1. Initialize state with the default value FIRST
   const [ownerName, setOwnerName] = useState(localStorage.getItem('ownerName') || "Shop Owner");
-
-  const fetchPricing = useCallback(async () => {
+const fetchPricing = useCallback(async () => {
     try {
-      const res = await secureAxios.get(`/shop/pricing/${auth.shopId}`);
+      const res = await api.get(`/shop/pricing/${auth.shopId}`);
       if (res.data.success) {
-        setPricing(res.data.pricing); // <--- This fixes the warning
+        setPricing(res.data.pricing);
         setTempPricing(res.data.pricing);
       }
     } catch (err) {
       console.error("Pricing fetch error:", err); 
     }
-  }, [auth.shopId, secureAxios]);
+  }, [auth.shopId]);
 
-  // 🟢 2. SAVE PRICING (Make sure setPricing is called inside here)
   const savePricing = async () => {
     try {
-      const res = await secureAxios.put(`/shop/pricing/${auth.shopId}`, { pricing: tempPricing });
+      const res = await api.put(`/shop/pricing/${auth.shopId}`, { pricing: tempPricing });
       if (res.data.success) {
-        setPricing(tempPricing); // <--- This fixes the warning
+        setPricing(tempPricing);
         setIsSettingsOpen(false);
         alert("✅ Prices updated successfully!");
       }
@@ -180,7 +166,7 @@ const [showReleaseNotes, setShowReleaseNotes] = useState(false);
   useEffect(() => {
     if (!auth.shopId) return;
 
-    secureAxios.get(`/shop/details/${auth.shopId}`)
+api.get(`/shop/details/${auth.shopId}`)
       .then(res => {
           const actualName = res.data.ownerName || res.data.name || res.data.shop?.ownerName || res.data.user?.name;
           if (actualName) { 
@@ -202,25 +188,25 @@ const [showReleaseNotes, setShowReleaseNotes] = useState(false);
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [auth.shopId, secureAxios]);
+  }, [auth.shopId]);
 const checkHardware = useCallback(async () => {
     if (!auth.shopId || !auth.token || isCheckingHardware.current) return;
     isCheckingHardware.current = true; 
     try {
-      const res = await secureAxios.get(`/shop/hardware/status/${auth.shopId}`);
+      const res = await api.get(`/shop/hardware/status/${auth.shopId}`);
       setPendingHardware(res.data.success ? res.data.pendingHardware : null);
     } catch (err) {
       console.error("Hardware check error:", err); 
     } finally {
       isCheckingHardware.current = false; 
     }
-  }, [auth.shopId, auth.token, secureAxios]); // 🟢 Added secureAxios
+  }, [auth.shopId, auth.token]); 
 
 useEffect(() => {
     if (activeJob && !isDrawingMode) {
       const delayTimer = setTimeout(async () => {
         try {
-            const response = await secureAxios.post(`/preview-fast/${activeJob.jobId}`, { 
+            const response = await api.post(`/preview-fast/${activeJob.jobId}`, { 
                 overrides: { ...printSettings } 
             }, { responseType: 'blob' }); 
             
@@ -235,7 +221,7 @@ useEffect(() => {
 
       return () => clearTimeout(delayTimer); 
     }
-  }, [activeJob, printSettings, isDrawingMode, secureAxios]); // 🟢 Added secureAxios
+  }, [activeJob, printSettings, isDrawingMode]); 
 
   
   useEffect(() => {
@@ -390,7 +376,7 @@ const handlePrint = (jobId) => {
     if(!window.confirm("Delete this job? File will be securely wiped from the server.")) return;
     socket.emit('NOTIFY_DELETE', { jobId });
     try {
-        await secureAxios.delete(`/jobs/${jobId}`);
+        await api.delete(`/jobs/${jobId}`);
         if(activeJob?.jobId === jobId) { setActiveJob(null); setPreviewImage(null); setIsDrawingMode(false); }
         fetchQueue();
     } catch (err) { console.error("Job delete error:", err); alert("Failed to delete job."); }
@@ -398,7 +384,7 @@ const handlePrint = (jobId) => {
 
   const handleHardwareDecision = async (decision) => {
     try {
-      const res = await secureAxios.post('/shop/hardware/decision', { shopId: auth.shopId, decision });
+      const res = await api.post('/shop/hardware/decision', { shopId: auth.shopId, decision });
       if (res.data.success) {
         setPendingHardware(null); alert(decision === 'APPROVE' ? "✅ Hardware Approved!" : "❌ Hardware Rejected!");
       }
@@ -1012,7 +998,7 @@ const handlePrint = (jobId) => {
                 // 🟢 Added the secureToken directly into the URL!
                 const downloadUrl = `/jobs/download/${activeJob.jobId}?secureToken=subhams_front_auth_998877`;
                 
-                const response = await secureAxios.get(downloadUrl, { responseType: 'blob' });
+                const response = await api.get(downloadUrl, { responseType: 'blob' });
                 setRawDrawImage(URL.createObjectURL(response.data));
                 
                 setIsDrawingMode(true); 
