@@ -270,16 +270,12 @@ export default function CustomerUpload() {
     e.target.value = ''; 
   };
 
-  const processIdMerge = async () => {
+const processIdMerge = async () => {
     const { front, back } = idMergeModal;
     if (!front || !back) return alert("Please select both Front and Back sides.");
     
-    if (front.size > MAX_FILE_SIZE_BYTES || back.size > MAX_FILE_SIZE_BYTES) {
-        return alert("❌ One of your ID photos is too large! Maximum limit is 15MB.");
-    }
-
     setIsUploading(true);
-    setStatus('⚙️ Optimizing and Merging ID...');
+    setStatus('⚙️ Merging IDs Side-by-Side...');
 
     try {
       const loadImage = (file) => new Promise((resolve) => {
@@ -291,29 +287,55 @@ export default function CustomerUpload() {
       const img1 = await loadImage(front);
       const img2 = await loadImage(back);
 
-      const cardWidth = 800; const cardHeight = 500; const gap = 30;
-      const canvas = document.createElement('canvas');
-      canvas.width = cardWidth; canvas.height = (cardHeight * 2) + gap;
-      const ctx = canvas.getContext('2d');
+      const cardWidth = 800; 
+      const cardHeight = 500; 
+      const gap = 30; // Space between front and back
       
-      ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const canvas = document.createElement('canvas');
+      // 🟢 CHANGE: Double the width, keep height same
+      canvas.width = (cardWidth * 2) + gap;
+      canvas.height = cardHeight;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'white'; 
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      const drawCover = (img, yPos) => {
-          const imgRatio = img.width / img.height; const targetRatio = cardWidth / cardHeight;
+      // Helper function modified to accept X and Y positions
+      const drawCover = (img, xPos, yPos) => {
+          const imgRatio = img.width / img.height; 
+          const targetRatio = cardWidth / cardHeight;
           let sw = img.width, sh = img.height, sx = 0, sy = 0;
+          
           if (imgRatio > targetRatio) { sw = img.height * targetRatio; sx = (img.width - sw) / 2; } 
           else { sh = img.width / targetRatio; sy = (img.height - sh) / 2; }
-          ctx.drawImage(img, sx, sy, sw, sh, 0, yPos, cardWidth, cardHeight);
+          
+          ctx.drawImage(img, sx, sy, sw, sh, xPos, yPos, cardWidth, cardHeight);
       };
 
-      drawCover(img1, 0); drawCover(img2, cardHeight + gap);
+      // 🟢 CHANGE: Draw side-by-side (X=0 vs X=cardWidth + gap)
+      drawCover(img1, 0, 0); 
+      drawCover(img2, cardWidth + gap, 0);
 
       canvas.toBlob((blob) => {
-          const mergedFile = new File([blob], `Smart_Merged_ID_${Date.now()}.jpg`, { type: 'image/jpeg' });
-          setFileItems([...fileItems, { file: mergedFile, copies: 1, colorMode: 'color', scale: 'fit', position: 'top-left', previewUrl: URL.createObjectURL(mergedFile), isPdf: false, maskRectArray: [], rotate: 0 }]);
+          const mergedFile = new File([blob], `SideBySide_ID_${Date.now()}.jpg`, { type: 'image/jpeg' });
+          const previewUrl = URL.createObjectURL(blob);
+          
+          setFileItems([...fileItems, { 
+              file: mergedFile, 
+              copies: 1, 
+              colorMode: 'color', 
+              scale: 'fit', 
+              position: 'top-left', 
+              previewUrl: previewUrl, 
+              isPdf: false, 
+              maskRectArray: [], 
+              rotate: 0 
+          }]);
+          
           setIdMergeModal({ open: false, front: null, back: null });
-          setIsUploading(false); setStatus('');
-      }, 'image/jpeg', 0.9);
+          setIsUploading(false); 
+          setStatus('');
+      }, 'image/jpeg', 0.8);
 
     } catch (error) {
         console.error("Merge error:", error);
