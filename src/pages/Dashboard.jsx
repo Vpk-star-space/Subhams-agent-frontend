@@ -82,6 +82,13 @@ message: "✨ Welcome to Subhams Secure Networks | 🚀 We are happy to work wit
   });
   
   const initialFetchDone = useRef(false);
+  // 🟢 FIX: Define the missing activeJobRef and keep it synced
+  const activeJobRef = useRef(activeJob);
+  
+  useEffect(() => {
+      activeJobRef.current = activeJob;
+  }, [activeJob]);
+  
   const isCheckingHardware = useRef(false);
 
   const uploadLink = `${window.location.origin}/u/${auth.shopId}`;
@@ -225,10 +232,9 @@ setPreviewImage(oldUrl => {
       return () => clearTimeout(delayTimer); 
     }
   }, [activeJob, printSettings, isDrawingMode]); 
-
 useEffect(() => {
     const handleJobExpired = (data) => {
-        // Use the Ref instead of the State variable
+        // Now activeJobRef exists and won't crash!
         if (activeJobRef.current && activeJobRef.current.jobId === data.jobId) {
             setActiveJob(null);
             setPreviewImage(null);
@@ -242,7 +248,7 @@ useEffect(() => {
     
     // Clean up
     return () => socket.off('JOB_EXPIRED', handleJobExpired);
-}, [fetchQueue]); // Only depends on fetchQueue
+}, [fetchQueue]);
 
   useEffect(() => {
     const triggerLock = () => setIsWindowActive(false);
