@@ -212,9 +212,11 @@ useEffect(() => {
             }, { responseType: 'blob' }); 
             
             const contentType = response.headers['content-type'] || 'application/pdf';
-            const fileBlob = new Blob([response.data], { type: contentType });
-            const rawUrl = URL.createObjectURL(fileBlob);
-            setPreviewImage(rawUrl); 
+         const fileBlob = new Blob([response.data], { type: contentType });
+setPreviewImage(oldUrl => {
+    if (oldUrl) URL.revokeObjectURL(oldUrl); // 🟢 Kills the old memory instantly!
+    return URL.createObjectURL(fileBlob);
+});
         } catch (error) {
             console.error("Fast preview error:", error);
         }
@@ -1059,7 +1061,11 @@ const stopDrawing = (e) => {
                                       draggable={false}
                                       style={{ 
                                           display: 'block', maxWidth: '100%', maxHeight: '55vh', width: 'auto', height: 'auto',
-                                          filter: `${printSettings.colorMode === 'bw' ? 'grayscale(100%) contrast(120%) ' : ''}${printSettings.isBlindPreview ? 'blur(4px)' : ''}`.trim() || 'none',
+                                         /* 🟢 Safely combines filters without printing "false" to CSS */
+filter: [
+    printSettings?.colorMode === 'bw' ? 'grayscale(100%) contrast(120%)' : null,
+    printSettings?.isBlindPreview ? 'blur(4px)' : null
+].filter(Boolean).join(' ') || 'none',
                                           transform: `rotate(${printSettings.rotate || 0}deg)`, transition: 'transform 0.3s ease'
                                       }} 
                                   />
