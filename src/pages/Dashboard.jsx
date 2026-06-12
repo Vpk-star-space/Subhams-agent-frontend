@@ -224,18 +224,23 @@ useEffect(() => {
     }
   }, [activeJob, printSettings, isDrawingMode]); 
 
-  
-  useEffect(() => {
-      socket.on('JOB_EXPIRED', (data) => {
-          if (activeJob && activeJob.jobId === data.jobId) {
-              setActiveJob(null);
-              setPreviewImage(null);
-              alert("⚠️ The file was automatically removed due to timeout.");
-          }
-          fetchQueue();
-      });
-      return () => socket.off('JOB_EXPIRED');
-  }, [activeJob, fetchQueue]);
+useEffect(() => {
+    const handleJobExpired = (data) => {
+        // Use the Ref instead of the State variable
+        if (activeJobRef.current && activeJobRef.current.jobId === data.jobId) {
+            setActiveJob(null);
+            setPreviewImage(null);
+            alert("⚠️ The file was automatically removed due to timeout.");
+        }
+        // Always refresh the queue, regardless of which job expired
+        fetchQueue();
+    };
+
+    socket.on('JOB_EXPIRED', handleJobExpired);
+    
+    // Clean up
+    return () => socket.off('JOB_EXPIRED', handleJobExpired);
+}, [fetchQueue]); // Only depends on fetchQueue
 
   useEffect(() => {
     const triggerLock = () => setIsWindowActive(false);
