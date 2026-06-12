@@ -1336,6 +1336,7 @@ const processIdMerge = async () => {
                                             </div>
                                         )}
 
+                                       {/* 🟢 FIX: Outer A4 Paper Wrapper. Properly uses Flexbox so position grid works! */}
                                         <div style={{ 
                                             width: '100%', 
                                             aspectRatio: '1 / 1.414', 
@@ -1345,21 +1346,19 @@ const processIdMerge = async () => {
                                             overflow: 'hidden', 
                                             boxSizing: 'border-box',
                                             padding: (securityMode === 'govt' || securityMode === 'private') ? '6px' : '0', 
-                                            border: (securityMode === 'govt' || securityMode === 'private') ? '2px solid #0f172a' : '1px solid #cbd5e1'
-                                        }}>
-                                         {/* 🟢 FIX 2: TIGHT IMAGE WRAPPER (This guarantees masks NEVER misplace when page size changes!) */}
-                                     {/* 🟢 FIX 2: TIGHT IMAGE WRAPPER (Now perfectly linked to the 9-grid placement buttons!) */}
-                                        <div style={{ 
-                                            ...getImgSize(item.scale), 
-                                            background: '#f8fafc', 
                                             border: (securityMode === 'govt' || securityMode === 'private') ? '2px solid #0f172a' : '1px solid #cbd5e1',
                                             display: 'flex', 
-                                            /* 👇 This allows the photo to move freely around the paper based on button clicks! */
                                             alignItems: getAlign(item.position), 
-                                            justifyContent: getJustify(item.position), 
-                                            overflow: 'hidden', position: 'relative'
+                                            justifyContent: getJustify(item.position)
                                         }}>
-                                             {/* The Drawing box now tightly hugs the image itself, NOT the outer paper container! */}
+                                            {/* 🟢 FIX: Inner Image Wrapper accurately matches the Fit/Aadhaar Scale dimensions */}
+                                            <div style={{ 
+                                                ...getImgSize(item.scale), 
+                                                position: 'relative',
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                justifyContent: 'center'
+                                            }}>
                                              <div 
                                                  onPointerDown={(e) => isDrawingMode && startDrawing(e, index)}
                                                  onPointerMove={keepDrawing}
@@ -1367,25 +1366,25 @@ const processIdMerge = async () => {
                                                  onPointerCancel={(e) => stopDrawing(e, index)}
                                                  style={{ 
                                                      position: 'relative', 
-                                                     maxWidth: '100%', maxHeight: '100%', 
+                                                     width: '100%', height: '100%',
                                                      display: 'inline-block',
                                                      touchAction: isDrawingMode ? 'none' : 'auto', 
                                                      cursor: isDrawingMode ? 'crosshair' : 'default',
                                                      userSelect: 'none', WebkitUserSelect: 'none'
                                                  }}
                                              >
+                                                 {/* 🟢 Ensures the image fills the EXACT shape of the Aadhaar/Fit box so masks stick perfectly! */}
                                                  <img 
                                                      src={item.previewUrl} 
                                                      alt="Preview" 
                                                      style={{
-                                                         display: 'block', maxWidth: '100%', maxHeight: '100%', 
+                                                         display: 'block', width: '100%', height: '100%', objectFit: 'fill',
                                                          filter: `${item.colorMode === 'bw' ? 'grayscale(100%) ' : ''}${isBlindPreview ? 'blur(4px) ' : ''}`.trim() || 'none',
                                                          transform: `rotate(${item.rotate || 0}deg)`,
                                                          pointerEvents: 'none', userSelect: 'none' 
                                                      }} 
                                                      draggable={false} 
                                                  />
-                                                 
                                                  {/* 🟢 FIX 3: SMART "MASKED" TEXT SIZING */}
                                                  {item.maskRectArray.map((rect, rectIndex) => (
                                                      <div key={rectIndex} style={{
