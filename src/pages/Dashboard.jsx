@@ -73,7 +73,8 @@ message: "✨ Welcome to Subhams Secure Networks | 🚀 We are happy to work wit
   const [downloadStarted, setDownloadStarted] = useState(false);
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [drawState, setDrawState] = useState({ isDrawing: false, startX: 0, startY: 0, currentRect: null });
-  const [zoomLevel, setZoomLevel] = useState(1);
+  const [isBackMasking, setIsBackMasking] = useState(false);
+
   const [printSettings, setPrintSettings] = useState({
     colorMode: 'bw', scale: 'fit', position: 'top-left', backJobId: null,
     securityMode: 'none', securePurpose: '', secureDate: '',
@@ -264,46 +265,40 @@ useEffect(() => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
-
-// 🟢 MASTER EFFECT: Socket and Initial Data (Connection Checks Removed)
+// 🟢 MASTER EFFECT: Socket and Initial Data
 useEffect(() => {
-    // 1. Auth check
     if (!auth.token || !auth.shopId) {
         navigate('/login');
         return;
     }
 
-    // 2. Define Handlers
+    console.log("🔄 Initializing Socket for Shop:", auth.shopId);
+    
+    // 🟢 THE FIX: Force connect and immediately emit JOIN_SHOP regardless of events
+    socket.connect();
+    socket.emit('JOIN_SHOP', { shopId: auth.shopId });
+
     const handleConnect = () => {
-        console.log("🌐 Connected to Socket");
+        console.log("🌐 SUCCESS: Socket Re-Connected!");
         socket.emit('JOIN_SHOP', { shopId: auth.shopId });
     };
 
-    const handleDisconnect = () => {
-        console.log("⚠️ Socket Disconnected");
-    };
-
+    const handleDisconnect = (reason) => console.warn("⚠️ Socket Disconnected:", reason);
+    const handleConnectError = (error) => console.error("❌ SOCKET ERROR:", error.message);
     const handleNewJob = () => fetchQueue();
     const handleUpdate = () => setNeedsUpdate(true);
     const handleKick = () => {
-        alert("SECURITY ALERT: Your account has been deleted or disabled by the Administrator.");
+        alert("SECURITY ALERT: Your account has been deleted.");
         handleLogout();
     };
 
-    // 3. Attach Listeners
- 
-    if (socket.connected) {
-        handleConnect(); // 🟢 FIX: Trigger immediately if already connected!
-    } else {
-        socket.connect();
-    }
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
+    socket.on('connect_error', handleConnectError);
     socket.on('NEW_JOB_RECEIVED', handleNewJob);
     socket.on('AGENT_NEEDS_UPDATE', handleUpdate);
     socket.on('FORCE_KICK_ALL', handleKick);
 
-    // 4. Initial Fetch (Only runs once)
     if (!initialFetchDone.current) {
         fetchQueue();
         fetchPricing();
@@ -311,19 +306,17 @@ useEffect(() => {
         initialFetchDone.current = true;
     }
 
-    // 5. Security Interval
     const securityInterval = setInterval(checkHardware, 5000);
 
-    // 6. Cleanup
     return () => {
         socket.off('connect', handleConnect);
         socket.off('disconnect', handleDisconnect);
+        socket.off('connect_error', handleConnectError);
         socket.off('NEW_JOB_RECEIVED', handleNewJob);
         socket.off('AGENT_NEEDS_UPDATE', handleUpdate);
         socket.off('FORCE_KICK_ALL', handleKick);
         clearInterval(securityInterval);
     };
-
 }, [auth.shopId, auth.token, navigate, fetchQueue, fetchPricing, checkHardware, handleLogout]);
 
   const calculateJobPrice = (job, isForPreview = false) => {
@@ -344,17 +337,20 @@ useEffect(() => {
         } catch(e) { console.error("Could not parse coordinates:", e); }
     }
     
-    setPrintSettings({
+setPrintSettings({
       colorMode: job.options?.colorMode || 'bw', scale: job.options?.scale || 'fit',            
       position: job.options?.position || 'top-left', backJobId: null, securityMode: job.options?.securityMode || 'none', 
       securePurpose: job.options?.securePurpose || '', secureDate: job.options?.secureDate || new Date().toLocaleDateString('en-GB'),
       maskAadhaar: job.options?.maskAadhaar === true || job.options?.maskAadhaar === 'true' || parsedMaskArray.length > 0,
-      maskRectArray: parsedMaskArray,
+      
+      // 🟢 THE FIX: Start with dual buckets
+      maskRectArray: { front: parsedMaskArray, back: [] },
+      
       isBlindPreview: job.options?.isBlindPreview === true || job.options?.isBlindPreview === 'true',
       rotate: job.options?.rotate ? parseInt(job.options.rotate) : 0
     });
     
-    setActiveJob(job); setPreviewImage(null); setIsDrawingMode(false); setZoomLevel(1);
+setActiveJob(job); setPreviewImage(null); setIsDrawingMode(false);
     socket.emit('NOTIFY_VIEWED', { jobId: job.jobId });
   };
 const handlePrint = (jobId) => {
@@ -429,10 +425,16 @@ const handlePrint = (jobId) => {
       const height = Math.min(100 - y, Math.abs(currentY - drawState.startY));
       setDrawState(prev => ({ ...prev, currentRect: { x, y, width, height } }));
   };
-
-  const stopDrawing = (e) => {
+const stopDrawing = (e) => {
       if (drawState.isDrawing && drawState.currentRect && drawState.currentRect.width > 2) {
-          setPrintSettings(prev => ({ ...prev, maskRectArray: [...prev.maskRectArray, drawState.currentRect] }));
+          const side = isBackMasking ? 'back' : 'front';
+          setPrintSettings(prev => ({ 
+              ...prev, 
+              maskRectArray: {
+                  ...prev.maskRectArray,
+                  [side]: [...(prev.maskRectArray[side] || []), drawState.currentRect]
+              }
+          }));
       }
       setDrawState({ isDrawing: false, startX: 0, startY: 0, currentRect: null });
       if(e.pointerId) e.currentTarget.releasePointerCapture(e.pointerId);
@@ -440,26 +442,14 @@ const handlePrint = (jobId) => {
 
   const undoLastMask = () => {
       setPrintSettings(prev => {
-          const newArray = [...prev.maskRectArray]; newArray.pop();
-          return { ...prev, maskRectArray: newArray };
+          const side = isBackMasking ? 'back' : 'front';
+          const newArray = [...(prev.maskRectArray[side] || [])]; 
+          newArray.pop();
+          return { ...prev, maskRectArray: { ...prev.maskRectArray, [side]: newArray } };
       });
   };
 
-  const getJustify = (pos) => pos.includes('left') ? 'flex-start' : pos.includes('right') ? 'flex-end' : 'center';
-  const getAlign = (pos) => pos.includes('top') ? 'flex-start' : pos.includes('bottom') ? 'flex-end' : 'center';
-  
-  const getImgSize = (scale) => {
-      if (scale === 'fit') return { width: '100%', height: '100%' };
-      if (scale === 'aadhaar') return { width: '85%', aspectRatio: '241 / 153' };
-      if (scale === 'pan') return { width: '85%', aspectRatio: '244 / 153' };
-      if (scale === 'passport') return { height: '35%', aspectRatio: '99 / 128' };
-      return { width: '100%', height: '100%' };
-  };
 
-  const getWatermarkStyle = (text) => {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><text x="10" y="50" transform="rotate(-20 50 50)" font-family="Arial" font-size="12" font-weight="bold" fill="rgba(0,0,0,0.15)">${text}</text></svg>`;
-    return { backgroundImage: `url('data:image/svg+xml;utf8,${encodeURIComponent(svg)}')`, backgroundRepeat: 'repeat', position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10 };
-  };
 
   const groupedJobs = useMemo(() => {
     return jobs.reduce((groups, job) => {
@@ -1028,97 +1018,91 @@ const handlePrint = (jobId) => {
                       </div>
                    </div>
 
-                  {isDrawingMode && !isActivePdf ? (
+                 {isDrawingMode && !isActivePdf ? (
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', border: '2px dashed #94a3b8', borderRadius: '8px', padding: '20px' }}>
-                          <h4 style={{ margin: '0 0 15px 0', color: '#0f172a' }}>👆 Use the buttons to zoom. Swipe to Draw Masks</h4>
+                          <h4 style={{ margin: '0 0 15px 0', color: '#0f172a' }}>
+                              {isBackMasking ? "✏️ Drawing on BACK SIDE" : "✏️ Drawing on FRONT SIDE"}
+                          </h4>
                           
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', width: '100%', maxWidth: '400px' }}>
-                              <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b' }}>Zoom Level: {Math.round(zoomLevel * 100)}%</span>
-                              <div style={{ display: 'flex', gap: '5px' }}>
-                                  <button type="button" onClick={() => setZoomLevel(Math.max(1, zoomLevel - 0.2))} style={zoomBtn}>➖</button>
-                                  <button type="button" onClick={() => setZoomLevel(1)} style={zoomBtn}>Reset</button>
-                                  <button type="button" onClick={() => setZoomLevel(Math.min(3, zoomLevel + 0.2))} style={zoomBtn}>➕</button>
-                              </div>
-                          </div>
-
-                          <div 
-                              style={{ 
-                                  width: '100%', maxWidth: '400px', aspectRatio: '1 / 1.414', background: '#f8fafc', 
-                                  borderRadius: '4px', position: 'relative', overflow: 'auto', boxSizing: 'border-box',
-                                  padding: (printSettings.securityMode === 'govt' || printSettings.securityMode === 'private') ? '6px' : '0', 
-                                  border: (printSettings.securityMode === 'govt' || printSettings.securityMode === 'private') ? '2px solid #0f172a' : '1px solid #cbd5e1'
-                              }}
-                          >
-                              <div style={{ 
-                                  height: (printSettings.securityMode === 'govt' || printSettings.securityMode === 'private') ? '75%' : '100%', 
-                                  display: 'flex', padding: '4px', boxSizing: 'border-box', position: 'relative',
-                                  justifyContent: getJustify(printSettings.position), alignItems: getAlign(printSettings.position),
-                                  transform: `scale(${zoomLevel})`, transformOrigin: 'top left', transition: 'transform 0.1s' 
-                              }}>
-                                  
-                                  <div 
-                                      onPointerDown={startDrawing}
-                                      onPointerMove={keepDrawing}
-                                      onPointerUp={stopDrawing}
-                                      onPointerCancel={stopDrawing}
+                          {/* 🟢 THE FIX: Switch Button */}
+                          {printSettings.backJobId && (
+                              <button 
+                                  onClick={async () => {
+                                      const targetId = isBackMasking ? activeJob.jobId : printSettings.backJobId;
+                                      setIsBackMasking(!isBackMasking);
+                                      setPreviewImage(null);
+                                      const res = await api.get(`/jobs/download/${targetId}?secureToken=subhams_front_auth_998877`, { responseType: 'blob' });
+                                      setRawDrawImage(URL.createObjectURL(res.data));
+                                  }}
+                                  style={{ padding: '8px 15px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '5px', marginBottom: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                              >
+                                  🔄 {isBackMasking ? "Switch to Front ID" : "Switch to Back ID"}
+                              </button>
+                          )}
+                          
+                          <div style={{ position: 'relative', display: 'inline-block', border: '2px solid #cbd5e1', background: 'white', lineHeight: 0 }}>
+                              <div 
+                                  onPointerDown={startDrawing}
+                                  onPointerMove={keepDrawing}
+                                  onPointerUp={stopDrawing}
+                                  onPointerCancel={stopDrawing}
+                                  style={{ position: 'relative', display: 'inline-block', touchAction: 'none', cursor: 'crosshair' }}
+                              >
+                                  <img 
+                                      src={rawDrawImage} 
+                                      alt="Original File" 
+                                      draggable={false}
                                       style={{ 
-                                          ...getImgSize(printSettings.scale), position: 'relative', display: 'inline-block',
-                                          touchAction: 'none', cursor: 'crosshair', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                                      }}
-                                  >
-                                      <img 
-    src={rawDrawImage} /* 🟢 Uses the securely fetched image */
-    alt="Original File" 
-    style={{ 
-        width: '100%', height: '100%', 
-        objectFit: 'fill', display: 'block', background: 'white',
-        filter: `${printSettings.colorMode === 'bw' ? 'grayscale(100%) contrast(120%) ' : ''}${printSettings.isBlindPreview ? 'blur(4px)' : ''}`.trim() || 'none',
-        transform: `rotate(${printSettings.rotate || 0}deg)`, transition: 'transform 0.3s ease, filter 0.3s ease'
-    }} 
-    draggable={false}
-    onError={(e) => { 
-        e.target.style.display = 'none'; 
-        alert("❌ The image format is not supported by your browser (e.g., Apple .HEIC photo)."); 
-        setIsDrawingMode(false); 
-    }}
-/>
-                                      
-                                      {printSettings.maskRectArray.map((rect, rectIndex) => (
-                                          <div key={rectIndex} style={{
-                                              position: 'absolute', left: `${rect.x}%`, top: `${rect.y}%`,
-                                              width: `${rect.width}%`, height: `${rect.height}%`,
-                                              backgroundColor: 'black', opacity: 0.95,
-                                              display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                          }}>
-                                              <span style={{color: 'white', fontSize: '6px', fontWeight: 'bold'}}>XXXX XXXX</span>
-                                          </div>
-                                      ))}
+                                          display: 'block', maxWidth: '100%', maxHeight: '55vh', width: 'auto', height: 'auto',
+                                          filter: `${printSettings.colorMode === 'bw' ? 'grayscale(100%) contrast(120%) ' : ''}${printSettings.isBlindPreview ? 'blur(4px)' : ''}`.trim() || 'none',
+                                          transform: `rotate(${printSettings.rotate || 0}deg)`, transition: 'transform 0.3s ease'
+                                      }} 
+                                  />
+                                  
+                                  {/* 🟢 THE FIX: Show masks only for the active side */}
+                                  {(printSettings.maskRectArray[isBackMasking ? 'back' : 'front'] || []).map((rect, rectIndex) => (
+                                      <div key={rectIndex} style={{
+                                          position: 'absolute', left: `${rect.x}%`, top: `${rect.y}%`,
+                                          width: `${rect.width}%`, height: `${rect.height}%`,
+                                          backgroundColor: 'black', opacity: 0.95, pointerEvents: 'none',
+                                          display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                      }}>
+                                          <span style={{color: 'white', fontSize: '6px', fontWeight: 'bold'}}>XXXX XXXX</span>
+                                      </div>
+                                  ))}
 
-                                      {drawState.isDrawing && drawState.currentRect && (
-                                           <div style={{
-                                              position: 'absolute', left: `${drawState.currentRect.x}%`, top: `${drawState.currentRect.y}%`,
-                                              width: `${drawState.currentRect.width}%`, height: `${drawState.currentRect.height}%`,
-                                              backgroundColor: 'black', opacity: 0.5, border: '1px dashed yellow'
-                                          }}></div>
-                                      )}
-
-                                      {printSettings.securityMode === 'private' && (
-                                          <div style={getWatermarkStyle(printSettings.securePurpose ? `${printSettings.securePurpose.toUpperCase()} - ${new Date().toLocaleDateString('en-GB')}` : 'PRIVATE USE')}></div>
-                                      )}
-                                  </div>
+                                  {drawState.isDrawing && drawState.currentRect && (
+                                       <div style={{
+                                          position: 'absolute', left: `${drawState.currentRect.x}%`, top: `${drawState.currentRect.y}%`,
+                                          width: `${drawState.currentRect.width}%`, height: `${drawState.currentRect.height}%`,
+                                          backgroundColor: 'yellow', opacity: 0.4, border: '2px dashed red',
+                                          pointerEvents: 'none' 
+                                      }}></div>
+                                  )}
                               </div>
                           </div>
                           
                           <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
                               <button 
                                   onClick={undoLastMask} 
-                                  disabled={printSettings.maskRectArray.length === 0}
-                                  style={{ padding: '12px 20px', background: printSettings.maskRectArray.length > 0 ? '#fee2e2' : '#f1f5f9', color: printSettings.maskRectArray.length > 0 ? '#991b1b' : '#94a3b8', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: printSettings.maskRectArray.length > 0 ? 'pointer' : 'not-allowed', fontWeight: 'bold', fontSize: '14px' }}
+                                  style={{ padding: '12px 20px', background: '#fee2e2', color: '#991b1b', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
                               >
-                                  ↩️ Undo Last Mask
+                                  ↩️ Undo
                               </button>
+                              
+                              {/* 🟢 THE FIX: The Save Button logic */}
                               <button 
-                                  onClick={() => { setIsDrawingMode(false); setPreviewImage(null); }} 
+                                  onClick={() => { 
+                                      const finalMasks = {
+                                          front: printSettings.maskRectArray.front || [],
+                                          back: printSettings.maskRectArray.back || []
+                                      };
+                                      socket.emit('SAVE_MASK', { jobId: activeJob.jobId, maskRect: finalMasks });
+                                      
+                                      setIsDrawingMode(false); 
+                                      setIsBackMasking(false); 
+                                      setPreviewImage(null); 
+                                  }} 
                                   style={{ padding: '12px 25px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
                               >
                                   ✅ Save Masks & Generate PDF
