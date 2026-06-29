@@ -90,7 +90,7 @@ export default function CustomerUpload() {
   });
 
 // 🎛️ MASTER CONTROL: Change this one number, and everything else auto-syncs!
-  const BOOT_DURATION_MS = 6000; // 40 seconds
+  const BOOT_DURATION_MS = 10000; // 40 seconds
   const totalSec = BOOT_DURATION_MS / 1000;
 
   useEffect(() => {
@@ -738,8 +738,7 @@ const processIdMerge = async () => {
         `}
         
       </style>
-      
-{/* 🌟 FULLY AUTO-SYNCED SECURE BOOT-UP SEQUENCE (Custom Shop Privacy Rules) */}
+    {/* 🌟 FULLY AUTO-SYNCED "READING MODE" (2 Highlighted Privacy Guarantees) */}
       {showBootSequence && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
@@ -795,58 +794,75 @@ const processIdMerge = async () => {
                 animation: subtle-pulse 2s infinite, fade-in-up 0.5s ease-out forwards;
                 margin-bottom: 25px;
               }
+              
+              /* NEW: Highlighted Guarantee Boxes */
+              .guarantee-box {
+                display: flex; justify-content: space-between; align-items: center;
+                background: rgba(16, 185, 129, 0.05);
+                border: 1px solid rgba(16, 185, 129, 0.2);
+                border-radius: 12px;
+                padding: 16px 20px;
+                box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.02);
+              }
+              .guarantee-text {
+                color: #e2e8f0; font-size: 15px; font-weight: 500; letter-spacing: 0.3px;
+              }
+              /* Highlight specific words in green */
+              .text-highlight {
+                color: #10b981; font-weight: 700;
+              }
+              
               .mini-spinner {
-                width: 16px; height: 16px;
+                width: 18px; height: 18px;
                 border: 2px solid rgba(16, 185, 129, 0.15);
                 border-top: 2px solid #10b981;
                 border-radius: 50%;
                 animation: spin 0.8s linear infinite;
               }
-              .status-row {
-                display: flex; justify-content: space-between; align-items: center;
-                border-bottom: 1px solid rgba(255,255,255,0.05);
-                padding-bottom: 12px;
-              }
-              .status-text {
-                color: #cbd5e1; font-size: 14px; font-weight: 500;
-              }
               .icon-container {
-                position: relative; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center;
+                position: relative; width: 22px; height: 22px; display: flex; justify-content: center; align-items: center;
+                margin-left: 15px;
               }
             `}
           </style>
 
           <div className="premium-shield-badge">🛡️</div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '85%', maxWidth: '400px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '90%', maxWidth: '420px' }}>
             
             <h2 style={{ margin: '0 0 8px 0', color: '#ffffff', fontSize: '24px', fontWeight: '800', letterSpacing: '0.5px', animation: 'fade-in-up 0.6s ease-out 0.2s forwards', opacity: 0, textAlign: 'center' }}>
               🛡️ Welcome to Subhams Secure
             </h2>
             
-           
-            {/* AUTO-SYNCED CHECKMARKS WITH CUSTOM SHOP PRIVACY TEXT */}
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '35px', animation: 'fade-in-up 0.6s ease-out 0.4s forwards', opacity: 0 }}>
-              
-            
+            <p style={{ margin: '0 0 30px 0', color: '#94a3b8', fontSize: '15px', lineHeight: '1.7', textAlign: 'center', animation: 'fade-in-up 0.6s ease-out 0.3s forwards', opacity: 0 }}>
+              Please review our strict privacy rules before starting.
+            </p>
 
-              <div className="status-row">
-                <span className="status-text">Blocking downloads & unauthorized views 🛡️</span>
+            {/* 2 HIGHLIGHTED GUARANTEE BOXES */}
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '40px', animation: 'fade-in-up 0.6s ease-out 0.4s forwards', opacity: 0 }}>
+
+              <div className="guarantee-box">
+                <span className="guarantee-text">
+                  <span className="text-highlight">Blocking downloads</span> & unauthorized views 🛡️
+                </span>
                 <div className="icon-container">
+                  {/* Checks off at 40% of the total time */}
                   <div style={{ position: 'absolute', animation: `shrink-out 0.2s ease-in ${totalSec * 0.4 - 0.1}s forwards` }}><div className="mini-spinner"></div></div>
-                  <span style={{ position: 'absolute', opacity: 0, fontSize: '15px', animation: `pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${totalSec * 0.4}s forwards` }}>✅</span>
+                  <span style={{ position: 'absolute', opacity: 0, fontSize: '18px', animation: `pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${totalSec * 0.4}s forwards` }}>✅</span>
                 </div>
               </div>
 
-              <div className="status-row">
-                <span className="status-text">Auto-deleting after print or 10 mins 🗑️</span>
+              <div className="guarantee-box">
+                <span className="guarantee-text">
+                  <span className="text-highlight">Auto-deleting</span> after print or 10 mins 🗑️
+                </span>
                 <div className="icon-container">
-                  <div style={{ position: 'absolute', animation: `shrink-out 0.2s ease-in ${totalSec * 0.6 - 0.1}s forwards` }}><div className="mini-spinner"></div></div>
-                  <span style={{ position: 'absolute', opacity: 0, fontSize: '15px', animation: `pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${totalSec * 0.6}s forwards` }}>✅</span>
+                  {/* Checks off at 80% of the total time */}
+                  <div style={{ position: 'absolute', animation: `shrink-out 0.2s ease-in ${totalSec * 0.8 - 0.1}s forwards` }}><div className="mini-spinner"></div></div>
+                  <span style={{ position: 'absolute', opacity: 0, fontSize: '18px', animation: `pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${totalSec * 0.8}s forwards` }}>✅</span>
                 </div>
               </div>
 
-            
             </div>
 
             <p style={{ margin: '0 0 10px 0', color: '#10b981', fontSize: '11px', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase', animation: 'fade-in-up 0.6s ease-out 0.6s forwards', opacity: 0 }}>
