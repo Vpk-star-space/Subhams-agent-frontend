@@ -89,11 +89,15 @@ export default function CustomerUpload() {
     return false; 
   });
 
+// 🎛️ MASTER CONTROL: Change this one number, and everything else auto-syncs!
+  const BOOT_DURATION_MS = 16000; // 40 seconds
+  const totalSec = BOOT_DURATION_MS / 1000;
+
   useEffect(() => {
     if (showBootSequence) {
       const timer = setTimeout(() => {
         setShowBootSequence(false);
-      }, 6000);
+      }, BOOT_DURATION_MS);
       return () => clearTimeout(timer);
     }
   }, [showBootSequence]);
@@ -732,21 +736,21 @@ const processIdMerge = async () => {
             padding: 18px;
           }
         `}
+        
       </style>
-
-      {/* 🌟 10-SECOND SECURE BOOT-UP SEQUENCE (Premium Badge, No Messy Rings) */}
+      
+{/* 🌟 FULLY AUTO-SYNCED SECURE BOOT-UP SEQUENCE (Custom Shop Privacy Rules) */}
       {showBootSequence && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
           zIndex: 999999, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-          
           background: 'rgba(15, 23, 42, 0.95)', 
           backdropFilter: 'blur(20px)', 
           WebkitBackdropFilter: 'blur(20px)',
-          
           pointerEvents: 'none',
           overflow: 'hidden',
-          animation: 'boot-exit 0.8s cubic-bezier(0.16, 1, 0.3, 1) 9.5s forwards' 
+          /* Auto-calculates fade out to happen 0.5s before React unmounts it */
+          animation: `boot-exit 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${totalSec - 0.5}s forwards` 
         }}>
           <style>
             {`
@@ -770,45 +774,114 @@ const processIdMerge = async () => {
                 80% { transform: scaleX(0.9); }
                 100% { transform: scaleX(1); }
               }
+              @keyframes spin { 
+                100% { transform: rotate(360deg); } 
+              }
+              @keyframes shrink-out { 
+                0% { opacity: 1; transform: scale(1); }
+                99% { opacity: 0; transform: scale(0); }
+                100% { opacity: 0; transform: scale(0); visibility: hidden; display: none; } 
+              }
+              @keyframes pop-in { 
+                0% { opacity: 0; transform: scale(0.5); } 
+                100% { opacity: 1; transform: scale(1); } 
+              }
+              
               .premium-shield-badge {
-                width: 90px; 
-                height: 90px;
-                border-radius: 50%;
+                width: 90px; height: 90px; border-radius: 50%;
                 background: radial-gradient(circle, #064e3b 0%, #022c22 100%);
-                display: flex; 
-                justify-content: center; 
-                align-items: center;
-                font-size: 40px;
-                border: 2px solid #10b981;
+                display: flex; justify-content: center; align-items: center;
+                font-size: 40px; border: 2px solid #10b981;
                 animation: subtle-pulse 2s infinite, fade-in-up 0.5s ease-out forwards;
-                margin-bottom: 35px;
+                margin-bottom: 25px;
+              }
+              .mini-spinner {
+                width: 16px; height: 16px;
+                border: 2px solid rgba(16, 185, 129, 0.15);
+                border-top: 2px solid #10b981;
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+              }
+              .status-row {
+                display: flex; justify-content: space-between; align-items: center;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+                padding-bottom: 12px;
+              }
+              .status-text {
+                color: #cbd5e1; font-size: 14px; font-weight: 500;
+              }
+              .icon-container {
+                position: relative; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center;
               }
             `}
           </style>
 
           <div className="premium-shield-badge">🛡️</div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '85%', maxWidth: '320px' }}>
-            <h2 style={{ margin: '0 0 12px 0', color: '#ffffff', fontSize: '24px', fontWeight: '800', letterSpacing: '0.5px', animation: 'fade-in-up 0.6s ease-out 0.2s forwards', opacity: 0 }}>
-              Subhams Secure
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '85%', maxWidth: '400px' }}>
+            
+            <h2 style={{ margin: '0 0 8px 0', color: '#ffffff', fontSize: '24px', fontWeight: '800', letterSpacing: '0.5px', animation: 'fade-in-up 0.6s ease-out 0.2s forwards', opacity: 0, textAlign: 'center' }}>
+              🛡️ Welcome to Subhams Secure
             </h2>
-            <p style={{ margin: '0 0 35px 0', color: '#94a3b8', fontSize: '14px', lineHeight: '1.6', textAlign: 'center', animation: 'fade-in-up 0.6s ease-out 0.3s forwards', opacity: 0 }}>
-              Politely establishing your encrypted connection...
-            </p>
-            <p style={{ margin: '0 0 10px 0', color: '#10b981', fontSize: '11px', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase', animation: 'fade-in-up 0.6s ease-out 0.5s forwards', opacity: 0 }}>
-              Securing Environment
+            
+            <p style={{ margin: '0 0 30px 0', color: '#94a3b8', fontSize: '14px', lineHeight: '1.7', textAlign: 'center', animation: 'fade-in-up 0.6s ease-out 0.3s forwards', opacity: 0 }}>
+              Your privacy is our top priority.
+              Please review our strict privacy rules before starting.
             </p>
 
-            <div style={{ width: '100%', height: '3px', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', overflow: 'hidden', animation: 'fade-in-up 0.6s ease-out 0.6s forwards', opacity: 0 }}>
+            {/* AUTO-SYNCED CHECKMARKS WITH CUSTOM SHOP PRIVACY TEXT */}
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '35px', animation: 'fade-in-up 0.6s ease-out 0.4s forwards', opacity: 0 }}>
+              
+              <div className="status-row">
+                <span className="status-text"> Subhams Networks is encrypted ON 🔐</span>
+                <div className="icon-container">
+                  <div style={{ position: 'absolute', animation: `shrink-out 0.2s ease-in ${totalSec * 0.2 - 0.1}s forwards` }}><div className="mini-spinner"></div></div>
+                  <span style={{ position: 'absolute', opacity: 0, fontSize: '15px', animation: `pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${totalSec * 0.2}s forwards` }}>✅</span>
+                </div>
+              </div>
+
+              <div className="status-row">
+                <span className="status-text">Blocking downloads & unauthorized views 🛡️</span>
+                <div className="icon-container">
+                  <div style={{ position: 'absolute', animation: `shrink-out 0.2s ease-in ${totalSec * 0.4 - 0.1}s forwards` }}><div className="mini-spinner"></div></div>
+                  <span style={{ position: 'absolute', opacity: 0, fontSize: '15px', animation: `pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${totalSec * 0.4}s forwards` }}>✅</span>
+                </div>
+              </div>
+
+              <div className="status-row">
+                <span className="status-text">Auto-deleting after print or 10 mins 🗑️</span>
+                <div className="icon-container">
+                  <div style={{ position: 'absolute', animation: `shrink-out 0.2s ease-in ${totalSec * 0.6 - 0.1}s forwards` }}><div className="mini-spinner"></div></div>
+                  <span style={{ position: 'absolute', opacity: 0, fontSize: '15px', animation: `pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${totalSec * 0.6}s forwards` }}>✅</span>
+                </div>
+              </div>
+
+              <div className="status-row">
+                <span className="status-text" style={{ color: '#10b981', fontWeight: '600' }}>ready for your connection 📡</span>
+                <div className="icon-container">
+                  <div style={{ position: 'absolute', animation: `shrink-out 0.2s ease-in ${totalSec * 0.8 - 0.1}s forwards` }}><div className="mini-spinner"></div></div>
+                  <span style={{ position: 'absolute', opacity: 0, fontSize: '15px', animation: `pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${totalSec * 0.8}s forwards` }}>✅</span>
+                </div>
+              </div>
+
+            </div>
+
+            <p style={{ margin: '0 0 10px 0', color: '#10b981', fontSize: '11px', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase', animation: 'fade-in-up 0.6s ease-out 0.6s forwards', opacity: 0 }}>
+              AUTO-STARTING SECURE SESSION
+            </p>
+
+            <div style={{ width: '100%', height: '3px', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', overflow: 'hidden', animation: 'fade-in-up 0.6s ease-out 0.7s forwards', opacity: 0 }}>
               <div style={{ 
                 height: '100%', 
                 background: '#10b981', 
                 borderRadius: '10px', 
                 transformOrigin: 'left',
-                animation: 'progress-load 9.5s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                /* Auto-calculates progress bar duration to match the total time */
+                animation: `progress-load ${totalSec - 0.5}s cubic-bezier(0.4, 0, 0.2, 1) forwards`,
                 boxShadow: '0 0 8px #10b981'
               }}></div>
             </div>
+
           </div>
         </div>
       )}
