@@ -1,9 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Home() {
   const navigate = useNavigate();
-// 🛡️ Redirect if already logged in, but ONLY if they are a business
+  // State to handle responsive layout cleanly
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 650);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 650);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // 🛡️ Redirect if already logged in, but ONLY if they are a business
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     const shopId = localStorage.getItem('shopId');
@@ -12,29 +21,58 @@ export default function Home() {
       navigate('/dashboard');
     }
   }, [navigate]);
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', fontFamily: 'sans-serif' }}>
-      <h1 style={{ fontSize: '42px', color: '#0f172a', marginBottom: '10px' }}>Subhams Xerox</h1>
-      <p style={{ color: '#64748b', marginBottom: '40px' }}>Choose your portal / మీ పోర్టల్‌ను ఎంచుకోండి</p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 600 ? '1fr 1fr' : '1fr', gap: '20px', width: '90%', maxWidth: '800px' }}>
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', fontFamily: 'system-ui, sans-serif', padding: '20px' }}>
+      <h1 style={{ fontSize: '38px', color: '#0f172a', marginBottom: '8px', fontWeight: '800', textAlign: 'center' }}>Subhams Secure</h1>
+      <p style={{ color: '#64748b', marginBottom: '40px', fontSize: '15px', textAlign: 'center' }}>
+        Select your portal / మీ పోర్టల్‌ను ఎంచుకోండి
+      </p>
+
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: isMobile ? 'column' : 'row', 
+        gap: '24px', 
+        width: '100%', 
+        maxWidth: '850px',
+        justifyContent: 'center'
+      }}>
         
-        {/* 👤 INDIVIDUAL SENDER */}
-        {/* ✅ FIX: Added ?role=individual */}
-        <div onClick={() => navigate('/login?role=individual')} style={cardStyle}>
-          <div style={iconCircle}>👤</div>
-          <h3>Individual Sender</h3>
-          <p style={pStyle}>I want to upload and print files. <br/> నేను ఫైళ్ళను ప్రింట్ చేయాలి.</p>
-          <button style={btnStyle}>Continue as User</button>
+        {/* 📱 CUSTOMER (INDIVIDUAL SENDER) */}
+        <div 
+          onClick={() => navigate('/login?role=individual')} 
+          style={{ ...cardStyle, borderTop: '5px solid #10b981', flex: 1 }}
+        >
+          <div style={{ ...iconCircle, background: '#d1fae5', color: '#10b981' }}>📱</div>
+          <h3 style={h3Style}>Print Customer</h3>
+          <p style={pStyle}>
+            <strong style={{ color: '#334155' }}>I want to send files for printing.</strong><br/>
+            <span style={teluguStyle}>నేను ఫైల్స్ ప్రింట్ ఇవ్వాలి.</span>
+          </p>
+          <button style={{ ...btnStyle, background: '#10b981' }}>Send Files Now</button>
         </div>
 
-        {/* 🏢 BUSINESS RECEIVER */}
-        {/* ✅ FIX: Added ?role=business */}
-        <div onClick={() => navigate('/login?role=business')} style={{ ...cardStyle, border: '2px solid #2563eb' }}>
-          <div style={{ ...iconCircle, background: '#dbeafe', color: '#2563eb' }}>🏢</div>
-          <h3>Business Receiver</h3>
-          <p style={pStyle}>Manage my Xerox shop & printer. <br/> నా జిరాక్స్ షాపును నిర్వహించాలి.</p>
-          <button style={{ ...btnStyle, background: '#2563eb' }}>Owner Login</button>
+        {/* 🏢 XEROX SHOP OWNER (BUSINESS) */}
+        <div 
+          onClick={() => navigate('/login?role=business')} 
+          style={{ ...cardStyle, borderTop: '5px solid #2563eb', flex: 1, position: 'relative' }}
+        >
+          {/* PC ONLY BADGE */}
+          <div style={pcBadgeStyle}>
+            🖥️ PC / Laptop Only
+          </div>
+          
+          <div style={{ ...iconCircle, background: '#dbeafe', color: '#2563eb', marginTop: '10px' }}>🏢</div>
+          <h3 style={h3Style}>Xerox Shop Owner</h3>
+          <p style={pStyle}>
+            <strong style={{ color: '#334155' }}>I want to manage my shop printing.</strong><br/>
+            <span style={teluguStyle}>నా షాపుకి వచ్చిన ఫైల్స్ ప్రింట్ తీయాలి.</span>
+          </p>
+          
+          {/* Telugu Warning for PC Only */}
+          <p style={noteStyle}>* ఈ పోర్టల్ కంప్యూటర్ లేదా లాప్‌టాప్‌లో మాత్రమే పనిచేస్తుంది.</p>
+          
+          <button style={{ ...btnStyle, background: '#2563eb' }}>Shop Login</button>
         </div>
 
       </div>
@@ -42,7 +80,79 @@ export default function Home() {
   );
 }
 
-const cardStyle = { background: '#fff', padding: '30px', borderRadius: '20px', textAlign: 'center', cursor: 'pointer', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', transition: '0.3s' };
-const iconCircle = { width: '60px', height: '60px', background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', margin: '0 auto 15px' };
-const pStyle = { fontSize: '13px', color: '#64748b', minHeight: '40px' };
-const btnStyle = { marginTop: '15px', width: '100%', padding: '10px', borderRadius: '8px', border: 'none', background: '#0f172a', color: '#fff', fontWeight: 'bold' };
+// Inline Styles
+const cardStyle = { 
+  background: '#fff', 
+  padding: '35px 25px', 
+  borderRadius: '16px', 
+  textAlign: 'center', 
+  cursor: 'pointer', 
+  boxShadow: '0 4px 20px rgba(0,0,0,0.06)', 
+  display: 'flex', 
+  flexDirection: 'column', 
+  alignItems: 'center',
+  position: 'relative'
+};
+
+const iconCircle = { 
+  width: '64px', 
+  height: '64px', 
+  borderRadius: '50%', 
+  display: 'flex', 
+  alignItems: 'center', 
+  justifyContent: 'center', 
+  fontSize: '28px', 
+  marginBottom: '16px' 
+};
+
+const h3Style = { 
+  margin: '0 0 12px 0', 
+  color: '#1e293b', 
+  fontSize: '20px', 
+  fontWeight: '700' 
+};
+
+const pStyle = { 
+  fontSize: '14px', 
+  color: '#475569', 
+  minHeight: '50px', 
+  lineHeight: '1.7', 
+  margin: '0 0 15px 0' 
+};
+
+const teluguStyle = { 
+  color: '#64748b', 
+  fontSize: '13px' 
+};
+
+const btnStyle = { 
+  marginTop: 'auto', 
+  width: '100%', 
+  padding: '12px', 
+  borderRadius: '8px', 
+  border: 'none', 
+  color: '#fff', 
+  fontWeight: 'bold', 
+  fontSize: '15px', 
+  cursor: 'pointer' 
+};
+
+const pcBadgeStyle = { 
+  position: 'absolute', 
+  top: '-12px', 
+  background: '#1e293b', 
+  color: '#ffffff', 
+  padding: '5px 14px', 
+  borderRadius: '20px', 
+  fontSize: '11px', 
+  fontWeight: 'bold', 
+  letterSpacing: '0.5px' 
+};
+
+const noteStyle = { 
+  fontSize: '11px', 
+  color: '#ef4444', 
+  marginTop: '-5px', 
+  marginBottom: '15px', 
+  fontWeight: '600' 
+};
