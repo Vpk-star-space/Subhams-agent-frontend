@@ -90,7 +90,7 @@ export default function CustomerUpload() {
   });
 
 // 🎛️ MASTER CONTROL: Change this one number, and everything else auto-syncs!
-  const BOOT_DURATION_MS = 16000; // 40 seconds
+  const BOOT_DURATION_MS = 6000; // 40 seconds
   const totalSec = BOOT_DURATION_MS / 1000;
 
   useEffect(() => {
@@ -824,21 +824,11 @@ const processIdMerge = async () => {
               🛡️ Welcome to Subhams Secure
             </h2>
             
-            <p style={{ margin: '0 0 30px 0', color: '#94a3b8', fontSize: '14px', lineHeight: '1.7', textAlign: 'center', animation: 'fade-in-up 0.6s ease-out 0.3s forwards', opacity: 0 }}>
-              Your privacy is our top priority.
-              Please review our strict privacy rules before starting.
-            </p>
-
+           
             {/* AUTO-SYNCED CHECKMARKS WITH CUSTOM SHOP PRIVACY TEXT */}
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '35px', animation: 'fade-in-up 0.6s ease-out 0.4s forwards', opacity: 0 }}>
               
-              <div className="status-row">
-                <span className="status-text"> Subhams Networks is encrypted ON 🔐</span>
-                <div className="icon-container">
-                  <div style={{ position: 'absolute', animation: `shrink-out 0.2s ease-in ${totalSec * 0.2 - 0.1}s forwards` }}><div className="mini-spinner"></div></div>
-                  <span style={{ position: 'absolute', opacity: 0, fontSize: '15px', animation: `pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${totalSec * 0.2}s forwards` }}>✅</span>
-                </div>
-              </div>
+            
 
               <div className="status-row">
                 <span className="status-text">Blocking downloads & unauthorized views 🛡️</span>
@@ -856,14 +846,7 @@ const processIdMerge = async () => {
                 </div>
               </div>
 
-              <div className="status-row">
-                <span className="status-text" style={{ color: '#10b981', fontWeight: '600' }}>ready for your connection 📡</span>
-                <div className="icon-container">
-                  <div style={{ position: 'absolute', animation: `shrink-out 0.2s ease-in ${totalSec * 0.8 - 0.1}s forwards` }}><div className="mini-spinner"></div></div>
-                  <span style={{ position: 'absolute', opacity: 0, fontSize: '15px', animation: `pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${totalSec * 0.8}s forwards` }}>✅</span>
-                </div>
-              </div>
-
+            
             </div>
 
             <p style={{ margin: '0 0 10px 0', color: '#10b981', fontSize: '11px', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase', animation: 'fade-in-up 0.6s ease-out 0.6s forwards', opacity: 0 }}>
