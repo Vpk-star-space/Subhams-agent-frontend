@@ -59,7 +59,7 @@ const PrintPass = forwardRef(({ passData, shopId, uploadLink }, ref) => {
             {/* 3. QR Code Section */}
             <div style={{ textAlign: 'center', margin: '5px 0' }}>
                 <h2 style={{ fontSize: '22px', fontWeight: '800', margin: '0 0 15px 0', color: colors.text }}>
-                    📷 {isEnglish ? "SCAN TO UPLOAD DOCUMENTS" : "డాక్యుమెంట్లను అప్‌లోడ్ చేయడానికి స్కాన్ చేయండి"}
+                    📷 {isEnglish ? "SCAN TO SECURELY PRINT DOCUMENTS" : "డాక్యుమెంట్లను సురక్షితంగా ప్రింట్ చేయడానికి స్కాన్ చేయండి"}
                 </h2>
                 <div style={{ padding: '12px', background: '#fff', border: '3px solid #cbd5e1', borderRadius: '16px', display: 'inline-block', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
                     <QRCodeSVG value={uploadLink} size={200} level="H" />
@@ -92,7 +92,7 @@ const PrintPass = forwardRef(({ passData, shopId, uploadLink }, ref) => {
                 </div>
 
                 <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: colors.muted, fontWeight: '600' }}>
-                    🌐 Link: subhams-vpk.vercel.app
+                    🌐 Link: https://subhams-agent-vpk.vercel.app
                 </p>
                 <p style={{ margin: 0, fontWeight: '800', color: colors.success }}>
                     🛡️ {isEnglish ? "Our Security Promise:" : "మా భద్రతా వాగ్దానం:"}
