@@ -290,7 +290,7 @@ const GlobalAppInstallWidget = () => {
           }
         }, 16000); 
 
-      }, 20000);
+      }, 10000);
     };
 
     startLoop();
