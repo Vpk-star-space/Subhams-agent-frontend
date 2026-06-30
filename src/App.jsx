@@ -268,18 +268,36 @@ const GlobalAppInstallWidget = () => {
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
-  // 2. TIMING LOGIC (30 Sec Wait -> 10 Sec Show)
+// 2. RECURRING TIMING LOGIC (Wait 30s -> Show 10s -> Loop)
   useEffect(() => {
+    // If already installed, stop everything.
     if (isInstalled) return;
 
-    const appearTimer = setTimeout(() => {
-      setShowPopup(true); 
-      const disappearTimer = setTimeout(() => setShowPopup(false), 10000);
-      return () => clearTimeout(disappearTimer);
-    }, 30000);
+    let timeoutId;
 
-    return () => clearTimeout(appearTimer);
-  }, [isInstalled]); 
+    const startLoop = () => {
+      // 1. Wait 30 seconds
+      timeoutId = setTimeout(() => {
+        setShowPopup(true); // Show the popup
+
+        // 2. Stay open for 10 seconds
+        setTimeout(() => {
+          setShowPopup(false); // Hide the popup
+          
+          // 3. IMPORTANT: Recursively call startLoop to trigger the next 30s wait
+          if (!isInstalled) {
+            startLoop();
+          }
+        }, 16000); 
+
+      }, 20000);
+    };
+
+    startLoop();
+
+    // Cleanup when component unmounts
+    return () => clearTimeout(timeoutId);
+  }, [isInstalled]);
 
   // 3. THE BUTTON CLICK
   const handleInstallClick = async () => {
@@ -323,6 +341,7 @@ const GlobalAppInstallWidget = () => {
         </button>
       </div>
 
+    {/* ⚡ 2. THE SECURE INSTALL POPUP */}
       {showPopup && !isInstalled && (
         <div style={{
           position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
@@ -335,13 +354,34 @@ const GlobalAppInstallWidget = () => {
           <h4 style={{ margin: '0 0 12px 0', color: '#0f172a', fontSize: '22px', fontWeight: '800' }}>
             Secure Install
           </h4>
+          
           <p style={{ margin: '0 0 25px 0', fontSize: '15px', color: '#475569', lineHeight: '1.6' }}>
             Add to your Mobile Home Screen or PC Desktop.<br/>
-            <strong>No more typing URLs</strong>—just tap to open securely.
+            <strong>No more typing URLs</strong>—just tap to open securely.<br/>
+            <span style={{ 
+              display: 'block', 
+              marginTop: '15px', 
+              padding: '8px', 
+              background: '#f0fdf4', 
+              color: '#065f46', 
+              borderRadius: '8px', 
+              fontWeight: '600',
+              fontSize: '14px' 
+            }}>
+              Please install it—this message will never show again!
+            </span>
           </p>
+          
           <button 
             onClick={handleInstallClick}
-            style={{ ...widgetBtnStyle, background: '#10b981', width: '100%', padding: '16px', fontSize: '16px', opacity: isInstallable ? 1 : 0.9 }}
+            style={{ 
+              ...widgetBtnStyle, 
+              background: '#10b981', 
+              width: '100%', 
+              padding: '16px', 
+              fontSize: '16px', 
+              opacity: isInstallable ? 1 : 0.9 
+            }}
           >
             {isInstallable ? '📱 Install App Now' : '📱 View Install Steps'}
           </button>
