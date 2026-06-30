@@ -1,7 +1,7 @@
 import { BASE_URL } from './api/api';
 import { io } from 'socket.io-client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'; // 🟢 Added useRef here
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -243,10 +243,120 @@ const pingServer = async () => {
       </Routes>
 
       <XeroxChatbot />
+      <GlobalAppInstallWidget />
     </BrowserRouter>
   );
 }
+// =====================================================================
+// 🌟 GLOBAL WIDGET: Always-on Share & 10-Second Center Install Popup
+// =====================================================================
+const GlobalAppInstallWidget = () => {
+  const [isInstallable, setIsInstallable] = useState(false);
+  const [showPopup, setShowPopup] = useState(false); 
 
+  const isInstalled = typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches;
+
+  // 1. Capture the Install Event (NOW STORED GLOBALLY)
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      // Store in window so Vite Hot-Reload doesn't delete it!
+      window.deferredInstallPrompt = e; 
+      setIsInstallable(true);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  // 2. TIMING LOGIC (30 Sec Wait -> 10 Sec Show)
+  useEffect(() => {
+    if (isInstalled) return;
+
+    const appearTimer = setTimeout(() => {
+      setShowPopup(true); 
+      const disappearTimer = setTimeout(() => setShowPopup(false), 10000);
+      return () => clearTimeout(disappearTimer);
+    }, 30000);
+
+    return () => clearTimeout(appearTimer);
+  }, [isInstalled]); 
+
+  // 3. THE BUTTON CLICK
+  const handleInstallClick = async () => {
+    // Check our secure global window object
+    const promptEvent = window.deferredInstallPrompt; 
+    
+    if (!promptEvent) {
+      alert("Browser Security: To install securely, tap your browser menu (three dots) and select 'Add to Home screen' or 'Install App'.");
+      return;
+    }
+    
+    promptEvent.prompt();
+    const { outcome } = await promptEvent.userChoice;
+    if (outcome === 'accepted') {
+      setIsInstallable(false);
+      setShowPopup(false); 
+    }
+    // Clean up after use
+    window.deferredInstallPrompt = null; 
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Subhams Secure',
+          text: 'The most secure way to print your documents.',
+          url: window.location.origin, 
+        });
+      } catch (err) { console.log('Share failed', err); }
+    } else {
+      alert("Copy this link to share: " + window.location.origin);
+    }
+  };
+
+  return (
+    <>
+      <div style={{ position: 'fixed', bottom: '25px', left: '25px', zIndex: 9997 }}>
+        <button onClick={handleShare} style={{...widgetBtnStyle, background: '#1e293b', padding: '12px 20px'}}>
+          ↗️ Share
+        </button>
+      </div>
+
+      {showPopup && !isInstalled && (
+        <div style={{
+          position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          zIndex: 9999, background: '#ffffff', borderRadius: '20px', 
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 100vw rgba(15, 23, 42, 0.75)', 
+          border: '2px solid #10b981', padding: '35px 25px', width: '90%', maxWidth: '450px', 
+          textAlign: 'center', animation: 'fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)' 
+        }}>
+          <div style={{ fontSize: '40px', marginBottom: '15px' }}>⚡</div>
+          <h4 style={{ margin: '0 0 12px 0', color: '#0f172a', fontSize: '22px', fontWeight: '800' }}>
+            Secure Install
+          </h4>
+          <p style={{ margin: '0 0 25px 0', fontSize: '15px', color: '#475569', lineHeight: '1.6' }}>
+            Add to your Mobile Home Screen or PC Desktop.<br/>
+            <strong>No more typing URLs</strong>—just tap to open securely.
+          </p>
+          <button 
+            onClick={handleInstallClick}
+            style={{ ...widgetBtnStyle, background: '#10b981', width: '100%', padding: '16px', fontSize: '16px', opacity: isInstallable ? 1 : 0.9 }}
+          >
+            {isInstallable ? '📱 Install App Now' : '📱 View Install Steps'}
+          </button>
+        </div>
+      )}
+    </>
+  );
+};
+
+const widgetBtnStyle = {
+  padding: '10px 16px', borderRadius: '10px', border: 'none', color: '#fff', 
+  fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', 
+  justifyContent: 'center', fontSize: '14px', transition: 'all 0.2s', 
+  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+};
 // =====================================================================
 // 🎨 BEAUTIFUL STYLES FOR THE BOOTLOADER & MAINTENANCE
 // =====================================================================

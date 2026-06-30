@@ -5,7 +5,6 @@ export default defineConfig({
   plugins: [react()],
   server: {
     headers: {
-      /* 🟢 CHANGED: "unsafe-none" completely unblocks Google Sign-In iframes */
       "Cross-Origin-Opener-Policy": "unsafe-none",
       "Cross-Origin-Embedder-Policy": "unsafe-none",
     },
