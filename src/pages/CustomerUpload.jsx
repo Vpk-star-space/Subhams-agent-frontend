@@ -41,6 +41,10 @@ export default function CustomerUpload() {
   const [isDrawingMode, setIsDrawingMode] = useState(false); // 🟢 NEW: Controls scroll lock
   const [isBlindPreview, setIsBlindPreview] = useState(false);
   const [blindAnim, setBlindAnim] = useState(false); // 🟢 NEW: Animation state for Blind Preview
+
+
+// ... (Inside your component)
+const [isExpanded, setIsExpanded] = useState(false);
   
   const [showSecuritySuccess, setShowSecuritySuccess] = useState(false);
 // 🟢 SYSTEM ALERT STATE
@@ -1177,6 +1181,50 @@ const processIdMerge = async () => {
         )}
       </div>
 
+{/* HEADER & TOGGLE BUTTON - PREMIUM STYLE */}
+<div style={{ 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: isExpanded ? '20px' : '0',
+    transition: 'margin 0.3s ease'
+}}>
+
+    
+    <button 
+        type="button"
+        onClick={() => setIsExpanded(!isExpanded)}
+        onMouseOver={(e) => {
+            e.target.style.backgroundColor = '#e2e8f0';
+            e.target.style.transform = 'translateY(-1px)';
+        }}
+        onMouseOut={(e) => {
+            e.target.style.backgroundColor = '#f1f5f9';
+            e.target.style.transform = 'translateY(0)';
+        }}
+        style={{ 
+            background: '#f1f5f9', 
+            border: '1px solid #e2e8f0', // Added subtle border
+            padding: '8px 16px', 
+            borderRadius: '10px', // More modern rounding
+            fontSize: '12px', 
+            fontWeight: '700', 
+            color: '#475569', 
+            cursor: 'pointer',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth animation
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+        }}
+    >
+        {isExpanded ? (
+            <>▲ Hide Details</>
+        ) : (
+            <>▼ View Details</>
+        )}
+    </button>
+</div>
+
      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px', paddingBottom: '20px' }}>
         
         <style>
@@ -1258,32 +1306,145 @@ const processIdMerge = async () => {
           `}
         </style>
         
+
+{/* EXPANDABLE PREMIUM CONTENT - Only shows when expanded */}
+{isExpanded && (
+    <div style={{ 
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        padding: '20px',
+        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+        animation: 'fadeIn 0.3s ease-in-out',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px' // Increased spacing for premium feel
+    }}>
+        <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+        
+        {/* 1. BLIND PREVIEW & STANDARD */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <span style={{ fontSize: '24px' }}>👁️</span>
+                <div>
+                    <strong style={{ color: '#0f172a', display: 'block', marginBottom: '4px' }}>Blind Preview</strong>
+                    <span style={{ fontSize: '13px', color: '#475569' }}>Files are blurred on the shop screen (Shop owner cannot see content).</span>
+                    <i style={{ display: 'block', fontSize: '12px', color: '#64748b', marginTop: '4px' }}>బ్లైండ్ ప్రివ్యూ: షాపు వారి స్క్రీన్‌పై మీ ఫైల్స్ బ్లర్ గా ఉంటాయి.</i>
+                </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <span style={{ fontSize: '24px' }}>📄</span>
+                <div>
+                    <strong style={{ color: '#0f172a', display: 'block', marginBottom: '4px' }}>Standard</strong>
+                    <span style={{ fontSize: '13px', color: '#475569' }}>Normal print for standard documents.</span>
+                    <i style={{ display: 'block', fontSize: '12px', color: '#64748b', marginTop: '4px' }}>స్టాండర్డ్: సాధారణ జెరాక్స్ కాపీల కోసం.</i>
+                </div>
+            </div>
+        </div>
+
+        {/* 2. POPULAR (GOVT/BANK) - Bold Border */}
         <div style={{ 
+            background: '#f0fdf4', 
+            border: '1px solid #bbf7d0', 
+            padding: '15px', 
+            borderRadius: '12px' 
+        }}>
+            <p style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '900', color: '#065f46' }}>🔥 POPULAR: Govt / Bank Use</p>
+            <p style={{ margin: 0, fontSize: '13px', color: '#166534', lineHeight: '1.5' }}>
+                Automatic declaration box generation based on your purpose.<br/>
+                <i style={{ color: '#16a34a' }}>ప్రభుత్వ/బ్యాంక్ పనుల కోసం: డిక్లరేషన్ బాక్స్ ఆటోమేటిక్‌గా యాడ్ అవుతుంది.</i>
+            </p>
+        </div>
+
+        {/* 3. ADVANCED (PRIVATE) - Bold Border */}
+        <div style={{ 
+            background: '#eff6ff', 
+            border: '1px solid #bfdbfe', 
+            padding: '15px', 
+            borderRadius: '12px' 
+        }}>
+            <p style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '900', color: '#1e40af' }}>✨ ADVANCED: Private Use</p>
+            <p style={{ margin: 0, fontSize: '13px', color: '#1e3a8a', lineHeight: '1.5' }}>
+                <span style={{ color: '#dc2626', fontWeight: 'bold' }}>Mask Sensitive Data:</span> Swipe to hide details.
+                <br/> <span style={{ color: '#dc2626', fontWeight: 'bold' }}>Ghost Watermark:</span> Strong tamper-proof protection.
+                <br/> 
+                <i style={{ color: '#3b82f6', marginTop: '8px', display: 'block' }}>ప్రైవేట్ ఉపయోగం: డేటాను మాస్క్ చేయవచ్చు. 'గోస్ట్ వాటర్‌మార్క్' ద్వారా భద్రత ఉంటుంది.</i>
+            </p>
+        </div>
+
+        {/* ⚠️ PDF WARNING */}
+        <div style={{ 
+            background: '#fff7ed', 
+            border: '1px dashed #fdba74', 
+            padding: '12px', 
+            borderRadius: '10px',
+            textAlign: 'center' 
+        }}>
+            <p style={{ margin: 0, fontSize: '12px', color: '#9a3412', fontWeight: '700' }}>
+                ⚠️ Note: Advanced features work only with Images (JPG, PNG).
+            </p>
+        </div>
+    </div>
+)}
+
+ <div style={{ 
             background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)',
             border: '1px solid #a5b4fc', 
             borderRadius: '12px', 
-            padding: '15px', 
+            padding: '16px', 
             display: 'flex', 
-            gap: '15px', 
-            alignItems: 'center',
-            boxShadow: '0 4px 10px rgba(79, 70, 229, 0.15)'
+            flexDirection: 'column', // Changed to column to stack the features
+            gap: '12px', 
+            boxShadow: '0 4px 15px rgba(79, 70, 229, 0.15)'
         }}>
-            <div className="shield-icon" style={{ fontSize: '35px' }}>🛡️</div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.5' }}>
-                    <span className="sparkle-text">✨ YOU control the copies! Click </span>
-                    <span style={{ background: '#2563eb', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', display: 'inline-block', fontWeight: 'bold' }}>⚙️ Adjust</span>
-                    <span className="sparkle-text"> after uploading to set your exact copies and sizes.</span>
-                </p>
-                <p style={{ margin: 0, fontSize: '12px', lineHeight: '1.5' }}>
-                    <span className="sparkle-text">✨ గమనిక: ఫైల్ అప్‌లోడ్ చేసిన తర్వాత </span>
-                    <span style={{ background: '#2563eb', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', display: 'inline-block', fontWeight: 'bold' }}>⚙️ Adjust</span>
-                    <span className="sparkle-text"> పై క్లిక్ చేసి మీకు ఎన్ని కాపీలు కావాలో మీరే సెట్ చేసుకోండి.</span>
-                </p>
+            {/* ✨ PART 1: COPY CONTROL */}
+            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                <div className="shield-icon" style={{ fontSize: '35px' }}>🛡️</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.5', color: '#1e293b' }}>
+                        <span className="sparkle-text">✨ YOU control the copies! Click </span>
+                        <span style={{ background: '#2563eb', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', display: 'inline-block', fontWeight: 'bold' }}>⚙️ Adjust</span>
+                        <span className="sparkle-text"> after uploading to set your exact copies and sizes.</span>
+                    </p>
+                    <p style={{ margin: 0, fontSize: '12px', lineHeight: '1.5', color: '#475569' }}>
+                        <span className="sparkle-text">✨ గమనిక: ఫైల్ అప్‌లోడ్ చేసిన తర్వాత </span>
+                        <span style={{ background: '#2563eb', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', display: 'inline-block', fontWeight: 'bold' }}>⚙️ Adjust</span>
+                        <span className="sparkle-text"> పై క్లిక్ చేసి మీకు ఎన్ని కాపీలు కావాలో మీరే సెట్ చేసుకోండి.</span>
+                    </p>
+                </div>
+            </div>
+
+            {/* 〰️ ELEGANT DIVIDER */}
+            <div style={{ 
+                height: '1px', 
+                background: 'linear-gradient(90deg, transparent, #c7d2fe, transparent)',
+                margin: '4px 0'
+            }} />
+
+      {/* 🔒 PART 2: MILITARY-GRADE SECURITY GUARANTEE */}
+            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                <div style={{ fontSize: '32px' }}>🔒</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <p style={{ margin: 0, fontSize: '12px', lineHeight: '1.5', color: '#4338ca', fontWeight: '700' }}>
+                       System Security Guarantee: Military-grade encryption & auto-deletion ensures your files are safe and private.
+
+                    </p>
+                    
+                    <p style={{ margin: 0, fontSize: '11.5px', lineHeight: '1.5', color: '#334155' }}>
+                        Subhams <span style={{ color: '#ef4444', fontWeight: 'bold' }}>never views, downloads, or shares</span> your files. 
+                        Data is strictly delivered to the shop and <strong style={{ color: '#ef4444' }}>permanently auto-deleted</strong> 
+                        the second it prints (or within <span style={{ color: '#ef4444', fontWeight: 'bold' }}>10 minutes</span> if unprinted). 
+                        Your privacy is our ultimate priority.
+                    </p>
+                    
+                    <p style={{ margin: 0, fontSize: '11px', lineHeight: '1.5', color: '#64748b' }}>
+                        <strong style={{color: '#475569'}}>పూర్తి భద్రత:</strong> సుభమ్స్ సిస్టమ్ మీ ఫైల్స్‌ను <span style={{ color: '#ef4444', fontWeight: 'bold' }}>ఎప్పుడూ చూడదు లేదా సేవ్ చేయదు</span>. 
+                        ప్రింట్ అయిన వెంటనే లేదా <span style={{ color: '#ef4444', fontWeight: 'bold' }}>10 నిమిషాల</span> తర్వాత మీ డేటా <strong style={{ color: '#ef4444' }}>పూర్తిగా డిలీట్</strong> అవుతుంది.
+                    </p>
+                </div>
             </div>
         </div>
-        
       {/* 🟢 4B. BUTTONS WITH OLD STYLE INSIDE ANIMATED BORDER */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           <div className="border-wrap-browse" onClick={() => fileInputRef.current.click()}>

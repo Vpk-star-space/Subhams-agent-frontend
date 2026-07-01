@@ -247,9 +247,14 @@ const pingServer = async () => {
     </BrowserRouter>
   );
 }
+
 // =====================================================================
-// 🌟 GLOBAL WIDGET: Always-on Share & 10-Second Center Install Popup
+// 🌟 GLOBAL WIDGET: Always-on Share & Center Install Popup
 // =====================================================================
+
+// 🎛️ MASTER TOGGLE: Set to 'false' to completely disable the install popup
+const ENABLE_INSTALL_POPUP = false; 
+
 const GlobalAppInstallWidget = () => {
   const [isInstallable, setIsInstallable] = useState(false);
   const [showPopup, setShowPopup] = useState(false); 
@@ -260,7 +265,6 @@ const GlobalAppInstallWidget = () => {
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
-      // Store in window so Vite Hot-Reload doesn't delete it!
       window.deferredInstallPrompt = e; 
       setIsInstallable(true);
     };
@@ -268,24 +272,20 @@ const GlobalAppInstallWidget = () => {
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
-// 2. RECURRING TIMING LOGIC (Wait 30s -> Show 10s -> Loop)
+  // 2. RECURRING TIMING LOGIC (Wait 30s -> Show 10s -> Loop)
   useEffect(() => {
-    // If already installed, stop everything.
-    if (isInstalled) return;
+    if (!ENABLE_INSTALL_POPUP || isInstalled) return;
 
     let timeoutId;
 
     const startLoop = () => {
-      // 1. Wait 30 seconds
       timeoutId = setTimeout(() => {
-        setShowPopup(true); // Show the popup
+        setShowPopup(true); 
 
-        // 2. Stay open for 10 seconds
         setTimeout(() => {
-          setShowPopup(false); // Hide the popup
+          setShowPopup(false); 
           
-          // 3. IMPORTANT: Recursively call startLoop to trigger the next 30s wait
-          if (!isInstalled) {
+          if (!isInstalled && ENABLE_INSTALL_POPUP) {
             startLoop();
           }
         }, 16000); 
@@ -295,13 +295,11 @@ const GlobalAppInstallWidget = () => {
 
     startLoop();
 
-    // Cleanup when component unmounts
     return () => clearTimeout(timeoutId);
   }, [isInstalled]);
 
   // 3. THE BUTTON CLICK
   const handleInstallClick = async () => {
-    // Check our secure global window object
     const promptEvent = window.deferredInstallPrompt; 
     
     if (!promptEvent) {
@@ -315,7 +313,6 @@ const GlobalAppInstallWidget = () => {
       setIsInstallable(false);
       setShowPopup(false); 
     }
-    // Clean up after use
     window.deferredInstallPrompt = null; 
   };
 
@@ -335,40 +332,145 @@ const GlobalAppInstallWidget = () => {
 
   return (
     <>
-      <div style={{ position: 'fixed', bottom: '25px', left: '25px', zIndex: 9997 }}>
-        <button onClick={handleShare} style={{...widgetBtnStyle, background: '#1e293b', padding: '12px 20px'}}>
-          ↗️ Share
+      {/* 🟢 PREMIUM INJECTED CSS ANIMATIONS */}
+      <style>
+        {`
+          /* Share Button Liquid Glow */
+          @keyframes liquidGlow {
+            0% { box-shadow: 0 0 0 0 rgba(30, 41, 59, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(30, 41, 59, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(30, 41, 59, 0); }
+          }
+          /* Share Icon Gentle Bounce */
+          @keyframes iconFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-3px) scale(1.1); }
+          }
+          /* Premium Modal Pop-In */
+          @keyframes premiumPopIn {
+            0% { opacity: 0; transform: translate(-50%, -40%) scale(0.92); filter: blur(4px); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0px); }
+          }
+          /* Security Shield Radar Scan */
+          @keyframes radarScan {
+            0% { top: -10%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 110%; opacity: 0; }
+          }
+          /* Install Button Shimmer */
+          @keyframes shimmerBtn {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+          }
+        `}
+      </style>
+{/* ↗️ 1. LIQUID GLASS SHARE BUTTON (Pill-shaped to fit text) */}
+      <div style={{ 
+        position: 'fixed', 
+        bottom: '95px', 
+        right: '25px',  
+        zIndex: 9997 
+      }}>
+        <button 
+          onClick={handleShare} 
+          title="Share Subhams Secure"
+          style={{
+            /* Removed fixed width/height. Added padding for a pill shape */
+            padding: '12px 20px', 
+            borderRadius: '30px', 
+            background: 'rgba(255, 255, 255, 0.4)', // Premium glass effect
+            backdropFilter: 'blur(12px)', 
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px', // Adds space between the text and the icon
+            cursor: 'pointer',
+            color: '#0f172a', // Dark text for readability
+            fontWeight: '700',
+            fontSize: '14px',
+            animation: 'liquidGlow 2.5s infinite', 
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)'
+          }}
+        >
+          {/* Static text */}
+          Share App 
+          
+          {/* Animated icon */}
+          <span style={{ 
+            fontSize: '18px', 
+            animation: 'iconFloat 2s infinite ease-in-out',
+            display: 'inline-block' // Required for CSS transforms to work on spans
+          }}>
+            ↗️
+          </span>
         </button>
       </div>
 
-    {/* ⚡ 2. THE SECURE INSTALL POPUP */}
-      {showPopup && !isInstalled && (
+      {/* ⚡ 2. THE PREMIUM SECURE INSTALL POPUP */}
+      {showPopup && !isInstalled && ENABLE_INSTALL_POPUP && (
         <div style={{
           position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-          zIndex: 9999, background: '#ffffff', borderRadius: '20px', 
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 100vw rgba(15, 23, 42, 0.75)', 
-          border: '2px solid #10b981', padding: '35px 25px', width: '90%', maxWidth: '450px', 
-          textAlign: 'center', animation: 'fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)' 
+          zIndex: 9999, background: '#ffffff', borderRadius: '24px', 
+          boxShadow: '0 25px 50px -12px rgba(16, 185, 129, 0.25), 0 0 0 100vw rgba(15, 23, 42, 0.85)', 
+          border: '1px solid rgba(16, 185, 129, 0.3)', padding: '40px 30px', width: '90%', maxWidth: '420px', 
+          textAlign: 'center', 
+          animation: 'premiumPopIn 0.5s cubic-bezier(0.16, 1, 0.3, 1)' 
         }}>
-          <div style={{ fontSize: '40px', marginBottom: '15px' }}>⚡</div>
-          <h4 style={{ margin: '0 0 12px 0', color: '#0f172a', fontSize: '22px', fontWeight: '800' }}>
-            Secure Install
+          
+          {/* Animated Shield Container */}
+          <div style={{ 
+            position: 'relative',
+            overflow: 'hidden',
+            background: '#ecfdf5',
+            width: '85px',
+            height: '85px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '50%',
+            margin: '0 auto 20px auto',
+            boxShadow: 'inset 0 2px 10px rgba(16, 185, 129, 0.2), 0 4px 15px rgba(16, 185, 129, 0.1)'
+          }}>
+            <span style={{ fontSize: '42px', zIndex: 2 }}>🛡️</span>
+            {/* The Radar Scan Line */}
+            <div style={{ 
+              position: 'absolute', 
+              width: '100%', 
+              height: '3px', 
+              background: '#10b981', 
+              boxShadow: '0 0 12px #10b981', 
+              left: 0, 
+              zIndex: 3,
+              animation: 'radarScan 2.5s infinite linear' 
+            }} />
+          </div>
+          
+          <h4 style={{ margin: '0 0 10px 0', color: '#0f172a', fontSize: '24px', fontWeight: '800', letterSpacing: '-0.5px' }}>
+            Secure Agent Connection
           </h4>
           
           <p style={{ margin: '0 0 25px 0', fontSize: '15px', color: '#475569', lineHeight: '1.6' }}>
-            Add to your Mobile Home Screen or PC Desktop.<br/>
-            <strong>No more typing URLs</strong>—just tap to open securely.<br/>
+            Add Subhams to your Home Screen.<br/>
+            <strong>Zero URL typing. Maximum Security.</strong><br/>
+            
             <span style={{ 
-              display: 'block', 
-              marginTop: '15px', 
-              padding: '8px', 
-              background: '#f0fdf4', 
+              display: 'flex', 
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              marginTop: '20px', 
+              padding: '12px', 
+              background: 'linear-gradient(90deg, #f0fdf4, #ecfdf5)', // Soft gradient
               color: '#065f46', 
-              borderRadius: '8px', 
-              fontWeight: '600',
-              fontSize: '14px' 
+              borderRadius: '12px', 
+              fontWeight: '700',
+              fontSize: '13.5px',
+              borderLeft: '4px solid #10b981' // Solid system-badge look
             }}>
-              Please install it—this message will never show again!
+              ✅ Install to hide this message forever!
             </span>
           </p>
           
@@ -376,14 +478,18 @@ const GlobalAppInstallWidget = () => {
             onClick={handleInstallClick}
             style={{ 
               ...widgetBtnStyle, 
-              background: '#10b981', 
+              // Shimmer Gradient Background
+              background: 'linear-gradient(90deg, #10b981 0%, #34d399 50%, #10b981 100%)', 
+              backgroundSize: '200% auto',
               width: '100%', 
               padding: '16px', 
               fontSize: '16px', 
-              opacity: isInstallable ? 1 : 0.9 
+              opacity: isInstallable ? 1 : 0.9,
+              boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.4)',
+              animation: 'shimmerBtn 3s infinite linear' // Triggers the shine effect
             }}
           >
-            {isInstallable ? '📱 Install App Now' : '📱 View Install Steps'}
+            {isInstallable ? '📱 Install Secure App' : '📱 View Install Steps'}
           </button>
         </div>
       )}
@@ -392,11 +498,11 @@ const GlobalAppInstallWidget = () => {
 };
 
 const widgetBtnStyle = {
-  padding: '10px 16px', borderRadius: '10px', border: 'none', color: '#fff', 
+  borderRadius: '12px', border: 'none', color: '#fff', 
   fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', 
-  justifyContent: 'center', fontSize: '14px', transition: 'all 0.2s', 
-  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+  justifyContent: 'center', transition: 'all 0.3s ease', 
 };
+
 // =====================================================================
 // 🎨 BEAUTIFUL STYLES FOR THE BOOTLOADER & MAINTENANCE
 // =====================================================================
