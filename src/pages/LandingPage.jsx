@@ -206,7 +206,7 @@ export default function LandingPage() {
                     <div style={{...styles.macDot, background: '#f59e0b'}}></div>
                     <div style={{...styles.macDot, background: '#10b981'}}></div>
                   </div>
-                  <div style={styles.mockupUrl}>https://subhams-agent-vpk.vercel.app/</div>
+                  <div style={styles.mockupUrl}>Subhams Networks</div>
                 </div>
                 <div style={styles.mockupBody}>
                   <div style={styles.mockupUiBox}>
