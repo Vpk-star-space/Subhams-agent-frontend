@@ -253,7 +253,7 @@ const pingServer = async () => {
 // =====================================================================
 
 // 🎛️ MASTER TOGGLE: Set to 'false' to completely disable the install popup
-const ENABLE_INSTALL_POPUP = false; 
+const ENABLE_INSTALL_POPUP = true; 
 
 const GlobalAppInstallWidget = () => {
   const [isInstallable, setIsInstallable] = useState(false);
@@ -396,7 +396,7 @@ const GlobalAppInstallWidget = () => {
           }}
         >
           {/* Static text */}
-          Share App 
+        
           
           {/* Animated icon */}
           <span style={{ 
