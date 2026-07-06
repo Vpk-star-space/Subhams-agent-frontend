@@ -182,7 +182,7 @@ export default function App() {
 
     // 🟢 2. Listen for Vercel Update Command
     socket.on('CRITICAL_UPDATE_REFRESH', () => {
-        console.log("🚨 New Vercel Update Detected! Force Refreshing...");
+        console.log("🚨 New system Update Detected! Force Refreshing...");
         // 3 second delay gives Vercel time to finish deploying before browsers reload
         setTimeout(() => {
             window.location.reload(true);

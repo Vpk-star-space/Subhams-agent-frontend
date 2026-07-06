@@ -206,11 +206,7 @@ export default function LandingPage() {
                     <div style={{...styles.macDot, background: '#f59e0b'}}></div>
                     <div style={{...styles.macDot, background: '#10b981'}}></div>
                   </div>
-<<<<<<< HEAD
-                  <div style={styles.mockupUrl}>Subhams Networks</div>
-=======
                   <div style={styles.mockupUrl}>https://agent.subhamsnetworks.in/</div>
->>>>>>> 4db23a5 ( update in domain https://agent.subhamsnetworks.in)
                 </div>
                 <div style={styles.mockupBody}>
                   <div style={styles.mockupUiBox}>
