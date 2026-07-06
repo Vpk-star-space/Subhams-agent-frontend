@@ -101,10 +101,10 @@ const MaintenanceScreen = () => {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
         <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 5px 0', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>Explore Our Network</p>
         <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <a href="https://subhams-vpk.vercel.app/" target="_blank" rel="noopener noreferrer" style={styles.linkBtn}>
+          <a href="https://pmms.subhamsnetworks.in/" target="_blank" rel="noopener noreferrer" style={styles.linkBtn}>
             <span style={{ fontSize: '16px', marginRight: '5px' }}>🚀</span> Subhams App
           </a>
-          <a href="https://bhavyams-vendor-hub-vpk.vercel.app/" target="_blank" rel="noopener noreferrer" style={styles.linkBtn}>
+          <a href="https://bhavyams.subhamsnetworks.in/" target="_blank" rel="noopener noreferrer" style={styles.linkBtn}>
             <span style={{ fontSize: '16px', marginRight: '5px' }}>🏬</span> Bhavyams Vendor Hub
           </a>
         </div>

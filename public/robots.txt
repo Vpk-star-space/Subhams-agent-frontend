@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://subhams-agent-vpk.vercel.app/sitemap.xml
+Sitemap: https://agent.subhamsnetworks.in/sitemap.xml

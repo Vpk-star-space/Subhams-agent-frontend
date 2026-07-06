@@ -1,6 +1,6 @@
 # Subhams Secure Print Agent 🖨️🔒
 
-**Live Dashboard:** [https://subhams-agent-vpk.vercel.app/](https://subhams-agent-vpk.vercel.app/)  
+**Live Dashboard:** [https://agent.subhamsnetworks.in/](https://agent.subhamsnetworks.in/)  
 **Developer:** Venkata Pavan Kumar Amarthaluri
 
 Subhams is an enterprise-grade, real-time cloud printing management system. It securely bridges the gap between customer file uploads and physical Windows print spoolers using full-stack web technologies and secure hardware fingerprinting.

@@ -206,7 +206,11 @@ export default function LandingPage() {
                     <div style={{...styles.macDot, background: '#f59e0b'}}></div>
                     <div style={{...styles.macDot, background: '#10b981'}}></div>
                   </div>
+<<<<<<< HEAD
                   <div style={styles.mockupUrl}>Subhams Networks</div>
+=======
+                  <div style={styles.mockupUrl}>https://agent.subhamsnetworks.in/</div>
+>>>>>>> 4db23a5 ( update in domain https://agent.subhamsnetworks.in)
                 </div>
                 <div style={styles.mockupBody}>
                   <div style={styles.mockupUiBox}>
@@ -299,8 +303,8 @@ export default function LandingPage() {
               <h4 style={{color: '#f8fafc', fontSize: '15px', fontWeight: '600', margin: '0 0 20px 0'}}>Developer Network</h4>
               <a href="https://github.com/Vpk-star-space" target="_blank" rel="noopener noreferrer" className="footer-link">🐙 GitHub Profile</a>
               <a href="https://www.linkedin.com/in/venkata-pavan-kumar-server" target="_blank" rel="noopener noreferrer" className="footer-link">💼 LinkedIn Connect</a>
-              <a href="https://bhavyams-vendor-hub-vpk.vercel.app/" target="_blank" rel="noopener noreferrer" className="footer-link">🏪 Bhavyams VendorHub</a>
-              <a href="https://subhams-vpk.vercel.app/" target="_blank" rel="noopener noreferrer" className="footer-link">📈 Subhams PMMS</a>
+              <a href="https://bhavyams.subhamsnetworks.in/" target="_blank" rel="noopener noreferrer" className="footer-link">🏪 Bhavyams VendorHub</a>
+              <a href="https://pmms.subhamsnetworks.in/" target="_blank" rel="noopener noreferrer" className="footer-link">📈 Subhams PMMS</a>
             </div>
 
             {/* Column 3: System Architecture */}

@@ -92,7 +92,7 @@ const PrintPass = forwardRef(({ passData, shopId, uploadLink }, ref) => {
                 </div>
 
                 <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: colors.muted, fontWeight: '600' }}>
-                    🌐 Link: https://subhams-agent-vpk.vercel.app
+                    🌐 Link: https://agent.subhamsnetworks.in/
                 </p>
                 <p style={{ margin: 0, fontWeight: '800', color: colors.success }}>
                     🛡️ {isEnglish ? "Our Security Promise:" : "మా భద్రతా వాగ్దానం:"}
