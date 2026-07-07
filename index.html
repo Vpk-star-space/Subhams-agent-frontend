@@ -5,12 +5,15 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; manifest-src 'self'; connect-src 'self' blob: https://subhams-vpk.onrender.com wss://subhams-vpk.onrender.com http://localhost:5000 ws://localhost:5000 https://accounts.google.com; img-src 'self' data: https: blob:; frame-src 'self' blob: https://accounts.google.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com; worker-src 'self' blob:;">
 
     <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/png" href="/icon-192.png" />
+    <link rel="icon" type="image/png" href="/icon-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#020617" />
     
-    <title>Venkata Pavan Kumar Amarthaluri | Subhams Secure Agent</title>
-    <meta name="description" content="Official dashboard for Subhams Secure Agent. A highly secure cloud printing system developed by Venkata Pavan Kumar Amarthaluri, inspired by and named after his mother, Amarthaluri Subbayamma." />
+    <!-- 1. STRICT SEARCH ENGINE TITLES, KEYWORDS, & BRAND DESCRIPTION -->
+    <title>Subhams Agent | Venkata Pavan Kumar Amarthaluri</title>
+    <meta name="description" content="Official dashboard for Subhams Secure Agent. A highly secure cloud printing system developed by Venkata Pavan Kumar Amarthaluri, engineered under the Subhams Networks ecosystem." />
+    <meta name="keywords" content="subhams, subhams agent, subhams networks, Venkata Pavan Kumar Amarthaluri, secure cloud printing, bhavyams, pmms" />
+    <meta name="author" content="Venkata Pavan Kumar Amarthaluri" />
     
     <meta name="google-site-verification" content="OUPQ33AQcmty9J2Upps0lJ4OD15bs08i5ngVTjd3DJU" />
 
@@ -18,26 +21,53 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
+    <!-- 2. STICKY ECOSYSTEM SCHEMA (NO-GUESS COMBO FOR GOOGLE BOT) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "Person",
-      "name": "Venkata Pavan Kumar Amarthaluri",
-      "jobTitle": "Backend Software Engineer",
-      "url": "https://agent.subhamsnetworks.in/",
-      "sameAs": [
-        "https://www.linkedin.com/in/venkata-pavan-kumar-server",
-        "https://github.com/Vpk-star-space",
-        "https://bhavyams.subhamsnetworks.in/",
-        "https://pmms.subhamsnetworks.in/"
-      ],
-      "knowsAbout": ["Node.js", "MongoDB", "React", "System Architecture", "Cloud Security"],
-      "mainEntityOfPage": {
-        "@type": "SoftwareApplication",
-        "name": "Subhams Secure Agent",
-        "applicationCategory": "BusinessApplication",
-        "description": "The Subhams platform is a secure cloud printing and management ecosystem engineered by Venkata Pavan Kumar Amarthaluri, inspired by his mother, Amarthaluri Subbayamma."
-      }
+      "@graph": [
+        {
+          "@type": "Person",
+          "@id": "https://subhamsnetworks.in/#person",
+          "name": "Venkata Pavan Kumar Amarthaluri",
+          "url": "https://subhamsnetworks.in",
+          "email": "subhamsnetworks@gmail.com",
+          "jobTitle": "Backend Software Engineer",
+          "knowsAbout": ["Node.js", "MongoDB", "React", "System Architecture", "Cloud Security"],
+          "sameAs": [
+            "https://www.linkedin.com/in/venkata-pavan-kumar-server",
+            "https://github.com/Vpk-star-space",
+            "https://www.instagram.com/subhamsnetworks?igsh=cW9mYXBibzA3cGZp",
+            "https://x.com/subhamsnetworks",
+            "https://youtube.com/@subhamsnetworks?si=zzI2p8uHbOFkW-3D"
+          ]
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://agent.subhamsnetworks.in/#application",
+          "name": "Subhams Secure Agent",
+          "url": "https://agent.subhamsnetworks.in",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "All",
+          "description": "A secure cloud printing and management ecosystem engineered by Venkata Pavan Kumar Amarthaluri, inspired by his mother, Amarthaluri Subbayamma.",
+          "author": {
+            "@id": "https://subhamsnetworks.in/#person"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "Subhams Networks",
+            "alternateName": "subhams",
+            "url": "https://subhamsnetworks.in",
+            "logo": "https://agent.subhamsnetworks.in/icon-192.png",
+            "sameAs": [
+              "https://subhamsnetworks.in",
+              "https://agent.subhamsnetworks.in",
+              "https://bhavyams.subhamsnetworks.in",
+              "https://pmms.subhamsnetworks.in"
+            ]
+          }
+        }
+      ]
     }
     </script>
   </head>
