@@ -14,7 +14,7 @@ import ForgotPassword from './pages/ForgotPassword'; // Adjust the path if your 
 // 🤖 IMPORT THE NEW CHATBOT HERE
 import XeroxChatbot from './components/XeroxChatbot'; 
 import AIDocWriter from './components/AIDocWriter'; // Import the new AI Document Writer component
-
+import SplashScreen from './components/SplashScreen';
 // 🛑 THE MASTER SWITCH: Change to 'true' to lock down the app for updates!
 const IS_MAINTENANCE_MODE = false; 
  const TARGET_LAUNCH_TEXT = "Updating..."; // You can customize this text to show an estimated time or a fun message!
@@ -113,6 +113,7 @@ const MaintenanceScreen = () => {
   );
 };
 
+
 // =====================================================================
 // 🚀 THE WAKE-UP BOOTLOADER UI (Now a CSS Overlay for SEO!)
 // =====================================================================
@@ -170,11 +171,15 @@ const ServerBootloader = () => {
   );
 };
 
+
 // =====================================================================
-// 🌐 MAIN APP COMPONENT
+// 🌐 2. MAIN APP COMPONENT
 // =====================================================================
 export default function App() {
   const [isServerAwake, setIsServerAwake] = useState(false);
+  
+  // 🌟 NEW STATE: Controls the Splash Screen
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     // 🟢 1. Connect Socket using the MAGIC BASE_URL!
@@ -189,7 +194,7 @@ export default function App() {
         }, 3000);
     });
     
-const pingServer = async () => {
+    const pingServer = async () => {
       if (IS_MAINTENANCE_MODE) return; 
 
       try {
@@ -218,36 +223,38 @@ const pingServer = async () => {
     return <MaintenanceScreen />;
   }
 
-  // 🟢 SEO FIX: Render actual components into the DOM immediately! 
-  // If the server isn't awake, we just float the Bootloader on top of it.
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/portal" element={<Home />} />
-        
-        {/* 🟢 Customer Portal: Always rendered, Bootloader is just an overlay */}
-        <Route path="/u/:shopId" element={<>{!isServerAwake && <ServerBootloader />}<CustomerUpload /></>} />
-        <Route path="/u" element={<>{!isServerAwake && <ServerBootloader />}<CustomerUpload /></>} />
+    <>
+      {/* 🌟 RENDER THE SPLASH SCREEN FIRST */}
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
 
-        {/* 🟢 Auth Routes */}
-        <Route path="/login" element={<>{!isServerAwake && <ServerBootloader />}<Login /></>} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/register" element={<>{!isServerAwake && <ServerBootloader />}<Register /></>} />
-        
-        {/* 🟢 Dashboard Routes */}
-        <Route path="/dashboard" element={<ProtectedRoute>{!isServerAwake && <ServerBootloader />}<Dashboard /></ProtectedRoute>} />
-        <Route path="/manage" element={<ProtectedRoute>{!isServerAwake && <ServerBootloader />}<Manage /></ProtectedRoute>} />
-<Route path="/writer" element={<ProtectedRoute>{!isServerAwake && <ServerBootloader />}<AIDocWriter /></ProtectedRoute>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/portal" element={<Home />} />
+          
+          {/* 🟢 Customer Portal: Always rendered, Bootloader is just an overlay */}
+          <Route path="/u/:shopId" element={<>{!isServerAwake && <ServerBootloader />}<CustomerUpload /></>} />
+          <Route path="/u" element={<>{!isServerAwake && <ServerBootloader />}<CustomerUpload /></>} />
 
-      <XeroxChatbot />
-      <GlobalAppInstallWidget />
-    </BrowserRouter>
+          {/* 🟢 Auth Routes */}
+          <Route path="/login" element={<>{!isServerAwake && <ServerBootloader />}<Login /></>} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/register" element={<>{!isServerAwake && <ServerBootloader />}<Register /></>} />
+          
+          {/* 🟢 Dashboard Routes */}
+          <Route path="/dashboard" element={<ProtectedRoute>{!isServerAwake && <ServerBootloader />}<Dashboard /></ProtectedRoute>} />
+          <Route path="/manage" element={<ProtectedRoute>{!isServerAwake && <ServerBootloader />}<Manage /></ProtectedRoute>} />
+          <Route path="/writer" element={<ProtectedRoute>{!isServerAwake && <ServerBootloader />}<AIDocWriter /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+
+        <XeroxChatbot />
+        <GlobalAppInstallWidget />
+      </BrowserRouter>
+    </>
   );
 }
-
 // =====================================================================
 // 🌟 GLOBAL WIDGET: Always-on Share & Center Install Popup
 // =====================================================================
@@ -502,6 +509,7 @@ const widgetBtnStyle = {
   fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', 
   justifyContent: 'center', transition: 'all 0.3s ease', 
 };
+
 
 // =====================================================================
 // 🎨 BEAUTIFUL STYLES FOR THE BOOTLOADER & MAINTENANCE
