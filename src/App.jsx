@@ -14,7 +14,7 @@ import ForgotPassword from './pages/ForgotPassword'; // Adjust the path if your 
 // 🤖 IMPORT THE NEW CHATBOT HERE
 import XeroxChatbot from './components/XeroxChatbot'; 
 import AIDocWriter from './components/AIDocWriter'; // Import the new AI Document Writer component
-import SplashScreen from './components/SplashScreen';
+
 // 🛑 THE MASTER SWITCH: Change to 'true' to lock down the app for updates!
 const IS_MAINTENANCE_MODE = false; 
  const TARGET_LAUNCH_TEXT = "Updating..."; // You can customize this text to show an estimated time or a fun message!
@@ -178,9 +178,7 @@ const ServerBootloader = () => {
 export default function App() {
   const [isServerAwake, setIsServerAwake] = useState(false);
   
-  // 🌟 NEW STATE: Controls the Splash Screen
-  const [showSplash, setShowSplash] = useState(true);
-
+  
   useEffect(() => {
     // 🟢 1. Connect Socket using the MAGIC BASE_URL!
     const socket = io(BASE_URL);
@@ -225,9 +223,7 @@ export default function App() {
 
   return (
     <>
-      {/* 🌟 RENDER THE SPLASH SCREEN FIRST */}
-      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
-
+      
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
