@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import  { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/api'; 
 
@@ -8,83 +8,144 @@ export default function Manage() {
   const [otp, setOtp] = useState('');
   const [agentKey, setAgentKey] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [attemptsLeft, setAttemptsLeft] = useState(5);
+
+  // 🚀 SYNCHRONOUS LOCK: Prevents the double-fire race condition
+  const isProcessing = useRef(false);
+
+  // 🟢 COOLDOWN STATE
+  const [cooldown, setCooldown] = useState(() => {
+    const saved = localStorage.getItem('keyCooldown');
+    return saved ? Math.max(0, Math.floor((parseInt(saved) - Date.now()) / 1000)) : 0;
+  });
+
+  // ⏱️ TIMER LOGIC
+  useEffect(() => {
+    if (cooldown <= 0) {
+      localStorage.removeItem('keyCooldown');
+      return;
+    }
+    const timer = setInterval(() => setCooldown((prev) => prev - 1), 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   const requestKeyAccess = async () => {
+    // 🚀 Check the steel door
+    if (isProcessing.current) return;
+    isProcessing.current = true;
     setLoading(true);
+    
     try {
       await api.post('/auth/request-otp'); 
       setStep(2);
+      setAttemptsLeft(5); 
     } catch (err) {
       console.error(err);
-    // If error is 401, let the app handle the redirect, otherwise alert
       if (err.response?.status !== 401) alert("Failed to send code.");
     } finally {
+      // 🚀 Open the steel door
+      isProcessing.current = false;
       setLoading(false);
     }
   };
 
   const verifyAndReveal = async (e) => {
     e.preventDefault();
+    
+    // 🚀 Check the steel door (Stops the 5 -> 3 jump)
+    if (isProcessing.current) return; 
+    isProcessing.current = true;
     setLoading(true);
+    
     try {
-      const res = await api.post('/auth/verify-otp', { otp });
+    const res = await api.post('/auth/verify-otp', { otp: otp.trim() });
       if (res.data.success) {
-        setAgentKey(res.data.agentKey); // Shows CURRENT key
+        setAgentKey(res.data.agentKey); 
       }
     } catch (err) {
       console.error(err);
-      alert("Invalid Code. Please check your email.");
+      
+      const backendAttempts = err.response?.data?.attemptsLeft;
+      const remaining = backendAttempts !== undefined ? backendAttempts : attemptsLeft - 1;
+      
+      setAttemptsLeft(remaining);
+      
+      if (remaining <= 0) {
+        alert("Maximum attempts reached. Please request a new OTP.");
+        setStep(1); 
+        setOtp('');
+      } else {
+        alert(`Invalid Code. ${remaining} attempts remaining.`);
+      }
     } finally {
+      // 🚀 Open the steel door
+      isProcessing.current = false;
       setLoading(false);
     }
   };
 
-const handleGenerateNewKey = async () => {
+  const handleGenerateNewKey = async () => {
+    if (isProcessing.current) return;
+    
     const confirmChange = window.confirm("⚠️ WARNING: Generating a new key will instantly disconnect your current setup. Are you sure?");
     if (!confirmChange) return;
 
+    isProcessing.current = true;
     setLoading(true);
+    
     try {
-    const shopId = localStorage.getItem('shopId'); 
-console.log("DEBUG: Sending ShopID to server:", shopId); // 🟢 CHECK THIS IN F12 CONSOLE
+      const shopId = localStorage.getItem('shopId'); 
+      if (!shopId) {
+        alert("CRITICAL: No Shop ID found in browser storage!");
+        return;
+      }
 
-if (!shopId) {
-    alert("CRITICAL: No Shop ID found in browser storage!");
-    return;
-}
-
-const res = await api.post('/shop/regenerate-key', { shopId });
+      const res = await api.post('/shop/regenerate-key', { shopId });
       
       if (res.data.success) {
         setAgentKey(res.data.agentKey);
-        alert("✨ New Key Generated! Desktop Agent will now disconnect.");
+        const expires = Date.now() + 300000; 
+        localStorage.setItem('keyCooldown', expires);
+        setCooldown(300);
       }
     } catch (err) {
-      console.error("Full Error Object:", err); // 🟢 This logs the FULL error in F12 console
-      
-      // 🟢 THIS IS THE FIX: This extracts the specific message from the server
+      console.error("Full Error Object:", err); 
       const serverMessage = err.response?.data?.message || err.message;
       
       if (err.response?.status === 401) {
           alert("Session expired. Please log in again.");
       } else {
-          // This will now show "Shop not found" or "Error rotating key" instead of "Server error"
           alert(`Error: ${serverMessage}`);
       }
     } finally {
+      isProcessing.current = false;
       setLoading(false);
     }
   };
 
   return (
-   <div style={containerStyle}>
-      {/* 🟢 FIXED: Back button is now inside the container so it aligns perfectly */}
+    <div style={containerStyle}>
+      <style>
+        {`
+          @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+          }
+          @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+          }
+        `}
+      </style>
+
       <button onClick={() => navigate('/dashboard')} style={backBtnStyle}>
         ← Back to Dashboard
       </button>
     
       <h2 style={{ textAlign: 'center', color: '#0f172a', marginBottom: '5px' }}>Security Vault 🔐</h2>
-      <p style={{ textAlign: 'center', color: '#64748b', fontSize: '14px', marginTop: 0 }}>
+      <p style={{ textAlign: 'center', color: '#64748b', fontSize: '14px', marginTop: 0, marginBottom: '25px' }}>
         Manage your Device connection key.<br/>
         <span style={{fontSize: '12px', color: '#94a3b8'}}>మీ కనెక్షన్ కీని ఇక్కడ నిర్వహించండి.</span>
       </p>
@@ -113,6 +174,11 @@ const res = await api.post('/shop/regenerate-key', { shopId });
             style={inputStyle} 
             required
           />
+          
+          <p style={{ fontSize: '12px', color: attemptsLeft <= 2 ? '#ef4444' : '#64748b', marginTop: '-10px', marginBottom: '15px', fontWeight: 'bold' }}>
+            {attemptsLeft} attempts remaining
+          </p>
+
           <button type="submit" disabled={loading} style={btnStyle}>
             {loading ? 'Verifying... / నిర్ధారిస్తోంది...' : 'Unlock Vault / అన్‌లాక్ చేయండి'}
           </button>
@@ -120,47 +186,86 @@ const res = await api.post('/shop/regenerate-key', { shopId });
       )}
 
       {agentKey && (
-        <div style={{ ...vaultBox, background: '#0f172a', color: '#fff', border: '2px solid #334155' }}>
-          <h3 style={{ color: '#facc15', margin: '0 0 5px 0' }}>Your Current Agent Key 🔑</h3>
-          <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 15px 0' }}>
-            Paste this in your Subhams Desktop Agent.<br/>
-            దీన్ని మీ సుభమ్స్ డెస్క్‌టాప్ ఏజెంట్‌లో పేస్ట్ చేయండి.
-          </p>
-          
-          <div style={keyBox}>{agentKey}</div>
-          
-          <button 
-            onClick={() => {
-              navigator.clipboard.writeText(agentKey);
-              alert("Copied! / కాపీ చేయబడింది!");
-            }} 
-            style={copyBtn}
-          >
-            📋 Copy to Clipboard / కాపీ చేయండి
-          </button>
+        <>
+          {cooldown > 0 ? (
+            <div style={premiumNoticeStyle}>
+               <div style={{ fontSize: '45px', marginBottom: '10px', animation: 'bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>✅</div>
+               <h3 style={{ color: '#065f46', margin: '0 0 10px 0', fontSize: '22px' }}>New Key Activated!</h3>
+               <p style={{ color: '#047857', fontSize: '14px', marginBottom: '20px' }}>
+                 Your old agent has been instantly disconnected.
+               </p>
+               
+               <div style={{...keyBox, background: '#ffffff', color: '#059669', border: '2px dashed #10b981', animation: 'pulseGlow 2s infinite' }}>
+                 {agentKey}
+               </div>
+               
+               <button 
+                 onClick={() => {
+                   navigator.clipboard.writeText(agentKey);
+                   alert("Copied successfully! / కాపీ చేయబడింది!");
+                 }} 
+                 style={{...copyBtn, background: '#10b981', color: 'white'}}
+               >
+                 📋 Copy New Key
+               </button>
 
-          <hr style={{ borderColor: '#475569', margin: '20px 0' }} />
+               <div style={instructionBox}>
+                  <p style={{margin: '0 0 10px 0', fontWeight: '900', color: '#0f172a', fontSize: '15px'}}>How to reconnect:</p>
+                  <ol style={{ margin: 0, paddingLeft: '22px', color: '#334155', lineHeight: '1.8', fontSize: '14px', fontWeight: '500' }}>
+                    <li>Copy your new key above.</li>
+                    <li>Open <b>Subhams Print Agent</b> on your shop PC.</li>
+                    <li>Paste the key and click <b>Connect</b>.</li>
+                  </ol>
+               </div>
+               
+               <p style={{ marginTop: '20px', fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>
+                  Security lockdown ending in: {Math.floor(cooldown / 60)}m {(cooldown % 60).toString().padStart(2, '0')}s
+               </p>
+            </div>
 
-          {/* 🌟 THE NEW GENERATE BUTTON */}
-          <div style={{ textAlign: 'center' }}>
-             <p style={{ fontSize: '12px', color: '#cbd5e1', marginBottom: '10px' }}>Think your key was stolen? Generate a new one.</p>
-             <button 
-               onClick={handleGenerateNewKey} 
-               disabled={loading}
-               style={{ ...btnStyle, background: '#ef4444', padding: '10px' }}
-             >
-               {loading ? 'Generating...' : '⚠️ Generate New Key / కొత్త కీ సృష్టించండి'}
-             </button>
-          </div>
+          ) : (
+            <div style={{ ...vaultBox, background: '#0f172a', color: '#fff', border: '2px solid #334155' }}>
+              <h3 style={{ color: '#facc15', margin: '0 0 5px 0' }}>Your Current Agent Key 🔑</h3>
+              <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 15px 0' }}>
+                Paste this in your Subhams Desktop Agent.<br/>
+                దీన్ని మీ సుభమ్స్ డెస్క్‌టాప్ ఏజెంట్‌లో పేస్ట్ చేయండి.
+              </p>
+              
+              <div style={keyBox}>{agentKey}</div>
+              
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(agentKey);
+                  alert("Copied! / కాపీ చేయబడింది!");
+                }} 
+                style={copyBtn}
+              >
+                📋 Copy to Clipboard / కాపీ చేయండి
+              </button>
 
-          <div style={warningBox}>
-            <h4 style={{ color: '#b91c1c', margin: '0 0 8px 0', fontSize: '15px' }}>⚠️ CRITICAL SECURITY WARNING</h4>
-            <p style={{ color: '#7f1d1d', fontSize: '13px', margin: '0 0 10px 0', lineHeight: '1.5' }}>
-              Your <b>Agent Key</b> gives full control over your shop's printing queue. 
-              <b> NEVER share this key with anyone.</b>
-            </p>
-          </div>
-        </div>
+              <hr style={{ borderColor: '#475569', margin: '20px 0' }} />
+
+              <div style={{ textAlign: 'center' }}>
+                 <p style={{ fontSize: '12px', color: '#cbd5e1', marginBottom: '10px' }}>Think your key was stolen? Generate a new one.</p>
+                 <button 
+                   onClick={handleGenerateNewKey} 
+                   disabled={loading}
+                   style={{ ...btnStyle, background: '#ef4444', padding: '12px' }}
+                 >
+                   {loading ? 'Generating...' : '⚠️ Generate New Key / కొత్త కీ సృష్టించండి'}
+                 </button>
+              </div>
+
+              <div style={warningBox}>
+                <h4 style={{ color: '#b91c1c', margin: '0 0 8px 0', fontSize: '15px' }}>⚠️ CRITICAL SECURITY WARNING</h4>
+                <p style={{ color: '#7f1d1d', fontSize: '13px', margin: '0 0 10px 0', lineHeight: '1.5' }}>
+                  Your <b>Agent Key</b> gives full control over your shop's printing queue. 
+                  <b> NEVER share this key with anyone.</b>
+                </p>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -175,3 +280,5 @@ const btnStyle = { width: '100%', padding: '14px', background: '#2563eb', color:
 const keyBox = { background: '#1e293b', color: '#10b981', padding: '20px', borderRadius: '8px', wordBreak: 'break-all', fontFamily: 'monospace', margin: '20px 0', border: '1px solid #475569', fontSize: '16px' };
 const copyBtn = { width: '100%', padding: '12px', background: '#facc15', color: '#0f172a', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', transition: 'background 0.2s' };
 const warningBox = { background: '#fef2f2', border: '1px solid #ef4444', padding: '20px', borderRadius: '8px', marginTop: '25px', textAlign: 'left' };
+const premiumNoticeStyle = { background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)', padding: '40px 30px', borderRadius: '16px', textAlign: 'center', border: '2px solid #34d399', boxShadow: '0 20px 40px -10px rgba(16, 185, 129, 0.2)'};
+const instructionBox = { background: 'white', padding: '20px', borderRadius: '12px', marginTop: '25px', textAlign: 'left', border: '1px solid #d1fae5', boxShadow: '0 4px 6px rgba(0,0,0,0.02)'};

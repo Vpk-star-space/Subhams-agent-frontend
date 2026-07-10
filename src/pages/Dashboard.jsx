@@ -774,7 +774,7 @@ const stopDrawing = (e) => {
     <AIDocWriter />
 ) : (
     <>
-         {/* 🚨 THE NEW BIG HARDWARE SECURITY POPUP 🚨 */}
+       {/* 🚨 THE NEW BIG HARDWARE SECURITY POPUP 🚨 */}
         {pendingHardware && (
           <div style={securityBannerStyle}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -784,6 +784,11 @@ const stopDrawing = (e) => {
                       <p style={{ color: '#7f1d1d', margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
                           A new computer is attempting to connect to your Shop using your Agent Key.<br/>
                           <b>Device Fingerprint:</b> <code style={{background: '#fee2e2', padding: '2px 6px', borderRadius: '4px'}}>{pendingHardware}</code>
+                      </p>
+                      
+                      {/* 🌟 NEW TEXT ADDED HERE 🌟 */}
+                      <p style={{ color: '#991b1b', margin: '8px 0 0 0', fontSize: '13px', fontWeight: 'bold', background: '#fecaca', padding: '6px 10px', borderRadius: '6px' }}>
+                          ⚠️ If this wasn't you, click Reject, go to your Manage Vault, and update to a new Agent Key. NEVER share your key with anyone!
                       </p>
                   </div>
               </div>
