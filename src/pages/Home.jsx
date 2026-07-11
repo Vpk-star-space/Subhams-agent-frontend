@@ -25,11 +25,13 @@ export default function Home() {
       <p style={{ color: '#64748b', marginBottom: '40px', fontSize: '15px', textAlign: 'center' }}>
         Select your portal / మీ పోర్టల్‌ను ఎంచుకోండి
       </p>
+    {/*    ///login?role=individual/// */}
 
-      {/* PORTAL CARDS */}
+     {/* PORTAL CARDS */}
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '24px', width: '100%', maxWidth: '850px', justifyContent: 'center', marginBottom: '50px' }}>
         
-        <div onClick={() => navigate('/login?role=individual')} style={{ ...cardStyle, borderTop: '5px solid #10b981', flex: 1 }}>
+        {/* CUSTOMER CARD (Always Visible) */}
+        <div onClick={() => navigate('/u')} style={{ ...cardStyle, borderTop: '5px solid #10b981', flex: 1 }}>
           <div style={{ ...iconCircle, background: '#d1fae5', color: '#10b981' }}>📱</div>
           <h3 style={h3Style}>Print Customer</h3>
           <p style={pStyle}>
@@ -39,17 +41,20 @@ export default function Home() {
           <button style={{ ...btnStyle, background: '#10b981' }}>Send Files Now</button>
         </div>
 
-        <div onClick={() => navigate('/login?role=business')} style={{ ...cardStyle, borderTop: '5px solid #2563eb', flex: 1, position: 'relative' }}>
-          <div style={pcBadgeStyle}>🖥️ PC / Laptop Only</div>
-          <div style={{ ...iconCircle, background: '#dbeafe', color: '#2563eb', marginTop: '10px' }}>🏢</div>
-          <h3 style={h3Style}>Xerox Shop Owner</h3>
-          <p style={pStyle}>
-            <strong style={{ color: '#334155' }}>Manage my printing.</strong><br/>
-            <span style={teluguStyle}>నా షాపుకి వచ్చిన ఫైల్స్ ప్రింట్ తీయాలి.</span>
-          </p>
-          <p style={noteStyle}>* ఈ పోర్టల్ కంప్యూటర్లో మాత్రమే పనిచేస్తుంది.</p>
-          <button style={{ ...btnStyle, background: '#2563eb' }}>Shop Login</button>
-        </div>
+        {/* SHOP OWNER CARD (Hidden on Mobile) */}
+        {!isMobile && (
+          <div onClick={() => navigate('/login?role=business')} style={{ ...cardStyle, borderTop: '5px solid #2563eb', flex: 1, position: 'relative' }}>
+            <div style={pcBadgeStyle}>🖥️ PC / Laptop Only</div>
+            <div style={{ ...iconCircle, background: '#dbeafe', color: '#2563eb', marginTop: '10px' }}>🏢</div>
+            <h3 style={h3Style}>Xerox Shop Owner</h3>
+            <p style={pStyle}>
+              <strong style={{ color: '#334155' }}>Manage my printing.</strong><br/>
+              <span style={teluguStyle}>నా షాపుకి వచ్చిన ఫైల్స్ ప్రింట్ తీయాలి.</span>
+            </p>
+            <p style={noteStyle}>* ఈ పోర్టల్ కంప్యూటర్లో మాత్రమే పనిచేస్తుంది.</p>
+            <button style={{ ...btnStyle, background: '#2563eb' }}>Shop Login</button>
+          </div>
+        )}
         
       </div>
     </div>
