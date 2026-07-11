@@ -253,6 +253,7 @@ export default function App() {
     </>
   );
 }
+
 // =====================================================================
 // 🌟 GLOBAL WIDGET: Always-on Share & Center Install Popup
 // =====================================================================
@@ -264,35 +265,56 @@ const GlobalAppInstallWidget = () => {
   const [isInstallable, setIsInstallable] = useState(false);
   const [showPopup, setShowPopup] = useState(false); 
 
-  const isInstalled = typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches;
+  // 🌟 BUG FIX 1: Make 'isInstalled' a dynamic State and check LocalStorage
+  // Added 'fullscreen' and 'minimal-ui' to fix the Zoom/Fullscreen bug!
+  const [isInstalled, setIsInstalled] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const isStandalone = window.matchMedia('(display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui)').matches;
+    const isIOS = window.navigator.standalone === true;
+    const isSaved = localStorage.getItem('pwa_installed') === 'true';
+    return isStandalone || isIOS || isSaved;
+  });
 
-  // 1. Capture the Install Event (NOW STORED GLOBALLY)
+  // 1. Capture the Install Event & Success Event
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       window.deferredInstallPrompt = e; 
       setIsInstallable(true);
     };
+
+    // 🌟 BUG FIX 2: Listen for successful installation by the browser
+    const handleAppInstalled = () => {
+      setIsInstalled(true); // Instantly stops the timer loop
+      localStorage.setItem('pwa_installed', 'true'); // Saves forever
+      setShowPopup(false); 
+      window.deferredInstallPrompt = null;
+    };
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
   }, []);
 
-  // 2. RECURRING TIMING LOGIC (Wait 30s -> Show 10s -> Loop)
+  // 2. RECURRING TIMING LOGIC (Now safely watches isInstalled state)
   useEffect(() => {
+    // 🌟 BUG FIX 3: If installed, instantly kill the loop
     if (!ENABLE_INSTALL_POPUP || isInstalled) return;
 
     let timeoutId;
+    let hideTimeoutId;
 
     const startLoop = () => {
       timeoutId = setTimeout(() => {
         setShowPopup(true); 
 
-        setTimeout(() => {
+        hideTimeoutId = setTimeout(() => {
           setShowPopup(false); 
-          
-          if (!isInstalled && ENABLE_INSTALL_POPUP) {
-            startLoop();
-          }
+          startLoop(); // Loop again only if not installed
         }, 16000); 
 
       }, 10000);
@@ -300,8 +322,11 @@ const GlobalAppInstallWidget = () => {
 
     startLoop();
 
-    return () => clearTimeout(timeoutId);
-  }, [isInstalled]);
+    return () => {
+      clearTimeout(timeoutId);
+      clearTimeout(hideTimeoutId);
+    };
+  }, [isInstalled]); // <--- This dependency array is the magic that kills the loop
 
   // 3. THE BUTTON CLICK
   const handleInstallClick = async () => {
@@ -314,9 +339,12 @@ const GlobalAppInstallWidget = () => {
     
     promptEvent.prompt();
     const { outcome } = await promptEvent.userChoice;
+    
     if (outcome === 'accepted') {
       setIsInstallable(false);
       setShowPopup(false); 
+      setIsInstalled(true); // Update state to kill loop
+      localStorage.setItem('pwa_installed', 'true'); // Lock it in forever
     }
     window.deferredInstallPrompt = null; 
   };
@@ -370,7 +398,8 @@ const GlobalAppInstallWidget = () => {
           }
         `}
       </style>
-{/* ↗️ 1. LIQUID GLASS SHARE BUTTON (Pill-shaped to fit text) */}
+      
+      {/* ↗️ 1. LIQUID GLASS SHARE BUTTON (Pill-shaped to fit text) */}
       <div style={{ 
         position: 'fixed', 
         bottom: '95px', 
@@ -381,7 +410,6 @@ const GlobalAppInstallWidget = () => {
           onClick={handleShare} 
           title="Share Subhams Secure"
           style={{
-            /* Removed fixed width/height. Added padding for a pill shape */
             padding: '12px 20px', 
             borderRadius: '30px', 
             background: 'rgba(255, 255, 255, 0.4)', // Premium glass effect
@@ -391,23 +419,19 @@ const GlobalAppInstallWidget = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px', // Adds space between the text and the icon
+            gap: '8px', 
             cursor: 'pointer',
-            color: '#0f172a', // Dark text for readability
+            color: '#0f172a', 
             fontWeight: '700',
             fontSize: '14px',
             animation: 'liquidGlow 2.5s infinite', 
             boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)'
           }}
         >
-          {/* Static text */}
-        
-          
-          {/* Animated icon */}
           <span style={{ 
             fontSize: '18px', 
             animation: 'iconFloat 2s infinite ease-in-out',
-            display: 'inline-block' // Required for CSS transforms to work on spans
+            display: 'inline-block' 
           }}>
             ↗️
           </span>
@@ -468,12 +492,12 @@ const GlobalAppInstallWidget = () => {
               gap: '8px',
               marginTop: '20px', 
               padding: '12px', 
-              background: 'linear-gradient(90deg, #f0fdf4, #ecfdf5)', // Soft gradient
+              background: 'linear-gradient(90deg, #f0fdf4, #ecfdf5)',
               color: '#065f46', 
               borderRadius: '12px', 
               fontWeight: '700',
               fontSize: '13.5px',
-              borderLeft: '4px solid #10b981' // Solid system-badge look
+              borderLeft: '4px solid #10b981' 
             }}>
               ✅ Install to hide this message forever!
             </span>
@@ -482,8 +506,9 @@ const GlobalAppInstallWidget = () => {
           <button 
             onClick={handleInstallClick}
             style={{ 
-              ...widgetBtnStyle, 
-              // Shimmer Gradient Background
+              borderRadius: '12px', border: 'none', color: '#fff', 
+              fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', 
+              justifyContent: 'center', transition: 'all 0.3s ease',
               background: 'linear-gradient(90deg, #10b981 0%, #34d399 50%, #10b981 100%)', 
               backgroundSize: '200% auto',
               width: '100%', 
@@ -491,7 +516,7 @@ const GlobalAppInstallWidget = () => {
               fontSize: '16px', 
               opacity: isInstallable ? 1 : 0.9,
               boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.4)',
-              animation: 'shimmerBtn 3s infinite linear' // Triggers the shine effect
+              animation: 'shimmerBtn 3s infinite linear' 
             }}
           >
             {isInstallable ? '📱 Install Secure App' : '📱 View Install Steps'}
@@ -502,11 +527,6 @@ const GlobalAppInstallWidget = () => {
   );
 };
 
-const widgetBtnStyle = {
-  borderRadius: '12px', border: 'none', color: '#fff', 
-  fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', 
-  justifyContent: 'center', transition: 'all 0.3s ease', 
-};
 
 
 // =====================================================================
