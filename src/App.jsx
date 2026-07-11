@@ -14,7 +14,7 @@ import ForgotPassword from './pages/ForgotPassword'; // Adjust the path if your 
 // 🤖 IMPORT THE NEW CHATBOT HERE
 import XeroxChatbot from './components/XeroxChatbot'; 
 import AIDocWriter from './components/AIDocWriter'; // Import the new AI Document Writer component
-
+import FounderNote from './components/FounderNote';
 // 🛑 THE MASTER SWITCH: Change to 'true' to lock down the app for updates!
 const IS_MAINTENANCE_MODE = false; 
  const TARGET_LAUNCH_TEXT = "Updating..."; // You can customize this text to show an estimated time or a fun message!
@@ -249,6 +249,7 @@ export default function App() {
 
         <XeroxChatbot />
         <GlobalAppInstallWidget />
+        <FounderNote/>
       </BrowserRouter>
     </>
   );
@@ -259,7 +260,7 @@ export default function App() {
 // =====================================================================
 
 // 🎛️ MASTER TOGGLE: Set to 'false' to completely disable the install popup
-const ENABLE_INSTALL_POPUP = true; 
+const ENABLE_INSTALL_POPUP = false; 
 
 const GlobalAppInstallWidget = () => {
   const [isInstallable, setIsInstallable] = useState(false);
