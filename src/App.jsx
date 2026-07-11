@@ -178,8 +178,7 @@ const ServerBootloader = () => {
 export default function App() {
   const [isServerAwake, setIsServerAwake] = useState(false);
   
-  // 🌟 NEW STATE: Controls the Splash Screen
-  const [showSplash, setShowSplash] = useState(true);
+
 
   useEffect(() => {
     // 🟢 1. Connect Socket using the MAGIC BASE_URL!
@@ -225,8 +224,7 @@ export default function App() {
 
   return (
     <>
-      {/* 🌟 RENDER THE SPLASH SCREEN FIRST */}
-      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
+
 
       <BrowserRouter>
         <Routes>
