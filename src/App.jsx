@@ -260,7 +260,7 @@ export default function App() {
 // =====================================================================
 
 // 🎛️ MASTER TOGGLE: Set to 'false' to completely disable the install popup
-const ENABLE_INSTALL_POPUP = false; 
+const ENABLE_INSTALL_POPUP = true; 
 
 const GlobalAppInstallWidget = () => {
   const [isInstallable, setIsInstallable] = useState(false);
