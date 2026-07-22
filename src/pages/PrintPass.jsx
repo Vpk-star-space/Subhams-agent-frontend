@@ -31,10 +31,10 @@ const PrintPass = forwardRef(({ passData, shopId, uploadLink }, ref) => {
             {/* 1. Branding Header */}
             <div style={{ textAlign: 'center', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px' }}>
                 <h1 style={{ margin: 0, fontSize: '30px', color: colors.primary, fontWeight: '900', letterSpacing: '1px' }}>
-                    SUBHAMS SECURE NETWORKS
+                    SUBHAMS NETWORKS
                 </h1>
                 <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: colors.muted, letterSpacing: '0.5px' }}>
-                    🛡️ Subhams Secure Agent | Subhams VPK
+                    🛡️ Subhams Secure Agent
                 </p>
                 <h2 style={{ margin: '8px 0 0 0', fontSize: '22px', fontWeight: '700', color: colors.text }}>
                     WELCOME
@@ -87,7 +87,7 @@ const PrintPass = forwardRef(({ passData, shopId, uploadLink }, ref) => {
                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                     </svg>
                     <p style={{ margin: 0, fontWeight: '800', color: colors.googleBlue, fontSize: '14px' }}>
-                        {isEnglish ? "Search: Subhams VPK | Subhams Secure Agent" : "సెర్చ్ చేయండి: Subhams VPK | Subhams Secure Agent"}
+                        {isEnglish ? "Search: agent.subhamsnetworks.in | subhamsnetworks.in" : "సెర్చ్ చేయండి: agent.subhamsnetworks.in | subhamsnetworks.in"}
                     </p>
                 </div>
 

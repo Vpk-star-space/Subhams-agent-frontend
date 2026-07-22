@@ -502,11 +502,11 @@ const processIdMerge = async () => {
           
           // 🟢 SECURE TRAP DOOR KEY: This proves to your backend that the request is legit!
           // URL CHANGED to use 'api' instance, SECURITY HEADERS KEPT exactly as requested!
-          const response = await api.post('/jobs/upload', formData, {
-              headers: {
-                  'x-subhams-secure-token': 'subhams_front_auth_998877'
-              }
-          });
+         const response = await api.post('/jobs/upload', formData, {
+    headers: {
+        'x-subhams-secure-token': import.meta.env.VITE_UPLOAD_TOKEN
+    }
+});
           
           setLiveStatusTracker(prev => ({
             ...prev, [response.data.jobId]: { jobId: response.data.jobId, fileName: item.file.name, status: 'SECURED', msg: 'File securely added to queue.' }
@@ -835,7 +835,7 @@ const processIdMerge = async () => {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '90%', maxWidth: '420px' }}>
             
             <h2 style={{ margin: '0 0 8px 0', color: '#ffffff', fontSize: '24px', fontWeight: '800', letterSpacing: '0.5px', animation: 'fade-in-up 0.6s ease-out 0.2s forwards', opacity: 0, textAlign: 'center' }}>
-              🛡️ Welcome to Subhams Secure
+              🛡️ Welcome to Subhams Networks
             </h2>
             
             <p style={{ margin: '0 0 30px 0', color: '#94a3b8', fontSize: '15px', lineHeight: '1.7', textAlign: 'center', animation: 'fade-in-up 0.6s ease-out 0.3s forwards', opacity: 0 }}>

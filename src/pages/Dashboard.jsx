@@ -46,7 +46,7 @@ const config = useMemo(() => ({
     showAnnouncement: true,       
     enableScrolling: true,        
     scrollSpeed: "26s",           
-message: "✨ Welcome to Subhams Secure Networks | 🚀 We are happy to work with you today | ఈ రోజు మీతో కలిసి పని చేయడం మాకు ఆనందంగా ఉంది |  For more & information click ' ✨Ask Subhams' | 🙏 Thank You !" ,
+message: "✨ Welcome to Subhams Networks | 🚀 We are happy to work with you today | ఈ రోజు మీతో కలిసి పని చేయడం మాకు ఆనందంగా ఉంది |  For more & information click ' ✨Ask Subhams' | 🙏 Thank You !" ,
     postTime: "NA"                
   }), []);
 // 📅 Simplified to always show if config.showAnnouncement is true
@@ -78,6 +78,7 @@ message: "✨ Welcome to Subhams Secure Networks | 🚀 We are happy to work wit
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [drawState, setDrawState] = useState({ isDrawing: false, startX: 0, startY: 0, currentRect: null });
   const [isBackMasking, setIsBackMasking] = useState(false);
+  const [isSidebarHidden, setIsSidebarHidden] = useState(false); // 🟢 Controls the Hide/Show feature
 
   const [printSettings, setPrintSettings] = useState({
     colorMode: 'bw', scale: 'fit', position: 'top-left', backJobId: null,
@@ -150,11 +151,11 @@ const fetchPricing = useCallback(async () => {
       if (res.data.success) {
         setPricing(tempPricing);
         setIsSettingsOpen(false);
-        alert("✅ Prices updated successfully!");
+        alert("✅ Updated successfully!");
       }
     } catch (err) {
       console.error("Save pricing error:", err); 
-      alert("❌ Failed to update prices.");
+      alert("❌ Failed to update.");
     }
   };
   
@@ -254,13 +255,23 @@ useEffect(() => {
     return () => socket.off('JOB_EXPIRED', handleJobExpired);
 }, [fetchQueue]);
 
-  useEffect(() => {
+useEffect(() => {
     const triggerLock = () => setIsWindowActive(false);
     const releaseLock = () => setIsWindowActive(true);
+
+    // 🟢 BLOCK ZOOMING (Ctrl+Scroll, Trackpad Pinch)
+    const preventZoom = (e) => {
+        if (e.ctrlKey || e.metaKey || e.touches?.length > 1) {
+            e.preventDefault();
+        }
+    };
 
     const handleKeyDown = (e) => {
       const key = e.key.toLowerCase();
       const isMetaOrCtrl = e.ctrlKey || e.metaKey;
+      
+      // Block Ctrl++ and Ctrl+- zooming
+      if (isMetaOrCtrl && (key === '+' || key === '-' || key === '=')) { e.preventDefault(); return; }
 
       if (isMetaOrCtrl && key === 'p') { e.preventDefault(); alert("🚫 Printing is strictly disabled!"); return; }
       if (isMetaOrCtrl && key === 's') { e.preventDefault(); alert("🚫 Saving files is disabled!"); return; }
@@ -275,11 +286,15 @@ useEffect(() => {
     window.addEventListener('blur', triggerLock);
     window.addEventListener('focus', releaseLock);
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('wheel', preventZoom, { passive: false });
+    window.addEventListener('touchmove', preventZoom, { passive: false });
 
     return () => {
       window.removeEventListener('blur', triggerLock);
       window.removeEventListener('focus', releaseLock);
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('wheel', preventZoom);
+      window.removeEventListener('touchmove', preventZoom);
     };
   }, []);
 // 🟢 MASTER EFFECT: Socket and Initial Data
@@ -527,6 +542,7 @@ const stopDrawing = (e) => {
           )}
         </div>
       )}
+      
  
 
      {/* 🌟 2. NAVBAR */}
@@ -550,6 +566,44 @@ const stopDrawing = (e) => {
             background-size: 200% auto;
             animation: radar-scan 2.5s infinite, premium-shine 5s linear infinite;
             border: 1px solid #22c55e;
+          }
+            /* Add this inside your existing <style> tag */
+.dashboard-fluid-grid {
+    display: grid;
+    gap: 25px;
+    grid-template-columns: 1fr; /* Stacks vertically on small screens */
+}
+
+/* When the screen is wider than 1100px, automatically switch to side-by-side! */
+@media (min-width: 1100px) {
+    .dashboard-fluid-grid {
+        grid-template-columns: 1fr 1fr; 
+    }
+}
+
+.responsive-panel {
+    display: flex;
+    flex-direction: column;
+    /* Automatically takes up 75% of whatever screen height it is on */
+    height: 75vh; 
+    /* But if the screen is super tiny, never shrink smaller than 550px */
+    min-height: 550px; 
+}
+    /* 🟢 ANTI-ZOOM SAFEGUARD FOR MOBILE/TOUCH */
+          body { touch-action: pan-y; overscroll-behavior: none; }
+
+          /* 🟢 RESPONSIVE MASTER LAYOUT */
+          .master-layout {
+              display: grid;
+              grid-template-columns: 310px 1fr; /* Sidebar is 310px, everything else takes remaining space */
+              gap: 30px;
+              margin-top: 15px;
+              align-items: start;
+          }
+
+          /* If the screen gets smaller than 1200px (like a laptop), stack everything nicely! */
+          @media (max-width: 1200px) {
+              .master-layout { grid-template-columns: 1fr; }
           }
         `}
       </style>
@@ -670,7 +724,7 @@ const stopDrawing = (e) => {
                 {/* 🟢 NEW: High-Tech Boot-Up Terminal inside the Shield */}
                 <div style={{ marginTop: '25px', textAlign: 'center', background: 'rgba(0,0,0,0.4)', padding: '20px 30px', borderRadius: '16px', border: '1px solid rgba(52, 211, 153, 0.3)', width: '100%', boxSizing: 'border-box' }}>
                   <p style={{ margin: '0 0 8px 0', color: '#34d399', fontSize: '13px', fontWeight: 'bold', letterSpacing: '2px', textTransform: 'uppercase', animation: 'terminal-blink 1s infinite' }}>
-                    Subhams Secure Networks Activating...
+                    Subhams Networks Activating...
                   </p>
                   <p style={{ margin: 0, color: '#fff', fontSize: '20px', fontWeight: '800', letterSpacing: '1px' }}>
                     Welcome, {ownerName || 'User'}!
@@ -808,37 +862,55 @@ const stopDrawing = (e) => {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '30px', marginTop: '10px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={card}>
-              <h3 style={{ margin: '0 0 15px 0', color: '#1e293b', fontSize: '16px', textAlign: 'center' }}>Shop QR Code</h3>
-              <div style={{ background: '#fff', padding: '15px', display: 'flex', justifyContent: 'center', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                <QRCodeSVG id="shop-qr-code" value={uploadLink} size={180} />
-              </div>
-              <button 
-  onClick={() => setIsPrintModalOpen(true)} 
-  style={{
-    ...navBtn,
-    background: '#f59e0b',
-    width: '100%',
-    marginTop: '15px'
-  }}
->
-  🎟️ Print Shop QR
-</button>
-              <button onClick={downloadQR} style={downloadBtn}>📥 Download QR Code</button>
-              <div style={{ marginTop: '20px', background: '#f1f5f9', padding: '12px', borderRadius: '8px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>YOUR SHOP ID</span>
-                <span style={{ fontWeight: 'bold', color: '#2563eb', fontSize: '18px', letterSpacing: '1px' }}>{auth.shopId}</span>
-                <button onClick={copyShopId} style={copyIdBtn}>📋 Copy ID</button>
-              </div>
-            </div>
-
-            <button onClick={() => navigate('/manage')} style={vaultBtn}>
-              <span style={{ fontSize: '24px', display: 'block', marginBottom: '8px' }}>🔐</span>
-              Security Vault (OTP)<br/>
-              <span style={{ fontSize: '12px', fontWeight: 'normal', opacity: 0.8, marginTop: '4px', display: 'block' }}>Manage Agent Key</span>
+     {/* 🟢 NEW: APPLIED THE RESPONSIVE FLUID MASTER LAYOUT */}
+        <div className="master-layout">
+          
+          {/* 🟢 LEFT SIDEBAR (With Sticky Positioning so it stays in view) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', position: 'sticky', top: '70px' }}>
+            
+            {/* 🌟 HIDE / SHOW TOGGLE BUTTON 🌟 */}
+            <button 
+                onClick={() => setIsSidebarHidden(!isSidebarHidden)} 
+                style={{ 
+                    background: isSidebarHidden ? '#1e293b' : '#f1f5f9', 
+                    color: isSidebarHidden ? '#facc15' : '#475569', 
+                    border: isSidebarHidden ? '1px solid #334155' : '1px solid #cbd5e1', 
+                    padding: '12px 15px', borderRadius: '12px', cursor: 'pointer', fontWeight: '800', 
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                    boxShadow: isSidebarHidden ? '0 10px 15px -3px rgba(0,0,0,0.3)' : 'inset 0 2px 4px rgba(0,0,0,0.05)',
+                    transition: 'all 0.3s ease'
+                }}
+            >
+                <span>{isSidebarHidden ? '👀 Show Shop Tools' : '🙈 Hide Shop Tools'}</span>
+                <span style={{ transform: isSidebarHidden ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }}>⬆️</span>
             </button>
+
+            {/* 🌟 THE CONTENT THAT GETS HIDDEN 🌟 */}
+            {!isSidebarHidden && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', animation: 'slide-up-modal 0.4s ease-out' }}>
+                    <div style={{...card, padding: '20px'}}>
+                      <h3 style={{ margin: '0 0 15px 0', color: '#1e293b', fontSize: '16px', textAlign: 'center' }}>Shop QR Code</h3>
+                      <div style={{ background: '#fff', padding: '15px', display: 'flex', justifyContent: 'center', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                        <QRCodeSVG id="shop-qr-code" value={uploadLink} size={160} />
+                      </div>
+                      
+                      <button onClick={() => setIsPrintModalOpen(true)} style={{ ...navBtn, background: '#f59e0b', width: '100%', marginTop: '15px', padding: '10px' }}>
+                        🎟️ Print Shop QR Pass
+                      </button>
+                      
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
+                        <button onClick={downloadQR} style={{...downloadBtn, marginTop: 0}}>📥 Download</button>
+                        <button onClick={copyShopId} style={{...copyIdBtn, marginTop: 0}}>📋 Copy ID</button>
+                      </div>
+                    </div>
+
+                    <button onClick={() => navigate('/manage')} style={{...vaultBtn, padding: '15px'}}>
+                      <span style={{ fontSize: '20px', display: 'block', marginBottom: '4px' }}>🔐</span>
+                      Security Vault<br/>
+                      <span style={{ fontSize: '11px', fontWeight: 'normal', opacity: 0.8 }}>Manage Agent Key</span>
+                    </button>
+                </div>
+            )}
             
          {/* 🌟 NEW: ULTRA-PREMIUM BUSINESS PROMO BANNER 🌟 */}
             <div style={{
@@ -956,7 +1028,7 @@ const stopDrawing = (e) => {
 
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px' }}>
+          <div className="dashboard-fluid-grid">
             
             <div style={{...card, padding: '20px', maxHeight: '750px', overflowY: 'auto' }}>
               <h3 style={{ margin: '0 0 20px 0', color: '#1e293b', position: 'sticky', top: 0, background: '#fff', paddingBottom: '10px', zIndex: 10 }}>Print Queue</h3>
