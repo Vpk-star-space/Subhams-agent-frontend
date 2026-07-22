@@ -1309,9 +1309,14 @@ filter: [
                   A faster, more secure version of the Agent is available. <br/>
                   <span style={{ fontSize: '13px', color: '#64748b' }}>ప్రింటింగ్ కొనసాగించడానికి దయచేసి ఈ కొత్త వెర్షన్ డౌన్‌లోడ్ చేసుకోండి.</span>
                 </p>
-                <a href="/Install-SubhamsAgent.exe" download="Install-SubhamsAgent.exe" style={downloadBtnStyle} onClick={() => setDownloadStarted(true)}>
-                  ⬇️ Download Update / డౌన్‌లోడ్
-                </a>
+               <a 
+  href="https://github.com/Vpk-star-space/Subhams-agent-frontend/releases/download/v2.0.0/Install-SubhamsAgent.exe" 
+  download="Install-SubhamsAgent.exe" 
+  style={downloadBtnStyle} 
+  onClick={() => setDownloadStarted(true)}
+>
+  ⬇️ Download Update / డౌన్‌లోడ్
+</a>
               </>
             ) : (
               <div style={stepsBoxStyle}>
