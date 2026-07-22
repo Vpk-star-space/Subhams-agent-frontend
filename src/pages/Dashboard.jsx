@@ -68,6 +68,10 @@ message: "✨ Welcome to Subhams Secure Networks | 🚀 We are happy to work wit
   const [isWindowActive, setIsWindowActive] = useState(true);
   const [pricing, setPricing] = useState({ bw: 2, color: 10, aadhaar: 30, passport: 20 });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  // 🟢 PRINTER ROUTING STATES
+  const [printers, setPrinters] = useState([]);
+  const [selectedPrinter, setSelectedPrinter] = useState(localStorage.getItem('saved_printer') || '');
+  const [isScanningPrinters, setIsScanningPrinters] = useState(false);
   const [tempPricing, setTempPricing] = useState({ ...pricing });
   const [needsUpdate, setNeedsUpdate] = useState(false);
   const [downloadStarted, setDownloadStarted] = useState(false);
@@ -311,6 +315,9 @@ useEffect(() => {
     socket.on('NEW_JOB_RECEIVED', handleNewJob);
     socket.on('AGENT_NEEDS_UPDATE', handleUpdate);
     socket.on('FORCE_KICK_ALL', handleKick);
+    // 🟢 NEW: Listen for printers from Desktop Agent
+    const handlePrintersList = (list) => { setPrinters(list); setIsScanningPrinters(false); };
+    socket.on('RECEIVE_PRINTERS_LIST', handlePrintersList);
 
     if (!initialFetchDone.current) {
         fetchQueue();
@@ -328,6 +335,7 @@ useEffect(() => {
         socket.off('NEW_JOB_RECEIVED', handleNewJob);
         socket.off('AGENT_NEEDS_UPDATE', handleUpdate);
         socket.off('FORCE_KICK_ALL', handleKick);
+        socket.off('RECEIVE_PRINTERS_LIST', handlePrintersList);
         clearInterval(securityInterval);
     };
 }, [auth.shopId, auth.token, navigate, fetchQueue, fetchPricing, checkHardware, handleLogout]);
@@ -367,11 +375,12 @@ setActiveJob(job); setPreviewImage(null); setIsDrawingMode(false);
     socket.emit('NOTIFY_VIEWED', { jobId: job.jobId });
   };
 const handlePrint = (jobId) => {
+    const savedPrinter = localStorage.getItem('saved_printer'); // 🟢 Grab saved printer
     // 🛑 Connection checks removed. Directly sending the command.
     
     socket.emit('MANUAL_PRINT', { 
         jobId, fileIndex: 0,
-        overrides: { ...printSettings, rotate: printSettings.rotate, maskRect: printSettings.maskRectArray, copies: activeJob?.options?.copies || 1 } 
+        overrides: { ...printSettings, rotate: printSettings.rotate, maskRect: printSettings.maskRectArray, copies: activeJob?.options?.copies || 1 ,targetPrinter: savedPrinter || ''} 
     });
     
     alert('Command Sent! / ప్రింట్ ఆర్డర్ పంపబడింది!');
@@ -830,6 +839,82 @@ const stopDrawing = (e) => {
               Security Vault (OTP)<br/>
               <span style={{ fontSize: '12px', fontWeight: 'normal', opacity: 0.8, marginTop: '4px', display: 'block' }}>Manage Agent Key</span>
             </button>
+            
+          {/* 🌟 NEW: PREMIUM GLASS PROMO BANNER 🌟 */}
+            <div style={{
+                background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                borderRadius: '16px',
+                padding: '25px 20px',
+                textAlign: 'center',
+                position: 'relative',
+                overflow: 'hidden',
+                border: '1px solid #334155',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)',
+                color: 'white'
+            }}>
+                <style>{`
+                  @keyframes glass-sweep {
+                    0% { left: -100%; }
+                    20% { left: 200%; }
+                    100% { left: 200%; }
+                  }
+                  @keyframes float-up-down {
+                    0%, 100% { transform: translateY(0px); }
+                    50% { transform: translateY(-5px); }
+                  }
+                `}</style>
+
+                {/* Animated Glass Shine Layer */}
+                <div style={{
+                    position: 'absolute', top: 0, width: '50%', height: '100%',
+                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
+                    transform: 'skewX(-25deg)',
+                    animation: 'glass-sweep 4s infinite cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                }}></div>
+
+                <div style={{ fontSize: '38px', marginBottom: '10px', animation: 'float-up-down 3s ease-in-out infinite' }}>📈</div>
+                
+                <h4 style={{ margin: '0 0 8px 0', color: '#facc15', fontSize: '16px', fontWeight: '900', letterSpacing: '0.5px' }}>
+                  Grow Your Business!
+                </h4>
+                
+                <p style={{ margin: '0 0 12px 0', color: '#cbd5e1', fontSize: '13px', lineHeight: '1.6' }}>
+                  Promote your shop with us.<br/>
+                  <span style={{ color: '#38bdf8', fontWeight: '800', fontSize: '14px' }}>Bhavyams Business Market</span><br/>
+                  <span style={{ 
+                      display: 'inline-block', marginTop: '6px', fontSize: '10px', background: '#3b82f6', 
+                      color: 'white', padding: '3px 8px', borderRadius: '6px', textTransform: 'uppercase', 
+                      letterSpacing: '1px', fontWeight: 'bold', boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)' 
+                  }}>
+                    Coming Soon
+                  </span>
+                </p>
+
+              <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, #475569, transparent)', margin: '15px 0' }}></div>
+                
+                <p style={{ margin: '0 0 15px 0', color: '#f8fafc', fontSize: '12px', lineHeight: '1.6', fontWeight: '600' }}>
+                  మీ వ్యాపారాన్ని ప్రమోట్ చేసుకోండి!<br/>
+                  <span style={{ color: '#facc15' }}>భవ్యంస్ బిజినెస్ మార్కెట్</span> త్వరలో రాబోతోంది.
+                </p>
+
+                {/* 🟢 NEW: The Link Button */}
+                <a 
+                  href="https://bhavyams.subhamsnetworks.in" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-block', padding: '10px 20px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                    color: 'white', textDecoration: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold',
+                    boxShadow: '0 4px 15px rgba(37, 99, 235, 0.4)', transition: 'transform 0.2s', width: '80%', boxSizing: 'border-box'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                  onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  🌐 Visit Bhavyams
+                </a>
+            </div>
+            {/* 🌟 END PREMIUM BANNER 🌟 */}
+
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px' }}>
@@ -1249,20 +1334,53 @@ filter: [
           </div>
         </div>
       )}
-
-      {isSettingsOpen && (
+{isSettingsOpen && (
         <div style={modalOverlay}>
-          <div style={modalContent}>
-            <h3 style={{marginTop: 0, borderBottom: '1px solid #e2e8f0', paddingBottom: '10px'}}>Shop Price Settings</h3>
+          <div style={{...modalContent, width: '450px', maxHeight: '90vh', overflowY: 'auto'}}>
+            <h3 style={{marginTop: 0, borderBottom: '1px solid #e2e8f0', paddingBottom: '10px', color: '#0f172a'}}>⚙️ Shop Settings</h3>
+            
+            {/* PRICING SECTION */}
             <div style={{display: 'flex', flexDirection: 'column', gap: '15px', margin: '20px 0'}}>
               <div><label style={controlLabel}>B&W Print Rate (₹)</label><input type="number" value={tempPricing.bw} onChange={(e) => setTempPricing({...tempPricing, bw: e.target.value})} style={controlInput} /></div>
               <div><label style={controlLabel}>Color Print Rate (₹)</label><input type="number" value={tempPricing.color} onChange={(e) => setTempPricing({...tempPricing, color: e.target.value})} style={controlInput} /></div>
               <div><label style={controlLabel}>Aadhaar/PAN Card Rate (₹)</label><input type="number" value={tempPricing.aadhaar} onChange={(e) => setTempPricing({...tempPricing, aadhaar: e.target.value})} style={controlInput} /></div>
               <div><label style={controlLabel}>Passport Photo Rate (₹)</label><input type="number" value={tempPricing.passport} onChange={(e) => setTempPricing({...tempPricing, passport: e.target.value})} style={controlInput} /></div>
             </div>
+
+            {/* 🟢 NEW: PRINTER ROUTING SECTION */}
+            <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
+                <h4 style={{ margin: '0 0 10px 0', color: '#1e293b' }}>🖨️ Hardware Routing</h4>
+                <p style={{ margin: '0 0 10px 0', fontSize: '11px', color: '#64748b' }}>Make sure your Desktop Agent is running, then scan for USB/Network printers.</p>
+                
+                <button 
+                    onClick={() => { setIsScanningPrinters(true); socket.emit('REQUEST_PRINTERS'); }} 
+                    style={{ width: '100%', padding: '8px', background: '#e0e7ff', color: '#4f46e5', border: '1px solid #c7d2fe', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '10px' }}
+                >
+                    {isScanningPrinters ? "⏳ Finding available printers..." : "🔍 Scan Connected Printers"}
+                </button>
+
+                {printers.length > 0 && (
+                    <div>
+                        <label style={controlLabel}>Force Print Jobs To:</label>
+                        <select 
+                            value={selectedPrinter} 
+                            onChange={(e) => {
+                                const choice = e.target.value;
+                                setSelectedPrinter(choice);
+                                localStorage.setItem('saved_printer', choice);
+                            }}
+                            style={{...controlInput, borderColor: '#3b82f6'}}
+                        >
+                            <option value="">-- Auto-Select Best Printer --</option>
+                            {printers.map((name, idx) => <option key={idx} value={name}>{name}</option>)}
+                        </select>
+                    </div>
+                )}
+            </div>
+
             <div style={{display: 'flex', gap: '10px', justifyContent: 'flex-end'}}>
-              <button onClick={() => setIsSettingsOpen(false)} style={{...actionBtn, background: '#f1f5f9'}}>Cancel</button>
-              <button onClick={savePricing} style={{...actionBtn, background: '#16a34a', color: 'white'}}>Save Prices</button>
+              <button onClick={() => setIsSettingsOpen(false)} style={{...actionBtn, background: '#f1f5f9', color: '#475569'}}>Cancel</button>
+              <button onClick={savePricing} style={{...actionBtn, background: '#16a34a', color: 'white'}}>✅ Save All Settings</button>
             </div>
           </div>
         </div>
