@@ -583,7 +583,7 @@ const stopDrawing = (e) => {
         <div style={{ display: 'flex', gap: '10px' }}>
        <button onClick={() => setActiveTab('subhamsWriter')} style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', color: '#facc15', border: '1px solid #facc15', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>✨ Subhams Writer</button>
        
-          <button onClick={() => setIsSettingsOpen(true)} style={{...navBtn, background: '#475569'}}>⚙️ Set Rates</button>
+          <button onClick={() => setIsSettingsOpen(true)} style={{...navBtn, background: '#475569'}}>⚙️ Settings</button>
           <button onClick={fetchQueue} style={navBtn}>🔄 Refresh Queue</button>
           <button onClick={handleLogout} style={{ ...navBtn, background: '#b91c1c' }}>🚪 Logout</button>
         </div>
@@ -840,16 +840,16 @@ const stopDrawing = (e) => {
               <span style={{ fontSize: '12px', fontWeight: 'normal', opacity: 0.8, marginTop: '4px', display: 'block' }}>Manage Agent Key</span>
             </button>
             
-          {/* 🌟 NEW: PREMIUM GLASS PROMO BANNER 🌟 */}
+         {/* 🌟 NEW: ULTRA-PREMIUM BUSINESS PROMO BANNER 🌟 */}
             <div style={{
-                background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                background: 'linear-gradient(145deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
                 borderRadius: '16px',
-                padding: '25px 20px',
+                padding: '20px',
                 textAlign: 'center',
                 position: 'relative',
                 overflow: 'hidden',
-                border: '1px solid #334155',
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)',
+                border: '1px solid #4c1d95',
+                boxShadow: '0 12px 30px -5px rgba(76, 29, 149, 0.4)',
                 color: 'white'
             }}>
                 <style>{`
@@ -858,60 +858,99 @@ const stopDrawing = (e) => {
                     20% { left: 200%; }
                     100% { left: 200%; }
                   }
-                  @keyframes float-up-down {
-                    0%, 100% { transform: translateY(0px); }
-                    50% { transform: translateY(-5px); }
+                  @keyframes glow-pulse {
+                    0%, 100% { box-shadow: 0 0 10px rgba(56, 189, 248, 0.4); transform: scale(1); }
+                    50% { box-shadow: 0 0 20px rgba(56, 189, 248, 0.8); transform: scale(1.05); }
                   }
                 `}</style>
 
                 {/* Animated Glass Shine Layer */}
                 <div style={{
                     position: 'absolute', top: 0, width: '50%', height: '100%',
-                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
+                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
                     transform: 'skewX(-25deg)',
                     animation: 'glass-sweep 4s infinite cubic-bezier(0.25, 0.46, 0.45, 0.94)'
                 }}></div>
 
-                <div style={{ fontSize: '38px', marginBottom: '10px', animation: 'float-up-down 3s ease-in-out infinite' }}>📈</div>
-                
-                <h4 style={{ margin: '0 0 8px 0', color: '#facc15', fontSize: '16px', fontWeight: '900', letterSpacing: '0.5px' }}>
-                  Grow Your Business!
+                {/* 🟢 Premium Tech/Service Image Showcase */}
+                <div style={{ 
+                    position: 'relative', marginBottom: '15px', borderRadius: '12px', 
+                    overflow: 'hidden', height: '110px', border: '1px solid rgba(139, 92, 246, 0.4)' 
+                }}>
+                    <img 
+                        src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=400&q=80" 
+                        alt="Tech Business" 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7 }} 
+                    />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #1e1b4b, transparent)' }}></div>
+                    <div style={{ position: 'absolute', bottom: '8px', width: '100%', textAlign: 'center' }}>
+                        <span style={{ 
+                            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', padding: '4px 12px', 
+                            borderRadius: '20px', fontSize: '10px', fontWeight: '900', color: '#38bdf8', 
+                            letterSpacing: '1px', border: '1px solid rgba(56,189,248,0.3)' 
+                        }}>
+                             PRODUCTS • SERVICES
+                        </span>
+                    </div>
+                </div>
+
+                <h4 style={{ margin: '0 0 6px 0', color: '#facc15', fontSize: '17px', fontWeight: '900', letterSpacing: '0.5px' }}>
+                  Grow Your Business Mindset!
                 </h4>
                 
-                <p style={{ margin: '0 0 12px 0', color: '#cbd5e1', fontSize: '13px', lineHeight: '1.6' }}>
-                  Promote your shop with us.<br/>
-                  <span style={{ color: '#38bdf8', fontWeight: '800', fontSize: '14px' }}>Bhavyams Business Market</span><br/>
+                <p style={{ margin: '0 0 12px 0', color: '#cbd5e1', fontSize: '13px', lineHeight: '1.5' }}>
+                  Your best platform to grow in the local market.<br/>
+                  <span style={{ color: '#c084fc', fontWeight: '800', fontSize: '14px' }}>Bhavyams Business Market</span><br/>
                   <span style={{ 
-                      display: 'inline-block', marginTop: '6px', fontSize: '10px', background: '#3b82f6', 
-                      color: 'white', padding: '3px 8px', borderRadius: '6px', textTransform: 'uppercase', 
-                      letterSpacing: '1px', fontWeight: 'bold', boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)' 
+                      display: 'inline-block', marginTop: '8px', fontSize: '10px', background: '#4f46e5', 
+                      color: 'white', padding: '4px 12px', borderRadius: '6px', textTransform: 'uppercase', 
+                      letterSpacing: '1px', fontWeight: 'bold', animation: 'glow-pulse 2s infinite' 
                   }}>
-                    Coming Soon
+                    🚀 Coming Soon
                   </span>
                 </p>
 
-              <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, #475569, transparent)', margin: '15px 0' }}></div>
+                <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, #6b21a8, transparent)', margin: '15px 0' }}></div>
                 
                 <p style={{ margin: '0 0 15px 0', color: '#f8fafc', fontSize: '12px', lineHeight: '1.6', fontWeight: '600' }}>
-                  మీ వ్యాపారాన్ని ప్రమోట్ చేసుకోండి!<br/>
-                  <span style={{ color: '#facc15' }}>భవ్యంస్ బిజినెస్ మార్కెట్</span> త్వరలో రాబోతోంది.
+                  మీ వ్యాపారాన్ని స్థానికంగా అభివృద్ధి చేసుకోండి!<br/>
+                  <span style={{ color: '#facc15' }}>భవ్యంస్ ప్లాట్‌ఫారమ్‌లో</span> చేరండి.
                 </p>
 
-                {/* 🟢 NEW: The Link Button */}
-                <a 
-                  href="https://bhavyams.subhamsnetworks.in" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'inline-block', padding: '10px 20px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-                    color: 'white', textDecoration: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold',
-                    boxShadow: '0 4px 15px rgba(37, 99, 235, 0.4)', transition: 'transform 0.2s', width: '80%', boxSizing: 'border-box'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                  onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                >
-                  🌐 Visit Bhavyams
-                </a>
+                {/* 🟢 Action Buttons Grid */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+                    
+                    {/* Main Website Link */}
+                    <a 
+                      href="https://bhavyams.subhamsnetworks.in" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-block', padding: '12px 20px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                        color: 'white', textDecoration: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold',
+                        boxShadow: '0 4px 15px rgba(37, 99, 235, 0.4)', transition: 'transform 0.2s', width: '95%', boxSizing: 'border-box'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
+                      onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                    >
+                      🌐 Visit Bhavyams Platform 
+                    </a>
+
+                    {/* Hidden Mailbox Contact Button */}
+                    <a 
+                      href="mailto:pavanvenkat63@gmail.com?subject=Business%20Inquiry%20-%20Bhavyams"
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                        padding: '10px 20px', background: 'rgba(255, 255, 255, 0.08)',
+                        color: '#cbd5e1', textDecoration: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold',
+                        border: '1px solid rgba(255,255,255,0.15)', transition: 'all 0.2s', width: '95%', boxSizing: 'border-box'
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'; e.currentTarget.style.color = '#fff'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'; e.currentTarget.style.color = '#cbd5e1'; }}
+                    >
+                      <span>📬</span> Send Mail
+                    </a>
+                </div>
             </div>
             {/* 🌟 END PREMIUM BANNER 🌟 */}
 
