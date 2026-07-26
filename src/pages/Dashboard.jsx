@@ -324,16 +324,40 @@ useEffect(() => {
         handleLogout();
     };
 
+    // ==========================================
+    // 🟢 1. NEW PRINT ERROR HANDLER
+    // ==========================================
+    const handlePrintError = (data) => {
+        const errorMsg = data.msg || data.error || 'Check printer connection.';
+        alert(`🖨️ PRINT FAILED!\n\nThe Subhams system is working perfectly, but your device has a problem.\n\nError: ${errorMsg}\n\nPlease fix your PC hardware/cables or contact Subhams Admin for help.`);
+    };
+
+    // ==========================================
+    // 🟢 2. UPDATED SCANNER HANDLER
+    // ==========================================
+    const handlePrintersList = (list) => { 
+        setPrinters(list); 
+        setIsScanningPrinters(false); 
+        
+        // Check if the Desktop Agent sent our custom PC Error string!
+        if (list.length > 0 && typeof list[0] === 'string' && list[0].includes('⚠️ PC Error')) {
+            alert(`🔍 SCANNER BLOCKED!\n\nThe Subhams system is working perfectly, but your PC blocked the USB scan.\n\nReason: ${list[0]}\n\nPlease check your Antivirus, fix your device, or contact Subhams Admin for help.`);
+        }
+    };
+
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
     socket.on('connect_error', handleConnectError);
     socket.on('NEW_JOB_RECEIVED', handleNewJob);
     socket.on('AGENT_NEEDS_UPDATE', handleUpdate);
     socket.on('FORCE_KICK_ALL', handleKick);
-    // 🟢 NEW: Listen for printers from Desktop Agent
-    const handlePrintersList = (list) => { setPrinters(list); setIsScanningPrinters(false); };
+    
+    // 🟢 3. REGISTER THE NEW LISTENERS
+    socket.on('PRINT_ERROR', handlePrintError);
+    socket.on('JOB_FAILED', (data) => handlePrintError({ msg: data.error }));
     socket.on('RECEIVE_PRINTERS_LIST', handlePrintersList);
 
+    // 🟢 YOUR ORIGINAL FETCH LOGIC (Safely kept intact!)
     if (!initialFetchDone.current) {
         fetchQueue();
         fetchPricing();
@@ -350,7 +374,12 @@ useEffect(() => {
         socket.off('NEW_JOB_RECEIVED', handleNewJob);
         socket.off('AGENT_NEEDS_UPDATE', handleUpdate);
         socket.off('FORCE_KICK_ALL', handleKick);
+        
+        // 🟢 4. CLEANUP THE NEW LISTENERS
+        socket.off('PRINT_ERROR', handlePrintError);
+        socket.off('JOB_FAILED', handlePrintError);
         socket.off('RECEIVE_PRINTERS_LIST', handlePrintersList);
+        
         clearInterval(securityInterval);
     };
 }, [auth.shopId, auth.token, navigate, fetchQueue, fetchPricing, checkHardware, handleLogout]);
@@ -503,6 +532,33 @@ const stopDrawing = (e) => {
   const otherCustomerJobs = activeJob ? jobs.filter(j => j.customerName === activeJob.customerName && j.jobId !== activeJob.jobId) : [];
   const hasCustomerMask = activeJob && activeJob.options?.maskRect && printSettings.maskRectArray.length > 0;
   const isActivePdf = activeJob && activeJob.files[0]?.mimeType === 'application/pdf';
+// 🟢 UPGRADED: Scan Button Logic with Timeout Trap
+    const handleScanPrinters = () => {
+        if (!socket || !socket.connected) {
+            alert("⚠️ OFFLINE: Your dashboard is disconnected from the server. Please refresh the page.");
+            return;
+        }
+
+        // 1. Start the loading spinner and ask the Agent for printers
+        setIsScanningPrinters(true);
+        setPrinters([]); // Clear old list
+        socket.emit('REQUEST_PRINTERS');
+
+        // 🟢 FIX: Local flag to stop React Strict Mode from double-alerting
+        let hasAlerted = false;
+
+        // 2. The Timeout Trap (Triggers if Agent is dead/closed)
+        setTimeout(() => {
+            setIsScanningPrinters((isStillScanning) => {
+                if (isStillScanning && !hasAlerted) {
+                    hasAlerted = true; // Locks the gate so it only alerts ONCE
+                    alert("⚠️ AGENT NOT RESPONDING!\n\nYour Subhams Desktop Agent is offline, closed, or not connected to the internet.\n\nPlease open the Subhams Agent on your Windows PC and make sure it says 'Ready' before scanning.");
+                    return false; // Turns off the infinite loading spinner!
+                }
+                return isStillScanning;
+            });
+        }, 6000); // Waits 6 seconds
+    };
 
   // --- Render ---
   return (
@@ -1468,13 +1524,12 @@ filter: [
                 <h4 style={{ margin: '0 0 10px 0', color: '#1e293b' }}>🖨️ Hardware Routing</h4>
                 <p style={{ margin: '0 0 10px 0', fontSize: '11px', color: '#64748b' }}>Make sure your Desktop Agent is running, then scan for USB/Network printers.</p>
                 
-                <button 
-                    onClick={() => { setIsScanningPrinters(true); socket.emit('REQUEST_PRINTERS'); }} 
-                    style={{ width: '100%', padding: '8px', background: '#e0e7ff', color: '#4f46e5', border: '1px solid #c7d2fe', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '10px' }}
-                >
-                    {isScanningPrinters ? "⏳ Finding available printers..." : "🔍 Scan Connected Printers"}
-                </button>
-
+              <button 
+        onClick={handleScanPrinters} 
+        style={{ width: '100%', padding: '8px', background: '#e0e7ff', color: '#4f46e5', border: '1px solid #c7d2fe', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '10px' }}
+    >
+        {isScanningPrinters ? "⏳ Finding available printers..." : "🔍 Scan Connected Printers"}
+    </button>
                 {printers.length > 0 && (
                     <div>
                         <label style={controlLabel}>Force Print Jobs To:</label>
