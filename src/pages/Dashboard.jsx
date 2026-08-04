@@ -75,6 +75,7 @@ message: "✨ Welcome to Subhams Networks | 🚀 We are happy to work with you t
   const [tempPricing, setTempPricing] = useState({ ...pricing });
   const [needsUpdate, setNeedsUpdate] = useState(false);
   const [downloadStarted, setDownloadStarted] = useState(false);
+  const [serverStatus, setServerStatus] = useState('connecting');
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [drawState, setDrawState] = useState({ isDrawing: false, startX: 0, startY: 0, currentRect: null });
   const [isBackMasking, setIsBackMasking] = useState(false);
@@ -312,11 +313,20 @@ useEffect(() => {
 
     const handleConnect = () => {
         console.log("🌐 SUCCESS: Socket Re-Connected!");
+        setServerStatus('connected'); // 🟢 NEW: Tell UI we are online and hide the traffic banner
         socket.emit('JOIN_SHOP', { shopId: auth.shopId });
     };
 
-    const handleDisconnect = (reason) => console.warn("⚠️ Socket Disconnected:", reason);
-    const handleConnectError = (error) => console.error("❌ SOCKET ERROR:", error.message);
+    const handleDisconnect = (reason) => {
+        console.warn("⚠️ Socket Disconnected:", reason);
+        setServerStatus('disconnected'); // 🟢 NEW: Tell UI the server went to sleep
+    };
+    
+    const handleConnectError = (error) => {
+        console.error("❌ SOCKET ERROR:", error.message);
+        setServerStatus('error'); // 🟢 NEW: Tell UI the server is trying to wake up
+    };
+
     const handleNewJob = () => fetchQueue();
     const handleUpdate = () => setNeedsUpdate(true);
     const handleKick = () => {
@@ -688,7 +698,28 @@ const stopDrawing = (e) => {
           </div>
         </div>
 
-        
+        {/* 🌟 MARKETING BANNER: "HIGH TRAFFIC / UPGRADING SERVERS" */}
+      {serverStatus !== 'connected' && (
+        <div style={{ 
+            background: 'linear-gradient(90deg, #f59e0b, #ea580c)', 
+            color: 'white', 
+            textAlign: 'center', 
+            padding: '14px 20px', 
+            fontSize: '13px', 
+            boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)',
+            lineHeight: '1.6',
+            position: 'relative',
+            zIndex: 900
+        }}>
+            <span style={{ fontSize: '16px', display: 'block', marginBottom: '4px' }}>
+                <strong style={{fontWeight: '900', letterSpacing: '0.5px'}}>🚀 HIGH TRAFFIC ALERT / సర్వర్లు బిజీగా ఉన్నాయి</strong>
+            </span>
+            Our system architecture is 100% perfect, but due to massive traffic, our current servers are extremely busy. If a print is delayed, please wait a moment. We will be adding more servers in the future to handle the high demand!<br/>
+            <span style={{color: '#fef3c7', fontSize: '12px', marginTop: '4px', display: 'block'}}>
+                మా సిస్టమ్ 100% పర్ఫెక్ట్, కానీ కస్టమర్ల రద్దీ ఎక్కువగా ఉండటం వల్ల సర్వర్లు బిజీగా ఉన్నాయి. ప్రింట్ రావడం ఆలస్యమైతే దయచేసి వేచి ఉండండి. భవిష్యత్తులో వేగం కోసం మరిన్ని సర్వర్లను పెంచుతాము!
+            </span>
+        </div>
+      )}
 
         <div style={{ display: 'flex', gap: '10px' }}>
        <button onClick={() => setActiveTab('subhamsWriter')} style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', color: '#facc15', border: '1px solid #facc15', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>✨ Subhams Writer</button>
@@ -1301,8 +1332,14 @@ const stopDrawing = (e) => {
                                       const targetId = isBackMasking ? activeJob.jobId : printSettings.backJobId;
                                       setIsBackMasking(!isBackMasking);
                                       setPreviewImage(null);
-                                      const res = await api.get(`/jobs/download/${targetId}?secureToken=subhams_front_auth_998877`, { responseType: 'blob' });
-                                      setRawDrawImage(URL.createObjectURL(res.data));
+                                   // Change the setRawDrawImage line inside the onClick of the "Draw Mask Manually" button:
+const res = await api.get(`/jobs/download/${targetId}?secureToken=subhams_front_auth_998877`, { responseType: 'blob' });
+
+// 🟢 THE FIX: Kills the old memory before loading the new image!
+setRawDrawImage(oldUrl => {
+    if (oldUrl) URL.revokeObjectURL(oldUrl);
+    return URL.createObjectURL(res.data);
+});
                                   }}
                                   style={{ padding: '8px 15px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '5px', marginBottom: '10px', cursor: 'pointer', fontWeight: 'bold' }}
                               >

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom'; 
 import { Html5Qrcode } from 'html5-qrcode'; 
 import { io } from 'socket.io-client'; 
+import imageCompression from 'browser-image-compression';
 
 // 🟢 Import your auto-switching API and BASE_URL
 import api, { BASE_URL } from '../api/api';
@@ -242,9 +243,13 @@ const [isExpanded, setIsExpanded] = useState(false);
       };
   }, [isScanning, scanSuccess]);
 
-  const handleFileChange = (e) => {
+ const handleFileChange = async (e) => {
     const rawFiles = Array.from(e.target.files);
     const validItems = [];
+
+    // 🟢 1. Show the loading spinner so the user knows the phone is processing
+    setIsUploading(true);
+    setStatus('🗜️ Optimizing and securing files...');
 
     for (const f of rawFiles) {
         if (f.size > MAX_FILE_SIZE_BYTES) {
@@ -252,19 +257,45 @@ const [isExpanded, setIsExpanded] = useState(false);
             continue; 
         }
         
+        let finalFile = f;
         const isImage = f.type.startsWith('image/');
+
+        // 🟢 2. THE FIX: COMPRESS IMAGE BEFORE SAVING TO STATE
+        if (isImage) {
+            try {
+                const options = {
+                    maxSizeMB: 0.6,          // Force file under 600KB
+                    maxWidthOrHeight: 1800,  // Perfect dimensions for 300 DPI A4 Printing
+                    useWebWorker: true,      // Uses background phone power to prevent freezing
+                };
+                
+                // Compress the file using the user's phone RAM!
+                const compressedBlob = await imageCompression(f, options);
+                
+                // Convert back to a File object to keep the original name
+                finalFile = new File([compressedBlob], f.name, { type: compressedBlob.type });
+            } catch (error) {
+                console.error("Compression error:", error);
+                // If compression fails, it falls back to the original file
+            }
+        }
+
         validItems.push({
-            file: f,
+            file: finalFile, // 👈 Now using the tiny, compressed file!
             copies: 1,
             colorMode: 'bw',
             scale: 'fit',        
             position: 'top-left', 
-            previewUrl: URL.createObjectURL(f),
+            previewUrl: URL.createObjectURL(finalFile),
             isPdf: !isImage,
             maskRectArray: [],
             rotate: 0 
         });
     }
+
+    // Turn off the loading text
+    setIsUploading(false);
+    setStatus('');
 
     if (validItems.length === 0) return; 
 
@@ -275,6 +306,8 @@ const [isExpanded, setIsExpanded] = useState(false);
     } else {
       setFileItems(combined);
     }
+    
+    // Clear the input so they can upload the same file again if needed
     e.target.value = ''; 
   };
 
@@ -1306,6 +1339,41 @@ const processIdMerge = async () => {
           `}
         </style>
         
+        {/* 🌟 HIGH-TECH BUFFERING ANIMATION (Triggers only when compressing/uploading) */}
+      {isUploading && (
+        <div style={{
+            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+            zIndex: 99999, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+            background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(8px)',
+        }}>
+            <style>{`
+                @keyframes spin-ring-fast { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                @keyframes spin-ring-slow { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+                @keyframes pulse-rocket { 0%, 100% { transform: scale(0.9) translateY(0); opacity: 0.8; } 50% { transform: scale(1.1) translateY(-5px); opacity: 1; filter: drop-shadow(0 0 10px #38bdf8); } }
+                @keyframes text-fade-load { 0% { opacity: 0.5; } 50% { opacity: 1; text-shadow: 0 0 8px #38bdf8; } 100% { opacity: 0.5; } }
+            `}</style>
+
+            <div style={{ position: 'relative', width: '90px', height: '90px', marginBottom: '25px' }}>
+                {/* Outer Ring */}
+                <div style={{ position: 'absolute', inset: 0, border: '3px solid rgba(56, 189, 248, 0.1)', borderRadius: '50%' }}></div>
+                {/* Fast Inner Ring */}
+                <div style={{ position: 'absolute', inset: '4px', border: '3px solid transparent', borderTopColor: '#38bdf8', borderRightColor: '#38bdf8', borderRadius: '50%', animation: 'spin-ring-fast 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite' }}></div>
+                {/* Slow Reverse Ring */}
+                <div style={{ position: 'absolute', inset: '12px', border: '2px solid transparent', borderBottomColor: '#818cf8', borderLeftColor: '#818cf8', borderRadius: '50%', animation: 'spin-ring-slow 1.5s linear infinite' }}></div>
+                {/* Center Rocket/Icon */}
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', animation: 'pulse-rocket 2s infinite' }}>🚀</div>
+            </div>
+
+            <h3 style={{ margin: '0 0 8px 0', color: '#ffffff', fontSize: '18px', fontWeight: '900', letterSpacing: '1px' }}>
+                Optimizing & Securing...
+            </h3>
+            
+            <p style={{ margin: 0, color: '#94a3b8', fontSize: '13px', textAlign: 'center', animation: 'text-fade-load 1.5s infinite', maxWidth: '280px', lineHeight: '1.5' }}>
+                Using your device's processor to compress files for lightning-fast printing.<br/>
+                <span style={{ fontSize: '11px', color: '#64748b' }}>Please do not close this window.</span>
+            </p>
+        </div>
+      )}
 
 {/* EXPANDABLE PREMIUM CONTENT - Only shows when expanded */}
 {isExpanded && (

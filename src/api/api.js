@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const TRAP_DOOR_KEY = 'subhams_front_auth_998877';
+const TRAP_DOOR_KEY = import.meta.env.VITE_UPLOAD_TOKEN;
 
 // 🟢 STEP 1: Define the raw URL. (Uses your .env first, then falls back to Render)
 export const BASE_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://subhams-vpk.onrender.com');
