@@ -72,7 +72,7 @@ const [isExpanded, setIsExpanded] = useState(false);
   const [status, setStatus] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [showMaskWarning, setShowMaskWarning] = useState(false); 
-
+const [ownerName, setOwnerName] = useState('');
   const [idMergeModal, setIdMergeModal] = useState({ open: false, front: null, back: null });
   const frontInputRef = useRef(null);
   const backInputRef = useRef(null);
@@ -122,7 +122,7 @@ const [isExpanded, setIsExpanded] = useState(false);
       }
   }, [shopId, shopStatus, navigate]);
 
-  useEffect(() => {
+useEffect(() => {
       const checkShopValidity = async () => {
           if (shopId === 'guest' || shopId.toUpperCase() === 'SUBHAMS-GUEST') {
               setShopStatus('guest');
@@ -136,8 +136,28 @@ const [isExpanded, setIsExpanded] = useState(false);
         setShopStatus('checking');
           try {
               const res = await api.get(`/shop/pricing/${shopId}`);
+              
               if (res.data.success) {
                   setShopStatus('valid');
+                  
+              
+                  try {
+                      const detailRes = await api.get(`/shop/details/${shopId}`);
+                    
+                      
+                      const actualName = detailRes.data.ownerName || detailRes.data.name || detailRes.data.shop?.ownerName;
+                   
+                      
+                      if (actualName && actualName !== 'null') {
+                          setOwnerName(actualName); 
+                        
+                      } else {
+                       
+                      }
+                  } catch (nameErr) {
+                    
+                  }
+
               } else {
                   setShopStatus('invalid');
               }
@@ -149,7 +169,6 @@ const [isExpanded, setIsExpanded] = useState(false);
       const timeoutId = setTimeout(checkShopValidity, 800);
       return () => clearTimeout(timeoutId);
   }, [shopId]);
-  
   const trackerRef = useRef(liveStatusTracker);
 
   useEffect(() => {
@@ -242,12 +261,14 @@ const [isExpanded, setIsExpanded] = useState(false);
           }
       };
   }, [isScanning, scanSuccess]);
-
- const handleFileChange = async (e) => {
+const handleFileChange = async (e) => {
     const rawFiles = Array.from(e.target.files);
     const validItems = [];
 
-    // 🟢 1. Show the loading spinner so the user knows the phone is processing
+    // 🟢 1. Start the 3-second timer right as the process begins
+    const processStartTime = Date.now();
+
+    // Show the loading spinner so the user knows the phone is processing
     setIsUploading(true);
     setStatus('🗜️ Optimizing and securing files...');
 
@@ -293,7 +314,14 @@ const [isExpanded, setIsExpanded] = useState(false);
         });
     }
 
-    // Turn off the loading text
+    // 🛑 3. THE 3-SECOND LOCK
+    // Check how long compression took. If it was faster than 3 seconds, force it to wait the remaining time!
+    const timeElapsed = Date.now() - processStartTime;
+    if (timeElapsed < 3000) {
+        await new Promise(resolve => setTimeout(resolve, 3000 - timeElapsed));
+    }
+
+    // Turn off the loading text ONLY AFTER 3 seconds have passed
     setIsUploading(false);
     setStatus('');
 
@@ -310,7 +338,6 @@ const [isExpanded, setIsExpanded] = useState(false);
     // Clear the input so they can upload the same file again if needed
     e.target.value = ''; 
   };
-
 const processIdMerge = async () => {
     const { front, back } = idMergeModal;
     if (!front || !back) return alert("Please select both Front and Back sides.");
@@ -498,12 +525,13 @@ const processIdMerge = async () => {
       masks[masks.length - 1] = last;
       setFileItems(updated);
   };
-
-  const executeUpload = async () => { 
+const executeUpload = async () => { 
     setIsUploading(true);
-    setStatus('📤 Sending files to Printer...');
+    setStatus('📤 Sending files to Printer queue...');
     setActivePreviewIndex(null); 
     
+    let isSuccess = false;
+
     try {
       for (const item of fileItems) {
           const formData = new FormData();
@@ -531,50 +559,106 @@ const processIdMerge = async () => {
               }
           }
 
-         formData.append('documents', item.file);
+          formData.append('documents', item.file);
           
-          // 🟢 SECURE TRAP DOOR KEY: This proves to your backend that the request is legit!
-          // URL CHANGED to use 'api' instance, SECURITY HEADERS KEPT exactly as requested!
-         const response = await api.post('/jobs/upload', formData, {
-    headers: {
-        'x-subhams-secure-token': import.meta.env.VITE_UPLOAD_TOKEN
-    }
-});
+          const response = await api.post('/jobs/upload', formData, {
+            headers: {
+                'x-subhams-secure-token': import.meta.env.VITE_UPLOAD_TOKEN
+            }
+          });
           
           setLiveStatusTracker(prev => ({
             ...prev, [response.data.jobId]: { jobId: response.data.jobId, fileName: item.file.name, status: 'SECURED', msg: 'File securely added to queue.' }
           }));
       }
       
-      setStatus(`✅ Success! Files sent to the queue.`);
-      
-      setShowSecuritySuccess(true);
-      setTimeout(() => setShowSecuritySuccess(false), 4000);
-
-      setFileItems([]); setSecurityMode('none'); setSecurePurpose(''); setMaskAadhaar(false); setIsBlindPreview(false);
-      
-      setTimeout(() => {
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-      }, 500);
+      isSuccess = true;
 
     } catch (err) {
+      console.error("Upload Error:", err);
       setStatus(`❌ Error: ${err.response?.data?.message || 'Failed to send files.'}`);
     } finally {
-      setIsUploading(false); setTimeout(() => setStatus(''), 5000); 
+      
+      // 🟢 NO MORE FAKE DELAY HERE! We just hide the uploading card instantly.
+      setIsUploading(false); 
+
+      // ⏱️ STAGE 2: IF SUCCESSFUL, SHOW SUCCESS FOR 5 SECONDS
+      if (isSuccess) {
+          setStatus(`✅ Success! Files sent to the printer queue.`);
+          setShowSecuritySuccess(true);
+
+          setFileItems([]); 
+          setSecurityMode('none'); 
+          setSecurePurpose(''); 
+          setMaskAadhaar(false); 
+          setIsBlindPreview(false);
+          
+          setTimeout(() => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+          }, 500);
+
+          // Hold success message for 5 full seconds
+          setTimeout(() => {
+            setShowSecuritySuccess(false);
+            setStatus('');
+          }, 5000);
+      } else {
+          setTimeout(() => setStatus(''), 5000);
+      }
     }
   };
-
-  const handleSubmit = async (e) => { 
+const handleSubmit = async (e) => { 
     e.preventDefault();
-    if (!shopId) return alert("Please enter a Shop ID.");
-    if (shopStatus === 'invalid') return alert("❌ The Shop ID you entered does not exist. Please check it again.");
-    if (!customerName.trim()) return alert("Please enter your name.");
-    if (fileItems.length === 0) return alert("Please add at least one file.");
 
-    if (securityMode !== 'none' && !securePurpose.trim()) {
-        return alert("Please enter the purpose of the document to generate the security stamp.");
+    // 🌟 SMART HELPER: Alerts the user, smoothly scrolls to the missing field, and flashes it red!
+    const jumpToField = (elementId, errorMessage) => {
+        alert(errorMessage);
+        const el = document.getElementById(elementId);
+        if (el) {
+            // Scroll to the middle of the screen
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.focus(); // Puts the typing cursor inside the box
+            
+            // Flash a red glow so they can't miss it
+            const originalBorder = el.style.border;
+            const originalShadow = el.style.boxShadow;
+            
+            el.style.transition = 'box-shadow 0.3s, border 0.3s';
+            el.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.8)';
+            el.style.border = '2px solid #ef4444';
+            
+            // Remove the red glow after 3 seconds
+            setTimeout(() => {
+                el.style.boxShadow = originalShadow;
+                el.style.border = originalBorder;
+            }, 3000);
+        }
+    };
+
+    // 1. Check Name
+    if (!customerName.trim()) {
+        return jumpToField('customerNameInput', "Please enter your name.");
     }
 
+    // 2. Check Shop ID
+    if (!shopId) {
+        return jumpToField('shopIdInput', "Please enter a Shop ID.");
+    }
+    if (shopStatus === 'invalid') {
+        return jumpToField('shopIdInput', "❌ The Shop ID you entered does not exist. Please check it again.");
+    }
+
+    // 3. Check Purpose (If security is active)
+    if (securityMode !== 'none' && !securePurpose.trim()) {
+        return jumpToField('securePurposeInput', "Please enter the purpose of the document to generate the security stamp.");
+    }
+
+    // 4. Check Files
+    if (fileItems.length === 0) {
+        return jumpToField('fileUploadSection', "Please add at least one file.");
+    }
+
+    // 5. Check if they forgot to draw masks (Uses your existing Warning Modal)
     if (securityMode === 'private' && maskAadhaar) {
         const forgotToMask = fileItems.some(item => !item.isPdf && item.maskRectArray.length === 0);
         if (forgotToMask) {
@@ -583,6 +667,7 @@ const processIdMerge = async () => {
         }
     }
 
+    // If everything is perfectly filled out, execute the upload!
     await executeUpload(); 
   };
 
@@ -922,7 +1007,7 @@ const processIdMerge = async () => {
         </div>
       )}
 
-      {/* 🌟 PREMIUM MOBILE SECURITY OVERLAY (Triggers on Upload Success) */}
+    {/* 🌟 PREMIUM MOBILE SECURITY OVERLAY (Triggers on Upload Success) */}
       {showSecuritySuccess && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
@@ -953,7 +1038,6 @@ const processIdMerge = async () => {
               .mobile-sec-box {
                 animation: lock-drop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
               }
-                
             `}
           </style>
 
@@ -972,30 +1056,40 @@ const processIdMerge = async () => {
             <div style={{ fontSize: '80px', marginBottom: '10px' }}>🔒</div>
             
             <h2 style={{ margin: '0 0 5px 0', color: '#bae6fd', fontSize: '22px', fontWeight: '900', letterSpacing: '1px', textAlign: 'center', animation: 'slide-text-up 0.5s ease-out 0.3s forwards', opacity: 0, lineHeight: '1.3' }}>
-              Files sent in Secured to Shop
+              Files Securely Delivered!
             </h2>
             <p style={{ margin: 0, color: '#94a3b8', fontSize: '13px', textAlign: 'center', animation: 'slide-text-up 0.5s ease-out 0.4s forwards', opacity: 0, lineHeight: '1.5' }}>
-              Encrypted & Sent to Subhams Secure Networks
+              Your documents are encrypted and waiting at the shop.
             </p>
 
+            {/* 🟢 UPDATED: Shop Info Box with Owner Name & ID */}
             <div style={{ 
-              marginTop: '18px', 
-              padding: '12px 25px', 
-              background: 'rgba(56, 189, 248, 0.05)', 
+              marginTop: '20px', 
+              padding: '12px 20px', 
+              background: 'rgba(56, 189, 248, 0.08)', 
               borderRadius: '16px', 
-              border: '1px dashed rgba(56, 189, 248, 0.4)', 
+              border: '1px dashed rgba(56, 189, 248, 0.5)', 
               display: 'flex', 
               alignItems: 'center', 
-              gap: '12px', 
+              gap: '15px', 
               animation: 'slide-text-up 0.5s ease-out 0.45s forwards', 
               opacity: 0,
-              boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+              boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+              width: '100%',
+              boxSizing: 'border-box'
             }}>
-              <div style={{ fontSize: '24px' }}>🏪</div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <span style={{ fontSize: '10px', color: '#7dd3fc', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>Delivered To Shop</span>
-                <span style={{ fontSize: '16px', color: '#ffffff', fontWeight: '900', letterSpacing: '1px' }}>
-                  {shopId}
+              <div style={{ fontSize: '32px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>🏪</div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', overflow: 'hidden' }}>
+                <span style={{ fontSize: '10px', color: '#7dd3fc', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>Successfully Sent To</span>
+                
+                {/* BIG OWNER NAME */}
+                <span style={{ fontSize: '17px', color: '#ffffff', fontWeight: '900', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+                  {(ownerName && ownerName !== 'null') ? ownerName : 'Verified Shop'}
+                </span>
+                
+                {/* SMALLER SHOP ID */}
+                <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold', marginTop: '2px' }}>
+                  ID: {shopId}
                 </span>
               </div>
             </div>
@@ -1083,7 +1177,7 @@ const processIdMerge = async () => {
             <label style={{...labelStyle, marginBottom: 0}}>Your Name / మీ పేరు</label>
             {customerName && <span style={{ fontSize: '11px', background: '#e0e7ff', color: '#1e40af', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>ID: #{userCode}</span>}
         </div>
-        <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} style={inputStyle} placeholder="Enter your name" required />
+       <input type="text" id="customerNameInput" value={customerName} onChange={(e) => setCustomerName(e.target.value)} style={inputStyle} placeholder="Enter your name" required />
       </div>
 
       <div style={{...sectionCard, marginBottom: '15px'}}>
@@ -1110,9 +1204,7 @@ const processIdMerge = async () => {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', gap: '10px' }}>
-             <input 
-                type="text" 
-                placeholder="SUBHAMS-XXXXXX" 
+          <input type="text" id="shopIdInput" placeholder="SUBHAMS-XXXXXX" 
                 maxLength={14} 
                 value={shopId.startsWith('SUBHAMS-') ? shopId : 'SUBHAMS-' + shopId.replace('SUBHAMS-', '')} 
                 onChange={(e) => {
@@ -1143,7 +1235,25 @@ const processIdMerge = async () => {
             </div>
             
             {shopStatus === 'checking' && <span style={{ fontSize: '12px', color: '#64748b' }}>⏳ Verifying Shop ID...</span>}
-            {shopStatus === 'valid' && <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 'bold' }}>✅ Shop Found & Ready!</span>}
+           {shopStatus === 'valid' && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
+                    <span style={{ fontSize: '13px', color: '#16a34a', fontWeight: 'bold', marginBottom: '6px' }}>
+                        ✅ Shop Found & Ready!
+                    </span>
+                    
+                    {/* 🟢 THE TRUST BADGE: Combines Name and Unique ID to prevent confusion */}
+                    <div style={{ background: '#dcfce3', padding: '6px 12px', borderRadius: '8px', border: '1px solid #86efac', display: 'inline-flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 4px rgba(22, 163, 74, 0.1)' }}>
+                        <span style={{ fontSize: '16px' }}>🏪</span>
+                        <span style={{ fontSize: '14px', color: '#166534', fontWeight: '900', textTransform: 'uppercase' }}>
+                            {(ownerName && ownerName !== 'null') ? ownerName : 'Verified Shop'}
+                        </span>
+                        {/* Highlights the unique ID so they know it is the EXACT right shop */}
+                        <span style={{ fontSize: '11px', color: '#15803d', fontWeight: 'bold', background: '#bbf7d0', padding: '3px 6px', borderRadius: '4px', border: '1px solid #86efac' }}>
+                            {shopId}
+                        </span>
+                    </div>
+                </div>
+            )}
            {shopStatus === 'invalid' && shopId.length > 0 && (
             <span style={{ fontSize: '12px', color: '#e11d48', fontWeight: 'bold' }}>  
                 ⚠️ Hello Dear! Welcome to Subhams Networks! It is an Invalid Shop ID. Please enter a valid Shop ID or use the QR scanner.
@@ -1196,10 +1306,7 @@ const processIdMerge = async () => {
                     <label style={{...labelStyle, color: securityMode === 'govt' ? '#1e40af' : '#c2410c'}}>
                         {securityMode === 'govt' ? 'Name of Bank/Govt (For Attestation Box)' : 'Purpose of ID (For Watermark & Attestation)'}
                     </label>
-                    <input 
-                        type="text" 
-                        placeholder={securityMode === 'govt' ? "e.g., HDFC Bank, RTO Office" : "e.g., Hotel Check-in, Jio SIM"} 
-                        value={securePurpose} 
+                   <input type="text" id="securePurposeInput" placeholder={securityMode === 'govt' ? "e.g., HDFC Bank, RTO Office" : "e.g., Hotel Check-in, Jio SIM"}
                         onChange={(e) => setSecurePurpose(e.target.value)} 
                         style={{...inputStyle, border: `1px solid ${securityMode === 'govt' ? '#bfdbfe' : '#fed7aa'}`, background: '#fff'}} 
                     />
@@ -1339,42 +1446,79 @@ const processIdMerge = async () => {
           `}
         </style>
         
-        {/* 🌟 HIGH-TECH BUFFERING ANIMATION (Triggers only when compressing/uploading) */}
+{/* 🌟 HIGH-TECH UPLOAD CARD (Guaranteed 3 Seconds Minimum) */}
       {isUploading && (
         <div style={{
             position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-            zIndex: 99999, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-            background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(8px)',
+            zIndex: 99999, display: 'flex', justifyContent: 'center', alignItems: 'center',
+            background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)',
         }}>
             <style>{`
                 @keyframes spin-ring-fast { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
                 @keyframes spin-ring-slow { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
                 @keyframes pulse-rocket { 0%, 100% { transform: scale(0.9) translateY(0); opacity: 0.8; } 50% { transform: scale(1.1) translateY(-5px); opacity: 1; filter: drop-shadow(0 0 10px #38bdf8); } }
-                @keyframes text-fade-load { 0% { opacity: 0.5; } 50% { opacity: 1; text-shadow: 0 0 8px #38bdf8; } 100% { opacity: 0.5; } }
             `}</style>
 
-            <div style={{ position: 'relative', width: '90px', height: '90px', marginBottom: '25px' }}>
-                {/* Outer Ring */}
-                <div style={{ position: 'absolute', inset: 0, border: '3px solid rgba(56, 189, 248, 0.1)', borderRadius: '50%' }}></div>
-                {/* Fast Inner Ring */}
-                <div style={{ position: 'absolute', inset: '4px', border: '3px solid transparent', borderTopColor: '#38bdf8', borderRightColor: '#38bdf8', borderRadius: '50%', animation: 'spin-ring-fast 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite' }}></div>
-                {/* Slow Reverse Ring */}
-                <div style={{ position: 'absolute', inset: '12px', border: '2px solid transparent', borderBottomColor: '#818cf8', borderLeftColor: '#818cf8', borderRadius: '50%', animation: 'spin-ring-slow 1.5s linear infinite' }}></div>
-                {/* Center Rocket/Icon */}
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', animation: 'pulse-rocket 2s infinite' }}>🚀</div>
-            </div>
+            <div style={{
+                background: '#1e293b',
+                borderRadius: '16px',
+                padding: '25px 20px',
+                width: '90%',
+                maxWidth: '340px',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+                border: '1px solid #334155',
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                textAlign: 'center'
+            }}>
+                <div style={{ position: 'relative', width: '70px', height: '70px', marginBottom: '15px' }}>
+                    <div style={{ position: 'absolute', inset: 0, border: '3px solid rgba(56, 189, 248, 0.1)', borderRadius: '50%' }}></div>
+                    <div style={{ position: 'absolute', inset: '4px', border: '3px solid transparent', borderTopColor: '#38bdf8', borderRightColor: '#38bdf8', borderRadius: '50%', animation: 'spin-ring-fast 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite' }}></div>
+                    <div style={{ position: 'absolute', inset: '12px', border: '2px solid transparent', borderBottomColor: '#818cf8', borderLeftColor: '#818cf8', borderRadius: '50%', animation: 'spin-ring-slow 1.5s linear infinite' }}></div>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', animation: 'pulse-rocket 2s infinite' }}>🚀</div>
+                </div>
 
-            <h3 style={{ margin: '0 0 8px 0', color: '#ffffff', fontSize: '18px', fontWeight: '900', letterSpacing: '1px' }}>
-                Optimizing & Securing...
-            </h3>
-            
-            <p style={{ margin: 0, color: '#94a3b8', fontSize: '13px', textAlign: 'center', animation: 'text-fade-load 1.5s infinite', maxWidth: '280px', lineHeight: '1.5' }}>
-                Using your device's processor to compress files for lightning-fast printing.<br/>
-                <span style={{ fontSize: '11px', color: '#64748b' }}>Please do not close this window.</span>
-            </p>
+                <h3 style={{ margin: '0 0 12px 0', color: '#ffffff', fontSize: '18px', fontWeight: '800' }}>
+                    Optimizing & Uploading...
+                </h3>
+
+                {/* 🟢 WHITE & GREEN BADGE FOR OWNER NAME */}
+                <div style={{ 
+                    background: '#ffffff', 
+                    padding: '12px', 
+                    borderRadius: '10px', 
+                    marginBottom: '15px', 
+                    width: '100%', 
+                    border: '2px solid #22c55e', 
+                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.2)',
+                    textAlign: 'center'
+                }}>
+                    {shopId ? (
+                        <>
+                            <p style={{ margin: '0 0 4px 0', color: '#166534', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                                ✅ Securely Sending To:
+                            </p>
+                          <p style={{ margin: 0, color: '#15803d', fontSize: '18px', fontWeight: '900', textTransform: 'uppercase' }}>
+                                {/* 🟢 COMPLETELY REMOVED shopData. Only checks the ownerName state! */}
+                                {(ownerName && ownerName !== 'null') ? ownerName : 'VERIFIED SHOP'}
+                            </p>
+                            <p style={{ margin: '4px 0 0 0', color: '#166534', fontSize: '12px', fontWeight: 'bold' }}>
+                                Shop ID: {shopId}
+                            </p>
+                        </>
+                    ) : (
+                        <p style={{ margin: 0, color: '#ef4444', fontSize: '13px', fontWeight: 'bold' }}>
+                            ⚠️ No Shop Selected
+                        </p>
+                    )}
+                </div>
+                
+                <p style={{ margin: 0, color: '#94a3b8', fontSize: '12px', lineHeight: '1.4' }}>
+                    Processing on your device for privacy.<br/>
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>Please do not close this window.</span>
+                </p>
+            </div>
         </div>
       )}
-
 {/* EXPANDABLE PREMIUM CONTENT - Only shows when expanded */}
 {isExpanded && (
     <div style={{ 
@@ -1513,23 +1657,55 @@ const processIdMerge = async () => {
                 </div>
             </div>
         </div>
-      {/* 🟢 4B. BUTTONS WITH OLD STYLE INSIDE ANIMATED BORDER */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          <div className="border-wrap-browse" onClick={() => fileInputRef.current.click()}>
-            <button type="button" className="old-inner-btn" style={{ background: '#f1f5f9' }}>
+{/* 🟢 4B. BULLETPROOF MOBILE FILE UPLOADERS */}
+        <div id="fileUploadSection" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          
+          {/* 📁 BROWSE FILES BUTTON */}
+          <div className="border-wrap-browse" style={{ position: 'relative', overflow: 'hidden' }}>
+            <button type="button" className="old-inner-btn" style={{ background: '#f1f5f9', width: '100%', pointerEvents: 'none' }}>
               <span style={{ fontSize: '24px', marginBottom: '5px' }}>📁</span> Browse Files
             </button>
+            <input 
+              type="file" 
+              multiple 
+              accept=".pdf,image/*" 
+              onChange={handleFileChange} 
+              style={{ 
+                position: 'absolute', 
+                inset: 0, 
+                opacity: 0, 
+                width: '100%', 
+                height: '100%', 
+                cursor: 'pointer',
+                zIndex: 10 
+              }} 
+            />
           </div>
-          <input type="file" multiple accept=".pdf,image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
           
-          <div className="border-wrap-camera" onClick={() => cameraInputRef.current.click()}>
-            <button type="button" className="old-inner-btn" style={{ background: '#eff6ff' }}>
+          {/* 📸 TAKE PHOTO BUTTON */}
+          <div className="border-wrap-camera" style={{ position: 'relative', overflow: 'hidden' }}>
+            <button type="button" className="old-inner-btn" style={{ background: '#eff6ff', width: '100%', pointerEvents: 'none' }}>
               <span style={{ fontSize: '24px', marginBottom: '5px' }}>📸</span> Take Photo
             </button>
+            <input 
+              type="file" 
+              accept="image/*" 
+              capture="environment" 
+              multiple 
+              onChange={handleFileChange} 
+              style={{ 
+                position: 'absolute', 
+                inset: 0, 
+                opacity: 0, 
+                width: '100%', 
+                height: '100%', 
+                cursor: 'pointer',
+                zIndex: 10 
+              }} 
+            />
           </div>
-          <input type="file" accept="image/*" capture="environment" multiple ref={cameraInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
+          
         </div>
-
         <div className="border-wrap-smart" onClick={() => setIdMergeModal({open: true, front: null, back: null})}>
           <button type="button" className="old-inner-btn" style={{ background: '#fef3c7', flexDirection: 'row', gap: '10px', padding: '15px' }}>
             <span style={{ fontSize: '28px' }}>🪪</span>
