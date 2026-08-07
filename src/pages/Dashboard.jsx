@@ -698,28 +698,7 @@ const stopDrawing = (e) => {
           </div>
         </div>
 
-        {/* 🌟 MARKETING BANNER: "HIGH TRAFFIC / UPGRADING SERVERS" */}
-      {serverStatus !== 'connected' && (
-        <div style={{ 
-            background: 'linear-gradient(90deg, #f59e0b, #ea580c)', 
-            color: 'white', 
-            textAlign: 'center', 
-            padding: '14px 20px', 
-            fontSize: '13px', 
-            boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)',
-            lineHeight: '1.6',
-            position: 'relative',
-            zIndex: 900
-        }}>
-            <span style={{ fontSize: '16px', display: 'block', marginBottom: '4px' }}>
-                <strong style={{fontWeight: '900', letterSpacing: '0.5px'}}>🚀 HIGH TRAFFIC ALERT / సర్వర్లు బిజీగా ఉన్నాయి</strong>
-            </span>
-            Our system architecture is 100% perfect, but due to massive traffic, our current servers are extremely busy. If a print is delayed, please wait a moment. We will be adding more servers in the future to handle the high demand!<br/>
-            <span style={{color: '#fef3c7', fontSize: '12px', marginTop: '4px', display: 'block'}}>
-                మా సిస్టమ్ 100% పర్ఫెక్ట్, కానీ కస్టమర్ల రద్దీ ఎక్కువగా ఉండటం వల్ల సర్వర్లు బిజీగా ఉన్నాయి. ప్రింట్ రావడం ఆలస్యమైతే దయచేసి వేచి ఉండండి. భవిష్యత్తులో వేగం కోసం మరిన్ని సర్వర్లను పెంచుతాము!
-            </span>
-        </div>
-      )}
+   
 
         <div style={{ display: 'flex', gap: '10px' }}>
        <button onClick={() => setActiveTab('subhamsWriter')} style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', color: '#facc15', border: '1px solid #facc15', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>✨ Subhams Writer</button>
