@@ -1059,7 +1059,7 @@ const stopDrawing = (e) => {
                 
                 <p style={{ margin: '0 0 12px 0', color: '#cbd5e1', fontSize: '13px', lineHeight: '1.5' }}>
                   Your best platform to grow in the local market.<br/>
-                  <span style={{ color: '#c084fc', fontWeight: '800', fontSize: '14px' }}>Bhavyams Business Market</span><br/>
+                  <span style={{ color: '#c084fc', fontWeight: '800', fontSize: '14px' }}>Subhams Business Market</span><br/>
                   <span style={{ 
                       display: 'inline-block', marginTop: '8px', fontSize: '10px', background: '#4f46e5', 
                       color: 'white', padding: '4px 12px', borderRadius: '6px', textTransform: 'uppercase', 
@@ -1073,7 +1073,7 @@ const stopDrawing = (e) => {
                 
                 <p style={{ margin: '0 0 15px 0', color: '#f8fafc', fontSize: '12px', lineHeight: '1.6', fontWeight: '600' }}>
                   మీ వ్యాపారాన్ని స్థానికంగా అభివృద్ధి చేసుకోండి!<br/>
-                  <span style={{ color: '#facc15' }}>భవ్యంస్ ప్లాట్‌ఫారమ్‌లో</span> చేరండి.
+                  <span style={{ color: '#facc15' }}>సుభమ్స్ హబ్ లో</span> చేరండి.
                 </p>
 
                 {/* 🟢 Action Buttons Grid */}
@@ -1081,7 +1081,7 @@ const stopDrawing = (e) => {
                     
                     {/* Main Website Link */}
                     <a 
-                      href="https://bhavyams.subhamsnetworks.in" 
+                      href="https://hub.subhamsnetworks.in" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       style={{
@@ -1092,12 +1092,12 @@ const stopDrawing = (e) => {
                       onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
                       onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     >
-                      🌐 Visit Bhavyams Platform 
+                      🌐 Visit Subhams Hub Platform 
                     </a>
 
                     {/* Hidden Mailbox Contact Button */}
                     <a 
-                      href="mailto:pavanvenkat63@gmail.com?subject=Business%20Inquiry%20-%20Bhavyams"
+                      href="mailto:pavanvenkat63@gmail.com?subject=Business%20Inquiry%20-%20Subhams-Hub"
                       style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                         padding: '10px 20px', background: 'rgba(255, 255, 255, 0.08)',

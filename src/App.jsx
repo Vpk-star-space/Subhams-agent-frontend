@@ -104,8 +104,8 @@ const MaintenanceScreen = () => {
           <a href="https://pmms.subhamsnetworks.in/" target="_blank" rel="noopener noreferrer" style={styles.linkBtn}>
             <span style={{ fontSize: '16px', marginRight: '5px' }}>🚀</span> Subhams App
           </a>
-          <a href="https://bhavyams.subhamsnetworks.in/" target="_blank" rel="noopener noreferrer" style={styles.linkBtn}>
-            <span style={{ fontSize: '16px', marginRight: '5px' }}>🏬</span> Bhavyams Vendor Hub
+          <a href="https://hub.subhamsnetworks.in/" target="_blank" rel="noopener noreferrer" style={styles.linkBtn}>
+            <span style={{ fontSize: '16px', marginRight: '5px' }}>🏬</span> Subhams Hub
           </a>
         </div>
       </div>

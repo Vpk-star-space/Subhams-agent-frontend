@@ -299,7 +299,7 @@ export default function LandingPage() {
               <h4 style={{color: '#f8fafc', fontSize: '15px', fontWeight: '600', margin: '0 0 20px 0'}}>Developer Network</h4>
               <a href="https://github.com/Vpk-star-space" target="_blank" rel="noopener noreferrer" className="footer-link">🐙 GitHub Profile</a>
               <a href="https://www.linkedin.com/in/venkata-pavan-kumar-server" target="_blank" rel="noopener noreferrer" className="footer-link">💼 LinkedIn Connect</a>
-              <a href="https://bhavyams.subhamsnetworks.in/" target="_blank" rel="noopener noreferrer" className="footer-link">🏪 Bhavyams VendorHub</a>
+              <a href="https://hub.subhamsnetworks.in/" target="_blank" rel="noopener noreferrer" className="footer-link">🏪 Subhams Hub</a>
               <a href="https://pmms.subhamsnetworks.in/" target="_blank" rel="noopener noreferrer" className="footer-link">📈 Subhams PMMS</a>
             </div>
 
