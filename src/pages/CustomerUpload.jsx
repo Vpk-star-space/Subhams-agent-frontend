@@ -933,6 +933,27 @@ const handleSubmit = async (e) => {
                 position: relative; width: 22px; height: 22px; display: flex; justify-content: center; align-items: center;
                 margin-left: 15px;
               }
+                /* 🟢 NEW: INLINE BUTTON SPINNER */
+@keyframes spin-fast { 
+    100% { transform: rotate(360deg); } 
+}
+.btn-spinner {
+    display: inline-block;
+    width: 20px; 
+    height: 20px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top: 3px solid #fff;
+    border-radius: 50%;
+    animation: spin-fast 0.8s linear infinite;
+}
+/* Smooth pulsing background for the status box */
+.status-sending {
+    background: linear-gradient(90deg, #eff6ff, #dbeafe, #eff6ff);
+    background-size: 200% 200%;
+    animation: border-glow-spin 2s linear infinite;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
             `}
           </style>
 
@@ -1918,13 +1939,42 @@ const handleSubmit = async (e) => {
           </div>
         )}
 
-        <button type="submit" disabled={isUploading || fileItems.length === 0} style={submitBtn}>
-          {isUploading ? 'Sending...' : 'Send to Printer / ప్రింట్ చేయండి'}
+    {/* 🟢 UPGRADED SUBMIT BUTTON WITH INLINE SPINNER */}
+        <button 
+            type="submit" 
+            disabled={isUploading || fileItems.length === 0} 
+            style={{
+                ...submitBtn,
+                background: isUploading ? '#60a5fa' : '#2563eb', /* Lighter blue when uploading */
+                cursor: isUploading ? 'wait' : 'pointer',
+                transition: 'all 0.3s ease'
+            }}
+        >
+            {isUploading ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                    <div className="btn-spinner"></div>
+                    <span>Sending to Printer... Please wait</span>
+                </div>
+            ) : (
+                'Send to Printer / ప్రింట్ చేయండి'
+            )}
         </button>
       </form>
 
-      {status && <div style={{ ...statusBox, background: status.includes('❌') ? '#fee2e2' : '#dcfce3', color: status.includes('❌') ? '#991b1b' : '#166534' }}>{status}</div>}
-
+      {/* 🟢 UPGRADED STATUS BOX */}
+      {status && (
+        <div 
+            className={isUploading ? "status-sending" : ""}
+            style={{ 
+                ...statusBox, 
+                /* If NOT uploading, use the normal Red/Green colors. If uploading, use the CSS class above! */
+                background: !isUploading ? (status.includes('❌') ? '#fee2e2' : '#dcfce3') : undefined, 
+                color: !isUploading ? (status.includes('❌') ? '#991b1b' : '#166534') : undefined 
+            }}
+        >
+            {status}
+        </div>
+      )}
       {activeOrders.length > 0 && (
         <div style={trackerContainerStyle}>
           <div style={trackerHeader}>
