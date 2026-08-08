@@ -265,38 +265,39 @@ const handleFileChange = async (e) => {
     const rawFiles = Array.from(e.target.files);
     const validItems = [];
 
+    // Temporary alert so the user knows it's working instantly (No spinning animations!)
+    if (rawFiles.length > 2) {
+        setStatus("⚡ Optimizing files for fast upload...");
+    }
 
     for (const f of rawFiles) {
         if (f.size > MAX_FILE_SIZE_BYTES) {
-            alert(`❌ FILE TOO LARGE!\n\nYour file "${f.name}" is ${(f.size / 1024 / 1024).toFixed(1)}MB.\nThe maximum limit is 15MB. Please compress the file and try again.`);
+            alert(`❌ FILE TOO LARGE!\n\nYour file "${f.name}" is ${(f.size / 1024 / 1024).toFixed(1)}MB.\nThe maximum limit is 15MB. Please try another file.`);
             continue; 
         }
         
         let finalFile = f;
         const isImage = f.type.startsWith('image/');
 
-        // 🟢 2. THE FIX: COMPRESS IMAGE BEFORE SAVING TO STATE
+        // 🟢 ULTRA-FAST COMPRESSION: Protects your 512MB Server without freezing the phone!
         if (isImage) {
             try {
                 const options = {
-                    maxSizeMB: 0.6,          // Force file under 600KB
-                    maxWidthOrHeight: 1800,  // Perfect dimensions for 300 DPI A4 Printing
-                    useWebWorker: true,      // Uses background phone power to prevent freezing
+                    maxSizeMB: 1.5,          // 👈 1.5MB is super fast to process but safe for your server
+                    maxWidthOrHeight: 1920,  // 👈 Standard HD, much faster to calculate
+                    useWebWorker: true,      // 👈 Prevents the phone screen from freezing
+                    initialQuality: 0.8      // 👈 Skips heavy math, compresses instantly
                 };
                 
-                // Compress the file using the user's phone RAM!
                 const compressedBlob = await imageCompression(f, options);
-                
-                // Convert back to a File object to keep the original name
                 finalFile = new File([compressedBlob], f.name, { type: compressedBlob.type });
             } catch (error) {
-                console.error("Compression error:", error);
-                // If compression fails, it falls back to the original file
+                console.error("Compression skipped, using original.");
             }
         }
 
         validItems.push({
-            file: finalFile, // 👈 Now using the tiny, compressed file!
+            file: finalFile,
             copies: 1,
             colorMode: 'bw',
             scale: 'fit',        
@@ -308,7 +309,10 @@ const handleFileChange = async (e) => {
         });
     }
 
-    if (validItems.length === 0) return; 
+    if (validItems.length === 0) {
+        setStatus("");
+        return; 
+    }
 
     const combined = [...fileItems, ...validItems];
     if (combined.length > 5) {
@@ -318,9 +322,10 @@ const handleFileChange = async (e) => {
       setFileItems(combined);
     }
     
-    // Clear the input so they can upload the same file again if needed
+    // Clear the input and remove the text
     e.target.value = ''; 
-  };
+    setStatus("");
+};
 const processIdMerge = async () => {
     const { front, back } = idMergeModal;
     if (!front || !back) return alert("Please select both Front and Back sides.");
