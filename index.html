@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#020617" />
     
+    <!-- 🟢 FIX 1: YOU MUST LINK THE MANIFEST AND ICONS FOR CHROME TO SEE IT -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="icon" href="/icon-192.png" />
+    
     <!-- 1. STRICT SEARCH ENGINE TITLES, KEYWORDS, & BRAND DESCRIPTION -->
     <title>Subhams Agent | Venkata Pavan Kumar Amarthaluri</title>
     <meta name="description" content="Official dashboard for Subhams Secure Agent. A highly secure cloud printing system developed by Venkata Pavan Kumar Amarthaluri, engineered under the Subhams Networks ecosystem." />
@@ -71,18 +76,13 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    
-    <!-- 🟢 SERVICE WORKER REGISTRATION SCRIPT -->
     <script>
+      // 🟢 FIX 2: VITE USES ABSOLUTE PATHS, NOT %PUBLIC_URL%
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-              console.log('Service Worker registered successfully!', registration.scope);
-            })
-            .catch((err) => {
-              console.log('Service Worker registration failed: ', err);
-            });
+            .then(reg => console.log('Agent SW Registered!'))
+            .catch(err => console.log('Agent SW Failed!', err));
         });
       }
     </script>

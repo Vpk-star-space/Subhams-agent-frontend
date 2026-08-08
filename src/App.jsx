@@ -256,18 +256,13 @@ export default function App() {
 }
 
 // =====================================================================
-// 🌟 GLOBAL WIDGET: Always-on Share & Center Install Popup
+// 🌟 GLOBAL WIDGET: Always-on Share & NEW Top-Banner Install
 // =====================================================================
-
-// 🎛️ MASTER TOGGLE: Set to 'false' to completely disable the install popup
-const ENABLE_INSTALL_POPUP = false; 
 
 const GlobalAppInstallWidget = () => {
   const [isInstallable, setIsInstallable] = useState(false);
-  const [showPopup, setShowPopup] = useState(false); 
 
-  // 🌟 BUG FIX 1: Make 'isInstalled' a dynamic State and check LocalStorage
-  // Added 'fullscreen' and 'minimal-ui' to fix the Zoom/Fullscreen bug!
+  // 🌟 Dynamic State to check if already installed
   const [isInstalled, setIsInstalled] = useState(() => {
     if (typeof window === 'undefined') return false;
     const isStandalone = window.matchMedia('(display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui)').matches;
@@ -276,19 +271,17 @@ const GlobalAppInstallWidget = () => {
     return isStandalone || isIOS || isSaved;
   });
 
-  // 1. Capture the Install Event & Success Event
+  // 1. Capture the Install Event Safely
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
+      e.preventDefault(); // Prevents Chrome's automatic error logs
       window.deferredInstallPrompt = e; 
-      setIsInstallable(true);
+      setIsInstallable(true); // Triggers our beautiful top banner
     };
 
-    // 🌟 BUG FIX 2: Listen for successful installation by the browser
     const handleAppInstalled = () => {
-      setIsInstalled(true); // Instantly stops the timer loop
+      setIsInstalled(true); 
       localStorage.setItem('pwa_installed', 'true'); // Saves forever
-      setShowPopup(false); 
       window.deferredInstallPrompt = null;
     };
 
@@ -301,60 +294,29 @@ const GlobalAppInstallWidget = () => {
     };
   }, []);
 
-  // 2. RECURRING TIMING LOGIC (Now safely watches isInstalled state)
-  useEffect(() => {
-    // 🌟 BUG FIX 3: If installed, instantly kill the loop
-    if (!ENABLE_INSTALL_POPUP || isInstalled) return;
-
-    let timeoutId;
-    let hideTimeoutId;
-
-    const startLoop = () => {
-      timeoutId = setTimeout(() => {
-        setShowPopup(true); 
-
-        hideTimeoutId = setTimeout(() => {
-          setShowPopup(false); 
-          startLoop(); // Loop again only if not installed
-        }, 16000); 
-
-      }, 10000);
-    };
-
-    startLoop();
-
-    return () => {
-      clearTimeout(timeoutId);
-      clearTimeout(hideTimeoutId);
-    };
-  }, [isInstalled]); // <--- This dependency array is the magic that kills the loop
-
-  // 3. THE BUTTON CLICK
+  // 2. THE INSTALL BUTTON CLICK
   const handleInstallClick = async () => {
     const promptEvent = window.deferredInstallPrompt; 
     
-    if (!promptEvent) {
-      alert("Browser Security: To install securely, tap your browser menu (three dots) and select 'Add to Home screen' or 'Install App'.");
-      return;
-    }
+    if (!promptEvent) return;
     
-    promptEvent.prompt();
+    promptEvent.prompt(); // Safely triggers the official Google Install UI
     const { outcome } = await promptEvent.userChoice;
     
     if (outcome === 'accepted') {
       setIsInstallable(false);
-      setShowPopup(false); 
-      setIsInstalled(true); // Update state to kill loop
+      setIsInstalled(true); 
       localStorage.setItem('pwa_installed', 'true'); // Lock it in forever
     }
     window.deferredInstallPrompt = null; 
   };
 
+  // 3. THE SHARE BUTTON CLICK
   const handleShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Subhams Secure',
+          title: 'Subhams Secure Agent',
           text: 'The most secure way to print your documents.',
           url: window.location.origin, 
         });
@@ -366,7 +328,6 @@ const GlobalAppInstallWidget = () => {
 
   return (
     <>
-      {/* 🟢 PREMIUM INJECTED CSS ANIMATIONS */}
       <style>
         {`
           /* Share Button Liquid Glow */
@@ -380,27 +341,15 @@ const GlobalAppInstallWidget = () => {
             0%, 100% { transform: translateY(0) scale(1); }
             50% { transform: translateY(-3px) scale(1.1); }
           }
-          /* Premium Modal Pop-In */
-          @keyframes premiumPopIn {
-            0% { opacity: 0; transform: translate(-50%, -40%) scale(0.92); filter: blur(4px); }
-            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0px); }
-          }
-          /* Security Shield Radar Scan */
-          @keyframes radarScan {
-            0% { top: -10%; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 110%; opacity: 0; }
-          }
-          /* Install Button Shimmer */
-          @keyframes shimmerBtn {
-            0% { background-position: -200% center; }
-            100% { background-position: 200% center; }
+          /* Banner Slide Down */
+          @keyframes bannerSlideDown {
+            0% { transform: translateY(-100%); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
           }
         `}
       </style>
       
-      {/* ↗️ 1. LIQUID GLASS SHARE BUTTON (Pill-shaped to fit text) */}
+      {/* ↗️ 1. LIQUID GLASS SHARE BUTTON (Remains at bottom right) */}
       <div style={{ 
         position: 'fixed', 
         bottom: '95px', 
@@ -413,7 +362,7 @@ const GlobalAppInstallWidget = () => {
           style={{
             padding: '12px 20px', 
             borderRadius: '30px', 
-            background: 'rgba(255, 255, 255, 0.4)', // Premium glass effect
+            background: 'rgba(255, 255, 255, 0.4)', 
             backdropFilter: 'blur(12px)', 
             WebkitBackdropFilter: 'blur(12px)',
             border: '1px solid rgba(255, 255, 255, 0.6)',
@@ -439,95 +388,55 @@ const GlobalAppInstallWidget = () => {
         </button>
       </div>
 
-      {/* ⚡ 2. THE PREMIUM SECURE INSTALL POPUP */}
-      {showPopup && !isInstalled && ENABLE_INSTALL_POPUP && (
+      {/* 📲 2. THE PREMIUM TOP-BANNER INSTALL (Sleek, No blocking) */}
+      {isInstallable && !isInstalled && (
         <div style={{
-          position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-          zIndex: 9999, background: '#ffffff', borderRadius: '24px', 
-          boxShadow: '0 25px 50px -12px rgba(16, 185, 129, 0.25), 0 0 0 100vw rgba(15, 23, 42, 0.85)', 
-          border: '1px solid rgba(16, 185, 129, 0.3)', padding: '40px 30px', width: '90%', maxWidth: '420px', 
-          textAlign: 'center', 
-          animation: 'premiumPopIn 0.5s cubic-bezier(0.16, 1, 0.3, 1)' 
-        }}>
-          
-          {/* Animated Shield Container */}
-          <div style={{ 
-            position: 'relative',
-            overflow: 'hidden',
-            background: '#ecfdf5',
-            width: '85px',
-            height: '85px',
+            background: 'linear-gradient(90deg, #0f172a, #065f46)', // Secure Dark/Green theme for Agent
+            color: 'white',
+            padding: '12px 15px',
             display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: '50%',
-            margin: '0 auto 20px auto',
-            boxShadow: 'inset 0 2px 10px rgba(16, 185, 129, 0.2), 0 4px 15px rgba(16, 185, 129, 0.1)'
-          }}>
-            <span style={{ fontSize: '42px', zIndex: 2 }}>🛡️</span>
-            {/* The Radar Scan Line */}
-            <div style={{ 
-              position: 'absolute', 
-              width: '100%', 
-              height: '3px', 
-              background: '#10b981', 
-              boxShadow: '0 0 12px #10b981', 
-              left: 0, 
-              zIndex: 3,
-              animation: 'radarScan 2.5s infinite linear' 
-            }} />
-          </div>
-          
-          <h4 style={{ margin: '0 0 10px 0', color: '#0f172a', fontSize: '24px', fontWeight: '800', letterSpacing: '-0.5px' }}>
-            Secure Agent Connection
-          </h4>
-          
-          <p style={{ margin: '0 0 25px 0', fontSize: '15px', color: '#475569', lineHeight: '1.6' }}>
-            Add Subhams to your Home Screen.<br/>
-            <strong>Zero URL typing. Maximum Security.</strong><br/>
-            
-            <span style={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              marginTop: '20px', 
-              padding: '12px', 
-              background: 'linear-gradient(90deg, #f0fdf4, #ecfdf5)',
-              color: '#065f46', 
-              borderRadius: '12px', 
-              fontWeight: '700',
-              fontSize: '13.5px',
-              borderLeft: '4px solid #10b981' 
-            }}>
-              ✅ Install to hide this message forever!
-            </span>
-          </p>
-          
-          <button 
-            onClick={handleInstallClick}
-            style={{ 
-              borderRadius: '12px', border: 'none', color: '#fff', 
-              fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', 
-              justifyContent: 'center', transition: 'all 0.3s ease',
-              background: 'linear-gradient(90deg, #10b981 0%, #34d399 50%, #10b981 100%)', 
-              backgroundSize: '200% auto',
-              width: '100%', 
-              padding: '16px', 
-              fontSize: '16px', 
-              opacity: isInstallable ? 1 : 0.9,
-              boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.4)',
-              animation: 'shimmerBtn 3s infinite linear' 
-            }}
-          >
-            {isInstallable ? '📱 Install Secure App' : '📱 View Install Steps'}
-          </button>
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            boxSizing: 'border-box',
+            zIndex: 99999, // Keeps it above everything else
+            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+            animation: 'bannerSlideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '28px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>🛡️</span>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '900', letterSpacing: '0.5px' }}>Install Subhams Agent</span>
+                    <span style={{ fontSize: '11px', color: '#a7f3d0', fontWeight: '600' }}>Fast access • High Security</span>
+                </div>
+            </div>
+            <button 
+                onClick={handleInstallClick}
+                style={{
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '8px 18px',
+                    borderRadius: '20px',
+                    fontWeight: '900',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 10px rgba(16, 185, 129, 0.4)',
+                    transition: 'transform 0.2s'
+                }}
+                onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+                onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+            >
+                INSTALL NOW
+            </button>
         </div>
       )}
     </>
   );
 };
-
 
 
 // =====================================================================
