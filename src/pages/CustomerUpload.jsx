@@ -72,7 +72,6 @@ const [isExpanded, setIsExpanded] = useState(false);
   const [status, setStatus] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [showMaskWarning, setShowMaskWarning] = useState(false); 
-  const [isCompressing, setIsCompressing] = useState(false);
 const [ownerName, setOwnerName] = useState('');
   const [idMergeModal, setIdMergeModal] = useState({ open: false, front: null, back: null });
   const frontInputRef = useRef(null);
@@ -263,7 +262,6 @@ useEffect(() => {
       };
   }, [isScanning, scanSuccess]);
 const handleFileChange = async (e) => {
-  setIsCompressing(true); // 🟢 1. TELL THE BUTTON TO SHOW "COMPRESSING..."
     const rawFiles = Array.from(e.target.files);
     const validItems = [];
 
@@ -310,10 +308,7 @@ const handleFileChange = async (e) => {
         });
     }
 
-    if (validItems.length === 0) {
-        setIsCompressing(false); // 🟢 TURN OFF IF EMPTY
-        return; 
-    }
+    if (validItems.length === 0) return; 
 
     const combined = [...fileItems, ...validItems];
     if (combined.length > 5) {
@@ -324,9 +319,8 @@ const handleFileChange = async (e) => {
     }
     
     // Clear the input so they can upload the same file again if needed
-  e.target.value = ''; 
-    setIsCompressing(false); // 🟢 2. TURN OFF WHEN DONE!
-};
+    e.target.value = ''; 
+  };
 const processIdMerge = async () => {
     const { front, back } = idMergeModal;
     if (!front || !back) return alert("Please select both Front and Back sides.");
@@ -1577,38 +1571,31 @@ const handleSubmit = async (e) => {
         <div id="fileUploadSection" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           
           {/* 📁 BROWSE FILES BUTTON */}
-          <div className="border-wrap-browse" style={{ position: 'relative', overflow: 'hidden', opacity: isCompressing ? 0.6 : 1 }}>
+          <div className="border-wrap-browse" style={{ position: 'relative', overflow: 'hidden' }}>
             <button type="button" className="old-inner-btn" style={{ background: '#f1f5f9', width: '100%', pointerEvents: 'none' }}>
-              <span style={{ fontSize: '24px', marginBottom: '5px' }}>
-                {isCompressing ? '⏳' : '📁'}
-              </span> 
-              {isCompressing ? 'Compressing...' : 'Browse Files'}
+              <span style={{ fontSize: '24px', marginBottom: '5px' }}>📁</span> Browse Files
             </button>
             <input 
               type="file" 
               multiple 
               accept=".pdf,image/*" 
               onChange={handleFileChange} 
-              disabled={isCompressing} /* 🟢 Prevents clicking again while processing */
               style={{ 
                 position: 'absolute', 
                 inset: 0, 
                 opacity: 0, 
                 width: '100%', 
                 height: '100%', 
-                cursor: isCompressing ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
                 zIndex: 10 
               }} 
             />
           </div>
           
           {/* 📸 TAKE PHOTO BUTTON */}
-          <div className="border-wrap-camera" style={{ position: 'relative', overflow: 'hidden', opacity: isCompressing ? 0.6 : 1 }}>
+          <div className="border-wrap-camera" style={{ position: 'relative', overflow: 'hidden' }}>
             <button type="button" className="old-inner-btn" style={{ background: '#eff6ff', width: '100%', pointerEvents: 'none' }}>
-              <span style={{ fontSize: '24px', marginBottom: '5px' }}>
-                {isCompressing ? '⏳' : '📸'}
-              </span> 
-              {isCompressing ? 'Compressing...' : 'Take Photo'}
+              <span style={{ fontSize: '24px', marginBottom: '5px' }}>📸</span> Take Photo
             </button>
             <input 
               type="file" 
@@ -1616,21 +1603,19 @@ const handleSubmit = async (e) => {
               capture="environment" 
               multiple 
               onChange={handleFileChange} 
-              disabled={isCompressing} /* 🟢 Prevents clicking again while processing */
               style={{ 
                 position: 'absolute', 
                 inset: 0, 
                 opacity: 0, 
                 width: '100%', 
                 height: '100%', 
-                cursor: isCompressing ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
                 zIndex: 10 
               }} 
             />
           </div>
           
         </div>
-      
         <div className="border-wrap-smart" onClick={() => setIdMergeModal({open: true, front: null, back: null})}>
           <button type="button" className="old-inner-btn" style={{ background: '#fef3c7', flexDirection: 'row', gap: '10px', padding: '15px' }}>
             <span style={{ fontSize: '28px' }}>🪪</span>
