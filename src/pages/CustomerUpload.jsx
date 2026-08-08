@@ -72,6 +72,7 @@ const [isExpanded, setIsExpanded] = useState(false);
   const [status, setStatus] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [showMaskWarning, setShowMaskWarning] = useState(false); 
+  const [isCompressing, setIsCompressing] = useState(false);
 const [ownerName, setOwnerName] = useState('');
   const [idMergeModal, setIdMergeModal] = useState({ open: false, front: null, back: null });
   const frontInputRef = useRef(null);
@@ -262,15 +263,10 @@ useEffect(() => {
       };
   }, [isScanning, scanSuccess]);
 const handleFileChange = async (e) => {
+  setIsCompressing(true); // 🟢 1. TELL THE BUTTON TO SHOW "COMPRESSING..."
     const rawFiles = Array.from(e.target.files);
     const validItems = [];
 
-    // 🟢 1. Start the 3-second timer right as the process begins
-    const processStartTime = Date.now();
-
-    // Show the loading spinner so the user knows the phone is processing
-    setIsUploading(true);
-    setStatus('🗜️ Optimizing and securing files...');
 
     for (const f of rawFiles) {
         if (f.size > MAX_FILE_SIZE_BYTES) {
@@ -314,18 +310,10 @@ const handleFileChange = async (e) => {
         });
     }
 
-    // 🛑 3. THE 3-SECOND LOCK
-    // Check how long compression took. If it was faster than 3 seconds, force it to wait the remaining time!
-    const timeElapsed = Date.now() - processStartTime;
-    if (timeElapsed < 3000) {
-        await new Promise(resolve => setTimeout(resolve, 3000 - timeElapsed));
+    if (validItems.length === 0) {
+        setIsCompressing(false); // 🟢 TURN OFF IF EMPTY
+        return; 
     }
-
-    // Turn off the loading text ONLY AFTER 3 seconds have passed
-    setIsUploading(false);
-    setStatus('');
-
-    if (validItems.length === 0) return; 
 
     const combined = [...fileItems, ...validItems];
     if (combined.length > 5) {
@@ -336,8 +324,9 @@ const handleFileChange = async (e) => {
     }
     
     // Clear the input so they can upload the same file again if needed
-    e.target.value = ''; 
-  };
+  e.target.value = ''; 
+    setIsCompressing(false); // 🟢 2. TURN OFF WHEN DONE!
+};
 const processIdMerge = async () => {
     const { front, back } = idMergeModal;
     if (!front || !back) return alert("Please select both Front and Back sides.");
@@ -1445,80 +1434,7 @@ const handleSubmit = async (e) => {
           }
           `}
         </style>
-        
-{/* 🌟 HIGH-TECH UPLOAD CARD (Guaranteed 3 Seconds Minimum) */}
-      {isUploading && (
-        <div style={{
-            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-            zIndex: 99999, display: 'flex', justifyContent: 'center', alignItems: 'center',
-            background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)',
-        }}>
-            <style>{`
-                @keyframes spin-ring-fast { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-                @keyframes spin-ring-slow { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
-                @keyframes pulse-rocket { 0%, 100% { transform: scale(0.9) translateY(0); opacity: 0.8; } 50% { transform: scale(1.1) translateY(-5px); opacity: 1; filter: drop-shadow(0 0 10px #38bdf8); } }
-            `}</style>
 
-            <div style={{
-                background: '#1e293b',
-                borderRadius: '16px',
-                padding: '25px 20px',
-                width: '90%',
-                maxWidth: '340px',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
-                border: '1px solid #334155',
-                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                textAlign: 'center'
-            }}>
-                <div style={{ position: 'relative', width: '70px', height: '70px', marginBottom: '15px' }}>
-                    <div style={{ position: 'absolute', inset: 0, border: '3px solid rgba(56, 189, 248, 0.1)', borderRadius: '50%' }}></div>
-                    <div style={{ position: 'absolute', inset: '4px', border: '3px solid transparent', borderTopColor: '#38bdf8', borderRightColor: '#38bdf8', borderRadius: '50%', animation: 'spin-ring-fast 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite' }}></div>
-                    <div style={{ position: 'absolute', inset: '12px', border: '2px solid transparent', borderBottomColor: '#818cf8', borderLeftColor: '#818cf8', borderRadius: '50%', animation: 'spin-ring-slow 1.5s linear infinite' }}></div>
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', animation: 'pulse-rocket 2s infinite' }}>🚀</div>
-                </div>
-
-                <h3 style={{ margin: '0 0 12px 0', color: '#ffffff', fontSize: '18px', fontWeight: '800' }}>
-                    Optimizing & Uploading...
-                </h3>
-
-                {/* 🟢 WHITE & GREEN BADGE FOR OWNER NAME */}
-                <div style={{ 
-                    background: '#ffffff', 
-                    padding: '12px', 
-                    borderRadius: '10px', 
-                    marginBottom: '15px', 
-                    width: '100%', 
-                    border: '2px solid #22c55e', 
-                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.2)',
-                    textAlign: 'center'
-                }}>
-                    {shopId ? (
-                        <>
-                            <p style={{ margin: '0 0 4px 0', color: '#166534', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>
-                                ✅ Securely Sending To:
-                            </p>
-                          <p style={{ margin: 0, color: '#15803d', fontSize: '18px', fontWeight: '900', textTransform: 'uppercase' }}>
-                                {/* 🟢 COMPLETELY REMOVED shopData. Only checks the ownerName state! */}
-                                {(ownerName && ownerName !== 'null') ? ownerName : 'VERIFIED SHOP'}
-                            </p>
-                            <p style={{ margin: '4px 0 0 0', color: '#166534', fontSize: '12px', fontWeight: 'bold' }}>
-                                Shop ID: {shopId}
-                            </p>
-                        </>
-                    ) : (
-                        <p style={{ margin: 0, color: '#ef4444', fontSize: '13px', fontWeight: 'bold' }}>
-                            ⚠️ No Shop Selected
-                        </p>
-                    )}
-                </div>
-                
-                <p style={{ margin: 0, color: '#94a3b8', fontSize: '12px', lineHeight: '1.4' }}>
-                    Processing on your device for privacy.<br/>
-                    <span style={{ fontSize: '11px', color: '#64748b' }}>Please do not close this window.</span>
-                </p>
-            </div>
-        </div>
-      )}
 {/* EXPANDABLE PREMIUM CONTENT - Only shows when expanded */}
 {isExpanded && (
     <div style={{ 
@@ -1661,31 +1577,38 @@ const handleSubmit = async (e) => {
         <div id="fileUploadSection" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           
           {/* 📁 BROWSE FILES BUTTON */}
-          <div className="border-wrap-browse" style={{ position: 'relative', overflow: 'hidden' }}>
+          <div className="border-wrap-browse" style={{ position: 'relative', overflow: 'hidden', opacity: isCompressing ? 0.6 : 1 }}>
             <button type="button" className="old-inner-btn" style={{ background: '#f1f5f9', width: '100%', pointerEvents: 'none' }}>
-              <span style={{ fontSize: '24px', marginBottom: '5px' }}>📁</span> Browse Files
+              <span style={{ fontSize: '24px', marginBottom: '5px' }}>
+                {isCompressing ? '⏳' : '📁'}
+              </span> 
+              {isCompressing ? 'Compressing...' : 'Browse Files'}
             </button>
             <input 
               type="file" 
               multiple 
               accept=".pdf,image/*" 
               onChange={handleFileChange} 
+              disabled={isCompressing} /* 🟢 Prevents clicking again while processing */
               style={{ 
                 position: 'absolute', 
                 inset: 0, 
                 opacity: 0, 
                 width: '100%', 
                 height: '100%', 
-                cursor: 'pointer',
+                cursor: isCompressing ? 'not-allowed' : 'pointer',
                 zIndex: 10 
               }} 
             />
           </div>
           
           {/* 📸 TAKE PHOTO BUTTON */}
-          <div className="border-wrap-camera" style={{ position: 'relative', overflow: 'hidden' }}>
+          <div className="border-wrap-camera" style={{ position: 'relative', overflow: 'hidden', opacity: isCompressing ? 0.6 : 1 }}>
             <button type="button" className="old-inner-btn" style={{ background: '#eff6ff', width: '100%', pointerEvents: 'none' }}>
-              <span style={{ fontSize: '24px', marginBottom: '5px' }}>📸</span> Take Photo
+              <span style={{ fontSize: '24px', marginBottom: '5px' }}>
+                {isCompressing ? '⏳' : '📸'}
+              </span> 
+              {isCompressing ? 'Compressing...' : 'Take Photo'}
             </button>
             <input 
               type="file" 
@@ -1693,19 +1616,21 @@ const handleSubmit = async (e) => {
               capture="environment" 
               multiple 
               onChange={handleFileChange} 
+              disabled={isCompressing} /* 🟢 Prevents clicking again while processing */
               style={{ 
                 position: 'absolute', 
                 inset: 0, 
                 opacity: 0, 
                 width: '100%', 
                 height: '100%', 
-                cursor: 'pointer',
+                cursor: isCompressing ? 'not-allowed' : 'pointer',
                 zIndex: 10 
               }} 
             />
           </div>
           
         </div>
+      
         <div className="border-wrap-smart" onClick={() => setIdMergeModal({open: true, front: null, back: null})}>
           <button type="button" className="old-inner-btn" style={{ background: '#fef3c7', flexDirection: 'row', gap: '10px', padding: '15px' }}>
             <span style={{ fontSize: '28px' }}>🪪</span>
