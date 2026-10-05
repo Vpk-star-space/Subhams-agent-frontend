@@ -3,7 +3,6 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import api from '../api/api';
 import { QRCodeSVG } from 'qrcode.react';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google'; 
-import { jwtDecode } from 'jwt-decode';            
 
 export default function Register() {
   const navigate = useNavigate();
@@ -88,11 +87,8 @@ api.get('/auth/google-client-id')
     setLoading(true);
     setError('');
     try {
-      const decoded = jwtDecode(credentialResponse.credential);
       const response = await api.post('/auth/google-login', {
-        email: decoded.email,
-        name: decoded.name,
-        googleId: decoded.sub,
+        credential: credentialResponse.credential,
         role: roleValue
       });
       

@@ -20,7 +20,8 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 const socket = io(BASE_URL, { 
     autoConnect: false,
     transports: ['websocket', 'polling'],
-    reconnectionAttempts: 5
+    reconnectionAttempts: 5,
+    auth: (callback) => callback({ accessToken: localStorage.getItem('accessToken') })
 });
 
 

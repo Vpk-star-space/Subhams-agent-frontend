@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import api from '../api/api';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google'; 
-import { jwtDecode } from 'jwt-decode';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -125,11 +124,8 @@ api.get('/auth/google-client-id')
     if (lockoutTimer > 0) return; 
 
     try {
-      const decoded = jwtDecode(credentialResponse.credential);
       const response = await api.post('/auth/google-login', {
-        email: decoded.email,
-        name: decoded.name,
-        googleId: decoded.sub,
+        credential: credentialResponse.credential,
         role: roleValue
       });
       

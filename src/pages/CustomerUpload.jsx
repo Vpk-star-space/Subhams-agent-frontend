@@ -556,7 +556,13 @@ const executeUpload = async () => {
           });
           
           setLiveStatusTracker(prev => ({
-            ...prev, [response.data.jobId]: { jobId: response.data.jobId, fileName: item.file.name, status: 'SECURED', msg: 'File securely added to queue.' }
+            ...prev, [response.data.jobId]: {
+              jobId: response.data.jobId,
+              revokeToken: response.data.revokeToken,
+              fileName: item.file.name,
+              status: 'SECURED',
+              msg: 'File securely added to queue.'
+            }
           }));
       }
       
@@ -661,7 +667,12 @@ const handleSubmit = async (e) => {
 
   const handleRevoke = (jobId) => {
     if(window.confirm("Are you sure? This will instantly wipe the file from the shop's screen and memory.")) {
-        socket.emit('CUSTOMER_REVOKE', { jobId });
+        const revokeToken = liveStatusTracker[jobId]?.revokeToken;
+        if (!revokeToken) {
+          alert("This job cannot be revoked from this device. Please contact the shop.");
+          return;
+        }
+        socket.emit('CUSTOMER_REVOKE', { jobId, revokeToken });
     }
   };
 
