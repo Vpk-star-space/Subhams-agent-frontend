@@ -1266,8 +1266,7 @@ const stopDrawing = (e) => {
   onClick={async () => { 
         if (!isDrawingMode) {
             try {
-                // 🟢 Added the secureToken directly into the URL!
-                const downloadUrl = `/jobs/download/${activeJob.jobId}?secureToken=subhams_front_auth_998877`;
+                const downloadUrl = `/jobs/download/${activeJob.jobId}`;
                 
                 const response = await api.get(downloadUrl, { responseType: 'blob' });
                 setRawDrawImage(URL.createObjectURL(response.data));
@@ -1313,7 +1312,7 @@ const stopDrawing = (e) => {
                                       setIsBackMasking(!isBackMasking);
                                       setPreviewImage(null);
                                    // Change the setRawDrawImage line inside the onClick of the "Draw Mask Manually" button:
-const res = await api.get(`/jobs/download/${targetId}?secureToken=subhams_front_auth_998877`, { responseType: 'blob' });
+const res = await api.get(`/jobs/download/${targetId}`, { responseType: 'blob' });
 
 // 🟢 THE FIX: Kills the old memory before loading the new image!
 setRawDrawImage(oldUrl => {
