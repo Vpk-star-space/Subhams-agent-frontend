@@ -192,14 +192,11 @@ useEffect(() => {
           return; 
       }
 
-      if (shopId && shopId.trim() && uniqueCustomerName && shopStatus === 'valid') {
-        const cleanShopId = shopId.toUpperCase().trim();
-        socket.emit('JOIN_CUSTOMER', { shopId: cleanShopId, customerName: uniqueCustomerName });
-
-        Object.keys(trackerRef.current).forEach(jobId => {
-           socket.emit('REJOIN_TRACKER', { jobId });
-        });
-      }
+      Object.entries(trackerRef.current).forEach(([jobId, tracker]) => {
+        if (tracker.trackerToken) {
+           socket.emit('REJOIN_TRACKER', { jobId, trackerToken: tracker.trackerToken });
+        }
+      });
     };
 
     joinTrackingRoom();
@@ -219,7 +216,7 @@ useEffect(() => {
         socket.off('connect', joinTrackingRoom);
         document.removeEventListener('visibilitychange', handleWakeUp);
     }
-  }, [shopId, uniqueCustomerName, shopStatus]);
+  }, []);
 
   useEffect(() => {
       let isComponentMounted = true;
@@ -559,11 +556,16 @@ const executeUpload = async () => {
             ...prev, [response.data.jobId]: {
               jobId: response.data.jobId,
               revokeToken: response.data.revokeToken,
+              trackerToken: response.data.trackerToken,
               fileName: item.file.name,
               status: 'SECURED',
               msg: 'File securely added to queue.'
             }
           }));
+          socket.emit('REJOIN_TRACKER', {
+            jobId: response.data.jobId,
+            trackerToken: response.data.trackerToken
+          });
       }
       
       isSuccess = true;
