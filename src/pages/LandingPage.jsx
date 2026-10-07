@@ -164,24 +164,7 @@ export default function LandingPage() {
           <a href="#enterprise" style={styles.navLink}>Enterprise</a>
         
         </div>
-        <a 
-  href="https://subhamsnetworks.in/legal" 
-  target="_blank" 
-  rel="noopener noreferrer" 
-  style={{ 
-    display: 'flex', 
-    alignItems: 'center', 
-    gap: '10px', 
-    padding: '12px 16px', 
-    color: '#475569', 
-    textDecoration: 'none',
-    fontWeight: '600',
-    fontSize: '14px'
-  }}
->
-  <span style={{ fontSize: '18px' }}>🛡️</span>
-  Privacy & Security Policy
-</a>
+
         <div className="nav-links">
           <Link to="/portal" style={styles.navBtn}>Go to Portal</Link>
         </div>
