@@ -147,6 +147,8 @@ export default function LandingPage() {
       <div className="glow-1" style={styles.bgGlow1}></div>
       <div className="glow-2" style={styles.bgGlow2}></div>
 
+      
+
       {/* Navbar */}
       <nav style={styles.navbar}>
         <div style={styles.logo}>
@@ -158,8 +160,28 @@ export default function LandingPage() {
           <a href="#about-footer" onClick={scrollToAbout} style={styles.navLink}>About</a>
           <a href="#features" style={styles.navLink}>Features</a>
           <a href="#security" style={styles.navLink}>Security</a>
+          
           <a href="#enterprise" style={styles.navLink}>Enterprise</a>
+        
         </div>
+        <a 
+  href="https://subhamsnetworks.in/legal" 
+  target="_blank" 
+  rel="noopener noreferrer" 
+  style={{ 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: '10px', 
+    padding: '12px 16px', 
+    color: '#475569', 
+    textDecoration: 'none',
+    fontWeight: '600',
+    fontSize: '14px'
+  }}
+>
+  <span style={{ fontSize: '18px' }}>🛡️</span>
+  Privacy & Security Policy
+</a>
         <div className="nav-links">
           <Link to="/portal" style={styles.navBtn}>Go to Portal</Link>
         </div>
@@ -197,6 +219,17 @@ export default function LandingPage() {
             </a>
           </div>
 
+<div style={{ textAlign: 'center', marginTop: '15px', fontSize: '12px', color: '#64748b' }}>
+  By continuing, you agree to the Subhams Networks <br/>
+  <a 
+    href="https://subhamsnetworks.in/legal" 
+    target="_blank" 
+    rel="noopener noreferrer" 
+    style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 'bold' }}
+  >
+    Privacy Policy & Terms of Service
+  </a>
+</div>
           {/* 💻 UI MOCKUP */}
           <div className="animate-fade-4" style={styles.mockupWrapper}>
              <div className="app-mockup" style={styles.mockupContainer}>
@@ -320,9 +353,20 @@ export default function LandingPage() {
             <p style={{margin: 0}}>
               Engineered & Designed by <strong style={{color: '#10b981', fontWeight: '600'}}>Venkata Pavan Kumar Amarthaluri</strong>
             </p>
+             © 2026 Subhams Networks. 
+    <a 
+      href="https://subhamsnetworks.in/legal" 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      style={{ color: '#64748b', textDecoration: 'underline', marginLeft: '10px' }}
+    >
+      Legal & Privacy
+    </a>
           </div>
         </div>
+        
       </footer>
+   
     </div>
   );
 }

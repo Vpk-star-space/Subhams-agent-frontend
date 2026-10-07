@@ -130,6 +130,7 @@ api.get('/auth/google-client-id')
           <span style={{ margin: '0 15px', color: '#94a3b8', fontSize: '14px', fontWeight: 'bold' }}>OR</span>
           <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
         </div>
+        
 
         <div style={{ display: 'flex', justifyContent: 'center', minHeight: '40px' }}>
           {clientId ? (
@@ -140,6 +141,17 @@ api.get('/auth/google-client-id')
               <span style={{ fontSize: '13px', color: '#94a3b8' }}>Loading Secure Login...</span>
           )}
         </div>
+        <div style={{ textAlign: 'center', marginTop: '15px', fontSize: '12px', color: '#64748b' }}>
+  By continuing, you agree to the Subhams Networks <br/>
+  <a 
+    href="https://subhamsnetworks.in/legal" 
+    target="_blank" 
+    rel="noopener noreferrer" 
+    style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 'bold' }}
+  >
+    Privacy Policy & Terms of Service
+  </a>
+</div>
 
         <p style={{textAlign: 'center', marginTop: '20px', fontSize: '14px'}}>
           Already have an account? <Link to={`/login?role=${roleValue}`} style={{color: '#2563eb', fontWeight: 'bold'}}>Login</Link>
@@ -147,6 +159,7 @@ api.get('/auth/google-client-id')
       </div>
     );
   }
+  
 
   // --- UI RENDER: STEP 2 ---
   if (step === 2) {
@@ -226,6 +239,17 @@ api.get('/auth/google-client-id')
         >
           ⬇️ Install Subhams Agent (.exe)
         </a>
+        <div style={{ textAlign: 'center', marginTop: '15px', fontSize: '12px', color: '#64748b' }}>
+  By continuing, you agree to the Subhams Networks <br/>
+  <a 
+    href="https://subhamsnetworks.in/legal" 
+    target="_blank" 
+    rel="noopener noreferrer" 
+    style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 'bold' }}
+  >
+    Privacy Policy & Terms of Service
+  </a>
+</div>
 
         {/* 🟢 NEW: ENHANCED 100% SECURITY TRUST MANUAL */}
         <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', padding: '20px', textAlign: 'left', maxWidth: '500px', margin: '0 auto', marginBottom: '25px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>

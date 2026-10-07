@@ -210,6 +210,17 @@ api.get('/auth/google-client-id')
             <button type="submit" disabled={loading || lockoutTimer > 0} style={{ ...btnStyle, background: lockoutTimer > 0 ? '#94a3b8' : '#0f172a' }}>
                {lockoutTimer > 0 ? "Locked" : "Sign In"}
             </button>
+            <div style={{ textAlign: 'center', marginTop: '15px', fontSize: '12px', color: '#64748b' }}>
+  By continuing, you agree to the Subhams Networks <br/>
+  <a 
+    href="https://subhamsnetworks.in/legal" 
+    target="_blank" 
+    rel="noopener noreferrer" 
+    style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 'bold' }}
+  >
+    Privacy Policy & Terms of Service
+  </a>
+</div>
           </form>
         ) : (
           <div style={{ textAlign: 'center', padding: '25px 20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>

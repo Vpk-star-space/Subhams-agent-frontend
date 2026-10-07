@@ -1624,6 +1624,24 @@ filter: [
     />
 </div>
 
+<a 
+  href="https://subhamsnetworks.in/legal" 
+  target="_blank" 
+  rel="noopener noreferrer" 
+  style={{ 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: '10px', 
+    padding: '12px 16px', 
+    color: '#475569', 
+    textDecoration: 'none',
+    fontWeight: '600',
+    fontSize: '14px'
+  }}
+>
+  <span style={{ fontSize: '18px' }}>🛡️</span>
+  Privacy & Security Policy
+</a>
       {/* 🌟 5. ANIMATIONS */}
       <style>{`
         @keyframes superScroll { 0% { transform: translate3d(100vw, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
@@ -1665,6 +1683,7 @@ filter: [
           `}
         </style>
         
+        
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
           {/* Left Sparkle (Animates instantly) */}
           <span style={{ animation: 'float-sparkle 2s ease-in-out infinite', fontSize: '13px' }}>✨</span>
@@ -1673,9 +1692,11 @@ filter: [
             POWERED BY <span className="subhams-brand-text">SUBHAMS</span>
           </p>
           
+          
           {/* Right Sparkle (Delayed by 1s so they twinkle back and forth) */}
           <span style={{ animation: 'float-sparkle 2s ease-in-out infinite 1s', fontSize: '13px' }}>✨</span>
         </div>
+        
 
         {/* Beautiful Animated Glowing Underline */}
         <div style={{ 
@@ -1685,11 +1706,14 @@ filter: [
             borderRadius: '10px',
             animation: 'line-breathe 3s ease-in-out infinite' 
         }}></div>
+        
       </div>
     </div>
        
+       
   );
 }
+
 
 // ==========================================
 // 🌟 CONSTANT STYLE OBJECTS

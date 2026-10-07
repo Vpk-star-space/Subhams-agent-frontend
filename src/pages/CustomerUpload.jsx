@@ -1973,6 +1973,17 @@ const handleSubmit = async (e) => {
             )}
         </button>
       </form>
+      <div style={{ textAlign: 'center', marginTop: '15px', fontSize: '12px', color: '#64748b' }}>
+  By continuing, you agree to the Subhams Networks <br/>
+  <a 
+    href="https://subhamsnetworks.in/legal" 
+    target="_blank" 
+    rel="noopener noreferrer" 
+    style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 'bold' }}
+  >
+    Privacy Policy & Terms of Service
+  </a>
+</div>
 
       {/* 🟢 UPGRADED STATUS BOX */}
       {status && (
